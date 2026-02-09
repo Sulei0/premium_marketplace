@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, Sparkles, Zap, ShieldCheck } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { TrustIndicators } from "@/components/TrustIndicators";
+import { RegistrationModal, type RegistrationRole } from "@/components/RegistrationModal";
 import { SAMPLE_PRODUCTS } from "@/data/products";
 import { IMAGES } from "@/assets/images";
 import { springPresets, fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
@@ -13,6 +15,14 @@ import { Button } from "@/components/ui/button";
  * Dijital Boudoir atmosferinde, premium ve gizemli bir C2C pazar yeri deneyimi.
  */
 export default function Home() {
+  const [regModalOpen, setRegModalOpen] = useState(false);
+  const [regRole, setRegRole] = useState<RegistrationRole>("buyer");
+
+  const openRegistration = (role: RegistrationRole) => {
+    setRegRole(role);
+    setRegModalOpen(true);
+  };
+
   return (
     <Layout>
       <div className="flex flex-col w-full overflow-hidden">
@@ -73,14 +83,29 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...springPresets.gentle, delay: 0.6 }}
             >
-              <Button size="lg" className="h-14 px-8 rounded-full text-lg font-semibold group">
-                Keşfetmeye Başla
+              <Button
+                size="lg"
+                className="h-14 px-8 rounded-full text-lg font-semibold group"
+                onClick={() => openRegistration("seller")}
+              >
+                Satıcıyım
                 <ChevronRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
               </Button>
-              <Button variant="outline" size="lg" className="h-14 px-8 rounded-full text-lg border-primary/20 hover:bg-primary/5">
-                Nasıl Çalışır?
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-14 px-8 rounded-full text-lg border-primary/20 hover:bg-primary/5"
+                onClick={() => openRegistration("buyer")}
+              >
+                Alıcıyım
               </Button>
             </motion.div>
+
+            <RegistrationModal
+              open={regModalOpen}
+              onOpenChange={setRegModalOpen}
+              role={regRole}
+            />
           </div>
 
           {/* Bottom Accent Glow */}

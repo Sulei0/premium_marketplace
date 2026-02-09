@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { ROUTE_PATHS } from "@/lib/index";
+import { AgeGate } from "@/components/AgeGate";
 import Home from "@/pages/Home";
 import Products from "@/pages/Products";
 import ProductDetail from "@/pages/ProductDetail";
@@ -30,6 +31,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner position="top-right" expand={false} richColors />
+        <AgeGate>
         <HashRouter>
           <Routes>
             {/* Ana Sayfa: Vitrin ve Hero Bölümü */}
@@ -66,6 +68,7 @@ const App = () => {
             />
           </Routes>
         </HashRouter>
+        </AgeGate>
       </TooltipProvider>
     </QueryClientProvider>
   );
