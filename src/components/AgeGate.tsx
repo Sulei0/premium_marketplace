@@ -33,14 +33,10 @@ export function AgeGate({ children }: { children: React.ReactNode }) {
     };
   }, [isVerified]);
 
-  if (isVerified === null) {
-    return null;
-  }
-
   return (
     <>
       {children}
-      {!isVerified && (
+      {isVerified === false && (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
