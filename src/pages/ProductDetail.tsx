@@ -194,8 +194,10 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
     setIsWhispering(true);
 
     try {
+      console.log("Whisper process started...");
+
       // 1. Check if chat exists
-      const { data: chatData } = await supabase!
+      const { data: chatData, error: fetchError } = await supabase!
         .from('chats')
         .select('id')
         .eq('product_id', product.id)
@@ -203,9 +205,16 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
         .eq('seller_id', product.user_id)
         .maybeSingle();
 
+      if (fetchError) {
+        console.error("Chat fetch error:", fetchError);
+        alert(`Sohbet kontrolü başarısız: ${fetchError.message}`);
+        throw fetchError;
+      }
+
       let chatId = chatData?.id;
 
       if (!chatId) {
+        console.log("Creating new chat...");
         // Create new chat
         const { data: newChat, error: createError } = await supabase!
           .from('chats')
@@ -217,11 +226,16 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
           .select()
           .single();
 
-        if (createError) throw createError;
+        if (createError) {
+          console.error("Chat creation error:", createError);
+          alert(`Sohbet oluşturulamadı: ${createError.message}. Veritabanı tabloları eksik olabilir.`);
+          throw createError;
+        }
         chatId = newChat.id;
       }
 
       // 2. Send offer message
+      console.log("Sending offer message to chat:", chatId);
       const offerDetails = {
         duration,
         extras: extras.filter(e => selectedExtras.includes(e.id)),
@@ -238,14 +252,19 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
           offer_details: offerDetails
         });
 
-      if (msgError) throw msgError;
+      if (msgError) {
+        console.error("Message send error:", msgError);
+        alert(`Mesaj gönderilemedi: ${msgError.message}`);
+        throw msgError;
+      }
 
       // 3. Navigate to chat
+      console.log("Navigating to:", ROUTE_PATHS.CHAT_DETAIL.replace(':id', chatId));
       navigate(ROUTE_PATHS.CHAT_DETAIL.replace(':id', chatId));
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending whisper:", error);
-      alert("Bir hata oluştu.");
+      // alert("Bir hata oluştu: " + (error.message || "Bilinmeyen hata"));
     } finally {
       setIsWhispering(false);
     }
@@ -533,15 +552,9 @@ function SampleProductView({ product }: { product: typeof SAMPLE_PRODUCTS[number
   const handleWhisper = () => {
     setIsWhispering(true);
     setTimeout(() => {
-      addItem({
-        product,
-        selectedDuration: duration,
-        selectedExtras,
-        totalPrice,
-      });
       setIsWhispering(false);
-      navigate(ROUTE_PATHS.HOME);
-    }, 800);
+      alert("⚠️ Bu bir ÖRNEK (Demo) üründür.\n\nGerçek sohbet sistemini test etmek için:\n1. Ana sayfadan veya menüden 'Ürün Sat' diyerek yeni bir ürün oluşturun.\n2. Veya veritabanında kayıtlı gerçek bir ürüne gidin.\n\nÖrnek ürünlerde veritabanı kaydı olmadığı için sohbet başlatılamaz.");
+    }, 500);
   };
 
   return (

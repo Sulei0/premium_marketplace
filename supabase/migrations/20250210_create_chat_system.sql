@@ -48,8 +48,8 @@ CREATE POLICY "Users can view messages in their chats"
   USING (
     EXISTS (
       SELECT 1 FROM public.chats
-      WHERE id = message.chat_id
-      AND (buyer_id = auth.uid() OR seller_id = auth.uid())
+      WHERE chats.id = messages.chat_id
+      AND (chats.buyer_id = auth.uid() OR chats.seller_id = auth.uid())
     )
   );
 
@@ -58,7 +58,7 @@ CREATE POLICY "Users can insert messages in their chats"
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.chats
-      WHERE id = chat_id
-      AND (buyer_id = auth.uid() OR seller_id = auth.uid())
+      WHERE chats.id = chat_id
+      AND (chats.buyer_id = auth.uid() OR chats.seller_id = auth.uid())
     )
   );
