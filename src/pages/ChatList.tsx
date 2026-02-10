@@ -42,9 +42,13 @@ export default function ChatList() {
         .select(`
           id,
           created_at,
-          product:products(title, image_url),
-          buyer:buyer_id(username, avatar_url),
-          seller:seller_id(username, avatar_url),
+          updated_at,
+          buyer_id,
+          seller_id,
+          product_id,
+          products!inner(title, image_url),
+          buyer_profile:profiles!chats_buyer_id_fkey(username, avatar_url),
+          seller_profile:profiles!chats_seller_id_fkey(username, avatar_url),
           messages(content, created_at, is_offer, read_at, sender_id)
         `)
         .or(`buyer_id.eq.${user!.id},seller_id.eq.${user!.id}`)
@@ -59,22 +63,22 @@ export default function ChatList() {
       // Process data to match ChatPreview interface
       const processedChats: ChatPreview[] = chatsData.map((chat: any) => {
         const isBuyer = chat.buyer_id === user!.id;
-        const otherUser = isBuyer ? chat.seller : chat.buyer;
-        
+        const otherUser = isBuyer ? chat.seller_profile : chat.buyer_profile;
+
         // Get last message
-        const sortedMessages = chat.messages?.sort((a: any, b: any) => 
+        const sortedMessages = chat.messages?.sort((a: any, b: any) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         ) || [];
         const lastMessage = sortedMessages[0] || null;
 
         // Count unread messages from other user
-        const unreadCount = chat.messages?.filter((m: any) => 
+        const unreadCount = chat.messages?.filter((m: any) =>
           m.sender_id !== user!.id && !m.read_at
         ).length || 0;
 
         return {
           id: chat.id,
-          product: chat.product,
+          product: chat.products,
           other_user: otherUser,
           last_message: lastMessage,
           unread_count: unreadCount,
@@ -86,7 +90,7 @@ export default function ChatList() {
     }
 
     fetchChats();
-    
+
     // Subscribe to new messages (simplified for now, ideally should use realtime)
     const channel = supabase!.channel('public:chats')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
@@ -152,12 +156,12 @@ export default function ChatList() {
                       </h3>
                       {chat.last_message && (
                         <span className="text-[10px] text-muted-foreground flex-shrink-0 flex items-center gap-1">
-                           <Clock className="w-3 h-3" />
-                           {formatDistanceToNow(new Date(chat.last_message.created_at), { addSuffix: true, locale: tr })}
+                          <Clock className="w-3 h-3" />
+                          {formatDistanceToNow(new Date(chat.last_message.created_at), { addSuffix: true, locale: tr })}
                         </span>
                       )}
                     </div>
-                    
+
                     <p className="text-xs text-muted-foreground mb-1">
                       {chat.product.title}
                     </p>
@@ -167,11 +171,11 @@ export default function ChatList() {
                         "text-sm truncate pr-4",
                         chat.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"
                       )}>
-                        {chat.last_message?.is_offer 
-                          ? "✨ Yeni bir teklif!" 
+                        {chat.last_message?.is_offer
+                          ? "✨ Yeni bir teklif!"
                           : chat.last_message?.content || "Sohbet başlatıldı..."}
                       </p>
-                      
+
                       {chat.unread_count > 0 && (
                         <span className="bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center">
                           {chat.unread_count}
@@ -179,7 +183,7 @@ export default function ChatList() {
                       )}
                     </div>
                   </div>
-                  
+
                   <ArrowRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity self-center" />
                 </div>
               </Link>

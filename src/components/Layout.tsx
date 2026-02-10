@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ROUTE_PATHS, cn } from "@/lib/index";
-import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoginModal } from "@/components/LoginModal";
 import { RegistrationModal } from "@/components/RegistrationModal";
@@ -35,7 +34,6 @@ export function Layout({ children }: LayoutProps) {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const whisperCount = useCart((state) => state.getTotalItems());
   const { user, signOut } = useAuth();
 
   useEffect(() => {
@@ -150,22 +148,17 @@ export function Layout({ children }: LayoutProps) {
               <Search className="w-5 h-5" />
             </button>
 
-            {/* Whisper Count */}
-            <Link
-              to={ROUTE_PATHS.PRODUCTS}
-              className="relative text-muted-foreground hover:text-primary transition-colors hidden sm:block"
-              title="Fısıltılarım"
-            >
-              <MessageSquare className="w-5 h-5" />
-              {whisperCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-[0_0_10px_var(--primary)]">
-                  {whisperCount}
-                </span>
-              )}
-            </Link>
-
             {user ? (
               <>
+                {/* Sohbetlerim */}
+                <Link
+                  to={ROUTE_PATHS.CHATS}
+                  className="relative text-muted-foreground hover:text-primary transition-colors hidden sm:block"
+                  title="Sohbetlerim"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                </Link>
+
                 {/* Ürün Sat Button */}
                 <button
                   onClick={() => setIsAddProductOpen(true)}
@@ -250,6 +243,13 @@ export function Layout({ children }: LayoutProps) {
               <div className="pt-4 flex flex-col space-y-3">
                 {user ? (
                   <>
+                    <Link
+                      to={ROUTE_PATHS.CHATS}
+                      className="flex items-center gap-3 py-3 text-lg text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <MessageSquare className="w-5 h-5" />
+                      Sohbetlerim
+                    </Link>
                     <button
                       onClick={() => { setIsMenuOpen(false); setIsAddProductOpen(true); }}
                       className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl transition-all active:scale-95"

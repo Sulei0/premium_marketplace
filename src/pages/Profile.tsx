@@ -16,10 +16,8 @@ import {
   Loader2
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
-import { ProductCard } from "@/components/ProductCard";
-import { SAMPLE_PRODUCTS } from "@/data/products";
-import { ROUTE_PATHS, User as SellerUser, cn, formatCurrency } from "@/lib/index";
-import { springPresets, fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
+import { ROUTE_PATHS, cn, formatCurrency } from "@/lib/index";
+import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
@@ -38,7 +36,7 @@ interface DbProduct {
 /**
  * Profil Sayfası
  * /profile/me → Giriş yapan kullanıcının kendi profili
- * /profile/:id → Satıcı profili (statik veriden)
+ * /profile/:id → Satıcı profili (veritabanından)
  */
 export default function Profile() {
   const { id } = useParams<{ id: string }>();
@@ -49,7 +47,7 @@ export default function Profile() {
     return <MyProfile />;
   }
 
-  // Otherwise, show seller profile from sample data
+  // Otherwise, show seller profile from database
   return <SellerProfile sellerId={id} />;
 }
 
@@ -277,18 +275,71 @@ function MyProductCard({ product }: { product: DbProduct }) {
   );
 }
 
-/** Seller profile from sample data */
+/** Seller profile — fetches real data from Supabase */
 function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
-  const { seller, sellerProducts } = useMemo(() => {
-    const products = SAMPLE_PRODUCTS.filter((p) => p.seller.id === sellerId);
-    const sellerInfo = products.length > 0 ? products[0].seller : SAMPLE_PRODUCTS[0].seller;
-    return {
-      seller: sellerInfo,
-      sellerProducts: products
-    };
+  const [sellerProfile, setSellerProfile] = useState<{ username: string; role: string; created_at: string } | null>(null);
+  const [sellerProducts, setSellerProducts] = useState<DbProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    async function fetchSellerData() {
+      if (!supabase || !sellerId) {
+        setLoading(false);
+        setError(true);
+        return;
+      }
+
+      try {
+        // Fetch seller profile from profiles table
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("username, role, created_at")
+          .eq("id", sellerId)
+          .single();
+
+        if (profileError || !profileData) {
+          console.error("Error fetching seller profile:", profileError);
+          setError(true);
+          setLoading(false);
+          return;
+        }
+
+        setSellerProfile(profileData);
+
+        // Fetch seller's products
+        const { data: productsData, error: productsError } = await supabase
+          .from("products")
+          .select("*")
+          .eq("user_id", sellerId)
+          .eq("is_active", true)
+          .order("created_at", { ascending: false });
+
+        if (!productsError && productsData) {
+          setSellerProducts(productsData as DbProduct[]);
+        }
+      } catch (err) {
+        console.error("Error fetching seller data:", err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSellerData();
   }, [sellerId]);
 
-  if (!seller) {
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !sellerProfile) {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
@@ -300,6 +351,8 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
       </Layout>
     );
   }
+
+  const joinDate = sellerProfile.created_at ? new Date(sellerProfile.created_at) : new Date();
 
   return (
     <Layout>
@@ -328,15 +381,10 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
             className="lg:col-span-4 space-y-8"
           >
             <div className="relative group">
-              <div className="relative z-10 w-48 h-48 mx-auto lg:mx-0 rounded-2xl overflow-hidden border-2 border-primary/20 bg-card">
-                <img
-                  src={seller.avatar}
-                  alt={seller.username}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                {seller.isVerified && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-                )}
+              <div className="relative z-10 w-48 h-48 mx-auto lg:mx-0 rounded-2xl overflow-hidden border-2 border-primary/20 bg-card flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-6xl font-bold text-white">
+                  {sellerProfile.username.charAt(0).toUpperCase()}
+                </div>
               </div>
               <div className="absolute -inset-4 bg-primary/5 blur-2xl rounded-full -z-0 opacity-50" />
             </div>
@@ -344,28 +392,25 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
             <div className="space-y-4 text-center lg:text-left">
               <div className="flex flex-col gap-2 items-center lg:items-start">
                 <h1 className="text-4xl font-bold tracking-tight">
-                  {seller.username}
+                  {sellerProfile.username}
                 </h1>
-                {seller.isVerified && (
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium animate-pulse">
-                    <ShieldCheck size={14} />
-                    <span>Doğrulanmış Satıcı</span>
-                  </div>
-                )}
+                <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider">
+                  {sellerProfile.role === "seller" ? "Satıcı" : "Alıcı"}
+                </span>
               </div>
 
               <p className="text-muted-foreground leading-relaxed italic text-lg">
-                "{seller.bio || "Sessizliğin içindeki hikayeleri keşfedin."}"
+                "Sessizliğin içindeki hikayeleri keşfedin."
               </p>
 
               <div className="flex flex-wrap gap-4 pt-4 justify-center lg:justify-start">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin size={16} className="text-primary" />
-                  <span>{seller.location}</span>
+                  <Calendar size={16} className="text-primary" />
+                  <span>{joinDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}'den beri</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar size={16} className="text-primary" />
-                  <span>{new Date(seller.joinedDate).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}'den beri</span>
+                  <Package className="w-4 h-4 text-primary" />
+                  <span>{sellerProducts.length} ürün</span>
                 </div>
               </div>
             </div>
@@ -375,23 +420,18 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
               <div className="text-center space-y-1">
                 <div className="flex items-center justify-center gap-1 text-primary">
                   <Star size={18} fill="currentColor" />
-                  <span className="text-xl font-bold">{seller.rating}</span>
+                  <span className="text-xl font-bold">—</span>
                 </div>
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">Puan</p>
               </div>
               <div className="text-center space-y-1">
                 <div className="flex items-center justify-center gap-1 text-primary">
                   <MessageCircle size={18} fill="currentColor" />
-                  <span className="text-xl font-bold">{seller.whisperCount}</span>
+                  <span className="text-xl font-bold">—</span>
                 </div>
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">Fısıltı</p>
               </div>
             </div>
-
-            <button className="w-full py-4 bg-primary text-primary-foreground font-semibold rounded-xl hover:shadow-[0_0_20px_rgba(var(--primary),0.4)] transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-              <MessageCircle size={20} />
-              Satıcıya Fısılda
-            </button>
 
             <div className="pt-4 space-y-4">
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -415,11 +455,6 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
                 Gardırop <span className="text-muted-foreground font-light font-mono ml-2">({sellerProducts.length})</span>
               </h2>
               <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
-              <select className="bg-transparent border-none text-sm text-muted-foreground focus:ring-0 cursor-pointer hover:text-primary transition-colors">
-                <option>En Yeniler</option>
-                <option>Fiyata Göre</option>
-                <option>Popülerlik</option>
-              </select>
             </div>
 
             <motion.div
@@ -431,50 +466,41 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
               {sellerProducts.length > 0 ? (
                 sellerProducts.map((product) => (
                   <motion.div key={product.id} variants={staggerItem}>
-                    <ProductCard product={product} />
+                    <Link to={`/product/${product.id}`} className="block">
+                      <div className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md cursor-pointer hover:border-primary/30 transition-all">
+                        <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
+                          {product.image_url ? (
+                            <img src={product.image_url} alt={product.title} className="h-full w-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-muted-foreground/30">
+                              <Package className="w-16 h-16" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+                        </div>
+                        <div className="p-4 space-y-2">
+                          <div className="flex justify-between items-start">
+                            <h3 className="text-sm font-semibold line-clamp-1">{product.title}</h3>
+                            <span className="text-sm font-mono font-bold text-primary ml-2 shrink-0">
+                              {formatCurrency(product.price)}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2">{product.description}</p>
+                          <p className="text-[10px] text-muted-foreground/60">
+                            {new Date(product.created_at).toLocaleDateString("tr-TR")}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
                   </motion.div>
                 ))
               ) : (
                 <div className="col-span-full py-20 text-center text-muted-foreground border-2 border-dashed border-border/30 rounded-3xl">
+                  <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground/40" />
                   <p>Bu satıcının henüz aktif ilanı bulunmuyor.</p>
                 </div>
               )}
             </motion.div>
-
-            {/* Satıcı İstatistikleri */}
-            <div className="mt-16 pt-8 border-t border-border/30">
-              <h3 className="text-xl font-semibold mb-6">Profil Etkinliği</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-secondary/20 p-4 rounded-xl border border-border/20">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Eye size={14} />
-                    <span className="text-xs">Toplam Görüntülenme</span>
-                  </div>
-                  <div className="text-xl font-mono">12.4K+</div>
-                </div>
-                <div className="bg-secondary/20 p-4 rounded-xl border border-border/20">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Heart size={14} />
-                    <span className="text-xs">Beğeniler</span>
-                  </div>
-                  <div className="text-xl font-mono">842</div>
-                </div>
-                <div className="bg-secondary/20 p-4 rounded-xl border border-border/20">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <ShieldCheck size={14} />
-                    <span className="text-xs">Güven Skoru</span>
-                  </div>
-                  <div className="text-xl font-mono text-primary">%98</div>
-                </div>
-                <div className="bg-secondary/20 p-4 rounded-xl border border-border/20">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Calendar size={14} />
-                    <span className="text-xs">Teslimat Hızı</span>
-                  </div>
-                  <div className="text-xl font-mono">2 Gün</div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

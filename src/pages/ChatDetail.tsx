@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Layout } from "@/components/Layout";
@@ -9,6 +9,7 @@ import { ArrowLeft, Send, Image as ImageIcon, Check, CheckCheck } from "lucide-r
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { toast } from "@/hooks/use-toast";
 
 interface Message {
     id: string;
@@ -66,8 +67,8 @@ export default function ChatDetail() {
 
             if (chatError || !chatData) {
                 console.error('Error fetching chat:', chatError);
-                alert(`Chat yüklenemedi: ${chatError?.message || 'Chat bulunamadı'}`);
-                navigate(ROUTE_PATHS.HOME);
+                toast({ title: "Hata", description: "Sohbet yüklenemedi.", variant: "destructive" });
+                navigate(ROUTE_PATHS.CHATS);
                 return;
             }
 
@@ -80,8 +81,8 @@ export default function ChatDetail() {
 
             if (productError || !productData) {
                 console.error('Error fetching product:', productError);
-                alert(`Ürün bilgisi yüklenemedi: ${productError?.message}`);
-                navigate(ROUTE_PATHS.HOME);
+                toast({ title: "Hata", description: "Ürün bilgisi yüklenemedi.", variant: "destructive" });
+                navigate(ROUTE_PATHS.CHATS);
                 return;
             }
 
@@ -181,7 +182,7 @@ export default function ChatDetail() {
 
         if (error) {
             console.error('Error sending message:', error);
-            alert(`Mesaj gönderilemedi: ${error.message}`);
+            toast({ title: "Hata", description: "Mesaj gönderilemedi. Tekrar deneyin.", variant: "destructive" });
             // Remove optimistic message on error
             setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
             // Restore message text
@@ -215,13 +216,15 @@ export default function ChatDetail() {
                         </Avatar>
                         <div className="truncate">
                             <h2 className="font-bold text-sm truncate">{chat?.other_user.username}</h2>
-                            <p className="text-xs text-muted-foreground truncate">{chat?.product.title}</p>
+                            <Link to={`/product/${chat?.product.id}`} className="text-xs text-muted-foreground truncate hover:text-primary transition-colors">
+                                {chat?.product.title}
+                            </Link>
                         </div>
                     </div>
 
-                    <div className="w-10 h-10 rounded overflow-hidden border shrink-0">
+                    <Link to={`/product/${chat?.product.id}`} className="w-10 h-10 rounded overflow-hidden border shrink-0 hover:border-primary transition-colors">
                         <img src={chat?.product.image_url || "/images/placeholder.webp"} className="w-full h-full object-cover" />
-                    </div>
+                    </Link>
                 </div>
 
                 {/* Messages Area */}
@@ -239,21 +242,28 @@ export default function ChatDetail() {
                                 )}
 
                                 {msg.is_offer ? (
-                                    <div className="mx-auto max-w-[85%] bg-secondary/10 border border-secondary/20 rounded-2xl p-4 space-y-3">
-                                        <p className="text-center font-bold text-sm text-secondary uppercase tracking-widest">✨ Özel Teklif</p>
-                                        {/* Offer details render logic */}
-                                        <div className="space-y-1 text-sm">
+                                    <div className="mx-auto max-w-[85%] bg-gradient-to-br from-pink-500/5 to-purple-600/5 border border-primary/20 rounded-2xl p-4 space-y-3">
+                                        <p className="text-center font-bold text-sm text-primary uppercase tracking-widest">✨ Özel Teklif</p>
+                                        <div className="space-y-2 text-sm">
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Süre:</span>
-                                                <span className="font-mono">{msg.offer_details.duration} Gün</span>
+                                                <span className="font-mono font-semibold">{msg.offer_details?.duration || '?'} Gün</span>
                                             </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Ekstralar:</span>
-                                                <span className="font-mono">{msg.offer_details.extras?.length || 0} Adet</span>
-                                            </div>
-                                            <div className="pt-2 border-t mt-2 flex justify-between font-bold">
+                                            {msg.offer_details?.extras && msg.offer_details.extras.length > 0 && (
+                                                <div>
+                                                    <span className="text-muted-foreground text-xs">Ekstralar:</span>
+                                                    <div className="mt-1 flex flex-wrap gap-1">
+                                                        {msg.offer_details.extras.map((extra: any, i: number) => (
+                                                            <span key={i} className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full border border-primary/20">
+                                                                {extra.label} (+{formatCurrency(extra.price)})
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div className="pt-2 border-t border-primary/10 mt-2 flex justify-between font-bold text-base">
                                                 <span>Toplam:</span>
-                                                <span className="text-primary">{formatCurrency(msg.offer_details.totalPrice)}</span>
+                                                <span className="text-primary font-mono">{formatCurrency(msg.offer_details?.totalPrice || 0)}</span>
                                             </div>
                                         </div>
                                     </div>

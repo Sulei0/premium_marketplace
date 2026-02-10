@@ -3,9 +3,6 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Sparkles, Loader2, ShoppingBag, Store } from "lucide-react";
 import { Layout } from "@/components/Layout";
-import { ProductCard } from "@/components/ProductCard";
-import { TrustIndicators } from "@/components/TrustIndicators";
-import { SAMPLE_PRODUCTS } from "@/data/products";
 import { IMAGES } from "@/assets/images";
 import { springPresets, staggerItem } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
@@ -126,43 +123,7 @@ export default function Home() {
           </section>
         )}
 
-        {/* Featured Section (Sample Products) */}
-        <section className={dbProducts.length === 0 ? "py-24 bg-background relative" : "py-16 bg-background relative"}>
-          <div className="container px-4">
-            {dbProducts.length === 0 && !loadingDb && (
-              <div className="flex items-center justify-between mb-12">
-                <div>
-                  <h2 className="text-3xl font-bold tracking-tight">Vitrin</h2>
-                  <p className="text-muted-foreground mt-2">Öne çıkan parçalar ve hikayeler</p>
-                </div>
-                <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
-              </div>
-            )}
-            {dbProducts.length > 0 && (
-              <div className="flex items-center justify-between mb-12">
-                <div>
-                  <h2 className="text-3xl font-bold tracking-tight">Öne Çıkanlar</h2>
-                  <p className="text-muted-foreground mt-2">Editör seçimi hikaye odaklı parçalar</p>
-                </div>
-                <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
-              </div>
-            )}
 
-            {loadingDb ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {SAMPLE_PRODUCTS.map((product) => (
-                  <motion.div key={product.id} variants={staggerItem}>
-                    <ProductCard product={product} />
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
       </div>
     </Layout>
   );

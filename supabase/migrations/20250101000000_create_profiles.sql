@@ -9,10 +9,10 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- RLS etkinleştir
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- Kullanıcı kendi profilini okuyabilir
-CREATE POLICY "Users can read own profile"
+-- Tüm giriş yapmış kullanıcılar profilleri okuyabilir
+CREATE POLICY "Users can read any profile"
   ON public.profiles FOR SELECT
-  USING (auth.uid() = id);
+  USING (true);
 
 -- Kullanıcı kendi profilini güncelleyebilir
 CREATE POLICY "Users can update own profile"
