@@ -181,7 +181,6 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
 
   const handleWhisper = async () => {
     if (!user) {
-      // TODO: Open login modal. For now, we rely on the header login button or redirect.
       alert("Fısıldamak için giriş yapmalısınız.");
       return;
     }
@@ -191,11 +190,14 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
       return;
     }
 
+    if (!supabase) {
+      alert("Bağlantı hatası. Lütfen sayfayı yenileyin.");
+      return;
+    }
+
     setIsWhispering(true);
 
     try {
-      console.log("Whisper process started...");
-
       // 1. Check if chat exists
       const { data: chatData, error: fetchError } = await supabase!
         .from('chats')
@@ -206,16 +208,14 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
         .maybeSingle();
 
       if (fetchError) {
-        console.error("Chat fetch error:", fetchError);
-        alert(`Sohbet kontrolü başarısız: ${fetchError.message}`);
+        console.error("Error checking for existing chat:", fetchError);
+        alert("Sohbet kontrolü başarısız. Lütfen tekrar deneyin.");
         throw fetchError;
       }
 
       let chatId = chatData?.id;
 
       if (!chatId) {
-        console.log("Creating new chat...");
-        // Create new chat
         const { data: newChat, error: createError } = await supabase!
           .from('chats')
           .insert({
@@ -227,15 +227,19 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
           .single();
 
         if (createError) {
-          console.error("Chat creation error:", createError);
-          alert(`Sohbet oluşturulamadı: ${createError.message}. Veritabanı tabloları eksik olabilir.`);
+          alert(`8. CHAT OLUŞTURMA HATASI:\n${createError.message}\nKod: ${createError.code || 'Yok'}\n\nBu genellikle RLS policy sorunu demektir. SQL'i doğru çalıştırdınız mı?`);
           throw createError;
         }
+
         chatId = newChat.id;
+        alert(`8. Chat oluşturuldu! ID: ${chatId.substring(0, 8)}...`);
+      } else {
+        alert("7. Mevcut chat kullanılacak.");
       }
 
       // 2. Send offer message
-      console.log("Sending offer message to chat:", chatId);
+      alert(`9. Mesaj gönderiliyor...\nChat ID: ${chatId.substring(0, 8)}`);
+
       const offerDetails = {
         duration,
         extras: extras.filter(e => selectedExtras.includes(e.id)),
@@ -253,18 +257,15 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
         });
 
       if (msgError) {
-        console.error("Message send error:", msgError);
         alert(`Mesaj gönderilemedi: ${msgError.message}`);
         throw msgError;
       }
 
       // 3. Navigate to chat
-      console.log("Navigating to:", ROUTE_PATHS.CHAT_DETAIL.replace(':id', chatId));
       navigate(ROUTE_PATHS.CHAT_DETAIL.replace(':id', chatId));
 
     } catch (error: any) {
       console.error("Error sending whisper:", error);
-      // alert("Bir hata oluştu: " + (error.message || "Bilinmeyen hata"));
     } finally {
       setIsWhispering(false);
     }

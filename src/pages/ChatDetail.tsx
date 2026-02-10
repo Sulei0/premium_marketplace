@@ -57,39 +57,66 @@ export default function ChatDetail() {
         if (!user || !id) return;
 
         async function fetchChatData() {
-            // Fetch chat details
+            // 1. Fetch chat basic info
             const { data: chatData, error: chatError } = await supabase!
                 .from('chats')
-                .select(`
-          id,
-          product:products(id, title, price, image_url),
-          buyer:buyer_id(id, username, avatar_url),
-          seller:seller_id(id, username, avatar_url)
-        `)
+                .select('id, buyer_id, seller_id, product_id')
                 .eq('id', id)
                 .single();
 
             if (chatError || !chatData) {
                 console.error('Error fetching chat:', chatError);
+                alert(`Chat yüklenemedi: ${chatError?.message || 'Chat bulunamadı'}`);
                 navigate(ROUTE_PATHS.HOME);
                 return;
             }
 
-            // Supabase might return arrays for joined relations, cast them safely
-            const product = Array.isArray(chatData.product) ? chatData.product[0] : chatData.product;
-            const buyer = Array.isArray(chatData.buyer) ? chatData.buyer[0] : chatData.buyer;
-            const seller = Array.isArray(chatData.seller) ? chatData.seller[0] : chatData.seller;
+            // 2. Fetch product
+            const { data: productData, error: productError } = await supabase!
+                .from('products')
+                .select('id, title, price, image_url')
+                .eq('id', chatData.product_id)
+                .single();
 
-            const isBuyer = buyer.id === user!.id;
-            const otherUser = isBuyer ? seller : buyer;
+            if (productError || !productData) {
+                console.error('Error fetching product:', productError);
+                alert(`Ürün bilgisi yüklenemedi: ${productError?.message}`);
+                navigate(ROUTE_PATHS.HOME);
+                return;
+            }
 
-            setChat({
-                id: chatData.id,
-                product: product,
-                other_user: otherUser,
-            });
+            // 3. Determine other user
+            const isBuyer = chatData.buyer_id === user!.id;
+            const otherUserId = isBuyer ? chatData.seller_id : chatData.buyer_id;
 
-            // Fetch messages
+            // 4. Fetch other user's profile
+            const { data: otherUserData, error: userError } = await supabase!
+                .from('profiles')
+                .select('id, username, avatar_url')
+                .eq('id', otherUserId)
+                .single();
+
+            if (userError || !otherUserData) {
+                console.error('Error fetching user profile:', userError);
+                // Fallback to a minimal user object
+                setChat({
+                    id: chatData.id,
+                    product: productData,
+                    other_user: {
+                        id: otherUserId,
+                        username: 'Kullanıcı',
+                        avatar_url: null
+                    }
+                });
+            } else {
+                setChat({
+                    id: chatData.id,
+                    product: productData,
+                    other_user: otherUserData
+                });
+            }
+
+            // 5. Fetch messages
             const { data: messagesData, error: messagesError } = await supabase!
                 .from('messages')
                 .select('*')
@@ -127,18 +154,38 @@ export default function ChatDetail() {
         e.preventDefault();
         if (!newMessage.trim() || !user || !id) return;
 
+        const messageContent = newMessage.trim();
+        setNewMessage(""); // Clear immediately for better UX
+
+        // Create optimistic message
+        const optimisticMessage: Message = {
+            id: `temp-${Date.now()}`,
+            sender_id: user.id,
+            content: messageContent,
+            is_offer: false,
+            offer_details: null,
+            created_at: new Date().toISOString(),
+            read_at: null
+        };
+
+        // Add to UI immediately
+        setMessages(prev => [...prev, optimisticMessage]);
+
         const { error } = await supabase!
             .from('messages')
             .insert({
                 chat_id: id,
                 sender_id: user.id,
-                content: newMessage.trim(),
+                content: messageContent,
             });
 
         if (error) {
             console.error('Error sending message:', error);
-        } else {
-            setNewMessage("");
+            alert(`Mesaj gönderilemedi: ${error.message}`);
+            // Remove optimistic message on error
+            setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+            // Restore message text
+            setNewMessage(messageContent);
         }
     };
 
