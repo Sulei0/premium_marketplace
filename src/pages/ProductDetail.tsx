@@ -81,18 +81,31 @@ export default function ProductDetail() {
       return;
     }
     async function fetchProduct() {
-      // Fetch product and join with profiles table via user_id
-      const { data, error } = await supabase!
+      // 1. Fetch product first
+      const { data: productData, error: productError } = await supabase!
         .from("products")
-        .select("*, seller:profiles!user_id(username, avatar_url, is_verified, rating, whisper_count)")
+        .select("*")
         .eq("id", id)
         .single();
 
-      if (!error && data) {
-        // Supabase join might return array or object depending on relationship
-        const sellerData = Array.isArray(data.seller) ? data.seller[0] : data.seller;
-        setDbProduct({ ...data, seller: sellerData } as DbProduct);
+      if (productError || !productData) {
+        console.error("Error fetching product:", productError);
+        setLoadingDb(false);
+        return;
       }
+
+      // 2. Fetch seller profile
+      const { data: sellerData, error: sellerError } = await supabase!
+        .from("profiles")
+        .select("username, avatar_url, is_verified, rating, whisper_count")
+        .eq("id", productData.user_id)
+        .single();
+
+      if (sellerError) {
+        console.warn("Seller profile fetch error (might be missing profile):", sellerError);
+      }
+
+      setDbProduct({ ...productData, seller: sellerData || undefined } as DbProduct);
       setLoadingDb(false);
     }
     fetchProduct();
