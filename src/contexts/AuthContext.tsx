@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       password,
       options: {
         data: { username, role },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: import.meta.env.VITE_SITE_URL || window.location.origin,
       },
     });
     if (error) throw error;
