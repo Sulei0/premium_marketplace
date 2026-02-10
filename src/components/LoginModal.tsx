@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSwitchToRegister: () => void; // <-- Bu da yeni özellik
+  onSwitchToRegister: () => void;
 }
 
 export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalProps) {
   const { signIn } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,14 +25,15 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
 
     try {
       await signIn(email, password);
-      // alert("🎉 Hoşgeldin!"); 
       onClose();
-      window.location.reload(); 
+      navigate('/profile/me');
     } catch (err: any) {
       if (err.message.includes("Invalid login")) {
         setError("E-posta veya şifre hatalı.");
       } else if (err.message.includes("Email not confirmed")) {
         setError("Lütfen önce e-postana gelen linki onayla! 📧");
+      } else if (err.message.includes("Supabase")) {
+        setError("Supabase bağlantısı kurulamadı. Lütfen .env dosyanızı kontrol edin.");
       } else {
         setError("Giriş hatası: " + err.message);
       }
@@ -43,7 +46,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="relative w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">✕</button>
-        
+
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-white">Tekrar Hoşgeldin</h2>
           <p className="text-gray-400 text-sm mt-2">Hesabına erişmek için bilgilerini gir.</p>
@@ -54,7 +57,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-xs text-gray-400 ml-1">E-posta</label>
-            <input 
+            <input
               type="email" required value={email} onChange={e => setEmail(e.target.value)}
               className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
               placeholder="mail@ornek.com"
@@ -62,13 +65,13 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
           </div>
           <div className="space-y-1">
             <label className="text-xs text-gray-400 ml-1">Şifre</label>
-            <input 
+            <input
               type="password" required value={password} onChange={e => setPassword(e.target.value)}
               className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
               placeholder="******"
             />
           </div>
-          <button 
+          <button
             disabled={loading}
             className="w-full bg-white text-black hover:bg-gray-200 font-bold py-3.5 rounded-lg transition-colors mt-2"
           >
@@ -79,8 +82,8 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
         <div className="mt-6 pt-6 border-t border-white/10 text-center">
           <p className="text-sm text-gray-400">
             Hesabın yok mu?{' '}
-            <button 
-              onClick={onSwitchToRegister} 
+            <button
+              onClick={onSwitchToRegister}
               className="text-pink-500 hover:text-pink-400 font-medium transition-colors hover:underline ml-1"
             >
               Kayıt Ol

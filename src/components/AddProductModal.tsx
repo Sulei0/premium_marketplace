@@ -1,0 +1,476 @@
+import { useState, useRef, useMemo } from "react";
+import { X, Upload, ImagePlus, Loader2, Check } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { formatCurrency } from "@/lib/index";
+
+interface AddProductModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    /** If provided, open in EDIT mode with existing data */
+    editProduct?: DbProductForEdit | null;
+}
+
+/** Shape of a DB product for editing */
+export interface DbProductForEdit {
+    id: string;
+    user_id: string;
+    title: string;
+    description: string;
+    price: number;
+    category: string;
+    image_url: string | null;
+    base_duration: number;
+    max_duration: number;
+    extras: ExtraItem[];
+}
+
+interface ExtraItem {
+    id: string;
+    label: string;
+    price: number;
+    enabled: boolean;
+}
+
+const CATEGORIES = ["İç Giyim", "Çorap", "Aksesuar", "Özel Parçalar", "Diğer"];
+
+const DEFAULT_EXTRAS: ExtraItem[] = [
+    { id: "photo_proof", label: "Giyerken Fotoğraf Kanıtı", price: 50, enabled: false },
+    { id: "perfume", label: "Özel Parfüm İsteği", price: 50, enabled: false },
+    { id: "sport_wear", label: "Spor Yaparken Giyilsin", price: 100, enabled: false },
+    { id: "video_proof", label: "Video Kanıtı", price: 200, enabled: false },
+    { id: "handwritten", label: "El Yazılı Not Ekle", price: 30, enabled: false },
+    { id: "rush_delivery", label: "Hızlı Kargo (1 Gün)", price: 75, enabled: false },
+];
+
+const PRICE_PER_DAY = 15; // ₺15/gün süre ek ücreti
+
+export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModalProps) {
+    const { user } = useAuth();
+    const isEditMode = !!editProduct;
+
+    const [title, setTitle] = useState(editProduct?.title ?? "");
+    const [description, setDescription] = useState(editProduct?.description ?? "");
+    const [basePrice, setBasePrice] = useState(editProduct?.price?.toString() ?? "");
+    const [category, setCategory] = useState(editProduct?.category ?? CATEGORIES[0]);
+    const [baseDuration, setBaseDuration] = useState(editProduct?.base_duration ?? 1);
+    const [maxDuration, setMaxDuration] = useState(editProduct?.max_duration ?? 7);
+    const [extras, setExtras] = useState<ExtraItem[]>(
+        editProduct?.extras?.length ? editProduct.extras : DEFAULT_EXTRAS.map(e => ({ ...e }))
+    );
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(editProduct?.image_url ?? null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Duration slider preview value
+    const [previewDuration, setPreviewDuration] = useState(baseDuration);
+
+    const enabledExtras = extras.filter(e => e.enabled);
+    const extrasTotal = enabledExtras.reduce((s, e) => s + e.price, 0);
+    const basePriceNum = parseFloat(basePrice) || 0;
+    const durationExtra = (previewDuration - 1) * PRICE_PER_DAY;
+    const totalPreview = basePriceNum + durationExtra + extrasTotal;
+
+    if (!isOpen) return null;
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setImageFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => setImagePreview(reader.result as string);
+        reader.readAsDataURL(file);
+    };
+
+    const toggleExtra = (id: string) => {
+        setExtras(prev => prev.map(e => e.id === id ? { ...e, enabled: !e.enabled } : e));
+    };
+
+    const resetForm = () => {
+        if (!isEditMode) {
+            setTitle("");
+            setDescription("");
+            setBasePrice("");
+            setCategory(CATEGORIES[0]);
+            setBaseDuration(1);
+            setMaxDuration(7);
+            setExtras(DEFAULT_EXTRAS.map(e => ({ ...e })));
+            setImageFile(null);
+            setImagePreview(null);
+            setPreviewDuration(1);
+        }
+        setError(null);
+        setSuccess(false);
+    };
+
+    const handleClose = () => {
+        resetForm();
+        onClose();
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!supabase || !user) {
+            setError("Giriş yapmanız ve Supabase bağlantısı gerekiyor.");
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            let imageUrl: string | null = editProduct?.image_url ?? null;
+
+            // Upload image if a new file is selected
+            if (imageFile) {
+                const fileExt = imageFile.name.split(".").pop();
+                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                const { error: uploadError } = await supabase.storage
+                    .from("product-images")
+                    .upload(fileName, imageFile);
+                if (uploadError) throw new Error("Görsel yüklenemedi: " + uploadError.message);
+                const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(fileName);
+                imageUrl = urlData.publicUrl;
+            }
+
+            const productData = {
+                title,
+                description,
+                price: basePriceNum,
+                category,
+                image_url: imageUrl,
+                base_duration: baseDuration,
+                max_duration: maxDuration,
+                extras: extras.filter(e => e.enabled).map(({ id, label, price }) => ({ id, label, price })),
+            };
+
+            if (isEditMode && editProduct) {
+                // Update existing product
+                const { error: updateError } = await supabase
+                    .from("products")
+                    .update(productData)
+                    .eq("id", editProduct.id)
+                    .eq("user_id", user.id);
+                if (updateError) throw new Error("Ürün güncellenemedi: " + updateError.message);
+            } else {
+                // Insert new product
+                const { error: insertError } = await supabase
+                    .from("products")
+                    .insert({ ...productData, user_id: user.id });
+                if (insertError) throw new Error("Ürün eklenemedi: " + insertError.message);
+            }
+
+            setSuccess(true);
+            setTimeout(() => {
+                handleClose();
+                window.location.reload();
+            }, 1200);
+        } catch (err: any) {
+            setError(err.message || "Bir hata oluştu.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="relative w-full max-w-2xl bg-[#121212] border border-white/10 rounded-2xl shadow-2xl max-h-[95vh] overflow-y-auto">
+                <button
+                    onClick={handleClose}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+
+                <div className="p-6 sm:p-8">
+                    {/* Header */}
+                    <div className="text-center mb-6">
+                        <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+                            {isEditMode ? "İlanı Düzenle" : "Ürün Sat / İlan Ver"}
+                        </h2>
+                        <p className="text-gray-400 text-sm mt-1.5">
+                            {isEditMode ? "Ürün bilgilerini güncelle" : "Ürününün hikayesini paylaş ve satışa çıkar."}
+                        </p>
+                    </div>
+
+                    {/* Success State */}
+                    {success ? (
+                        <div className="text-center py-10">
+                            <div className="text-5xl mb-4">🎉</div>
+                            <h3 className="text-xl font-semibold text-white mb-2">
+                                {isEditMode ? "Ürün Güncellendi!" : "Ürün Başarıyla Eklendi!"}
+                            </h3>
+                            <p className="text-gray-400 text-sm">
+                                {isEditMode ? "Değişiklikleriniz kaydedildi." : "İlanınız artık yayında."}
+                            </p>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            {error && (
+                                <div className="bg-red-500/20 text-red-200 p-3 rounded-lg text-sm text-center border border-red-500/30">
+                                    {error}
+                                </div>
+                            )}
+
+                            {/* Image Upload */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs text-gray-400 ml-1">Ürün Görseli</label>
+                                <div
+                                    className="relative border-2 border-dashed border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-pink-500/40 transition-colors group"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    {imagePreview ? (
+                                        <div className="relative aspect-video">
+                                            <img src={imagePreview} alt="Önizleme" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <p className="text-white text-sm font-medium">Görseli Değiştir</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                                            <ImagePlus className="w-10 h-10 mb-3 text-gray-600" />
+                                            <p className="text-sm font-medium text-gray-400">Tıklayarak görsel yükle</p>
+                                            <p className="text-xs text-gray-600 mt-1">JPG, PNG, WEBP (Maks. 5MB)</p>
+                                        </div>
+                                    )}
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        className="hidden"
+                                        onChange={handleImageChange}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Title + Category Row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400 ml-1">
+                                        Ürün Adı <span className="text-pink-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
+                                        placeholder="Örn: Gece Yarısı Danteli"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400 ml-1">Kategori</label>
+                                    <select
+                                        value={category}
+                                        onChange={(e) => setCategory(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors appearance-none cursor-pointer"
+                                    >
+                                        {CATEGORIES.map((cat) => (
+                                            <option key={cat} value={cat} className="bg-[#1a1a1a]">{cat}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Base Price */}
+                            <div className="space-y-1">
+                                <label className="text-xs text-gray-400 ml-1">
+                                    Taban Fiyat (₺) <span className="text-pink-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="1"
+                                    step="0.01"
+                                    value={basePrice}
+                                    onChange={(e) => setBasePrice(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
+                                    placeholder="0.00"
+                                />
+                            </div>
+
+                            {/* Description */}
+                            <div className="space-y-1">
+                                <label className="text-xs text-gray-400 ml-1">
+                                    Açıklama / Hikaye <span className="text-pink-500">*</span>
+                                </label>
+                                <textarea
+                                    required
+                                    rows={3}
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors resize-none"
+                                    placeholder="Ürününün hikayesini anlat..."
+                                />
+                            </div>
+
+                            {/* Duration Range Selector */}
+                            <div className="space-y-3 bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                                <div className="flex justify-between items-center">
+                                    <h4 className="text-sm font-bold uppercase tracking-wider text-pink-400">
+                                        🔥 Tenin Sıcaklığı (Gün)
+                                    </h4>
+                                    <span className="text-lg font-mono font-bold text-pink-400">
+                                        {previewDuration} Gün
+                                    </span>
+                                </div>
+
+                                {/* Neon Pink Slider */}
+                                <div className="relative px-1">
+                                    <input
+                                        type="range"
+                                        min={1}
+                                        max={14}
+                                        step={1}
+                                        value={previewDuration}
+                                        onChange={(e) => setPreviewDuration(parseInt(e.target.value))}
+                                        className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                                        style={{
+                                            background: `linear-gradient(to right, #ec4899 0%, #ec4899 ${((previewDuration - 1) / 13) * 100}%, rgba(255,255,255,0.1) ${((previewDuration - 1) / 13) * 100}%, rgba(255,255,255,0.1) 100%)`,
+                                        }}
+                                    />
+                                    <style>{`
+                    input[type="range"]::-webkit-slider-thumb {
+                      -webkit-appearance: none;
+                      appearance: none;
+                      width: 22px;
+                      height: 22px;
+                      border-radius: 50%;
+                      background: #ec4899;
+                      cursor: pointer;
+                      box-shadow: 0 0 15px rgba(236,72,153,0.6), 0 0 30px rgba(236,72,153,0.3);
+                      border: 2px solid white;
+                    }
+                    input[type="range"]::-moz-range-thumb {
+                      width: 22px;
+                      height: 22px;
+                      border-radius: 50%;
+                      background: #ec4899;
+                      cursor: pointer;
+                      box-shadow: 0 0 15px rgba(236,72,153,0.6), 0 0 30px rgba(236,72,153,0.3);
+                      border: 2px solid white;
+                    }
+                  `}</style>
+                                    <div className="flex justify-between mt-1.5 text-[10px] text-gray-500 font-mono uppercase">
+                                        <span>Taze</span>
+                                        <span>Yoğun</span>
+                                        <span>Mühürlenmiş</span>
+                                    </div>
+                                </div>
+
+                                {/* Duration Price Info */}
+                                {previewDuration > 1 && (
+                                    <div className="text-xs text-pink-300/70 text-right">
+                                        +{formatCurrency(durationExtra)} süre ek ücreti ({previewDuration - 1} × {formatCurrency(PRICE_PER_DAY)}/gün)
+                                    </div>
+                                )}
+
+                                {/* Min/Max Duration for seller */}
+                                <div className="grid grid-cols-2 gap-3 mt-2">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] text-gray-500 ml-1">Min Süre (Gün)</label>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={maxDuration}
+                                            value={baseDuration}
+                                            onChange={(e) => { const v = parseInt(e.target.value) || 1; setBaseDuration(v); if (previewDuration < v) setPreviewDuration(v); }}
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:border-pink-500 focus:outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] text-gray-500 ml-1">Max Süre (Gün)</label>
+                                        <input
+                                            type="number"
+                                            min={baseDuration}
+                                            max={30}
+                                            value={maxDuration}
+                                            onChange={(e) => { const v = parseInt(e.target.value) || 7; setMaxDuration(v); if (previewDuration > v) setPreviewDuration(v); }}
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:border-pink-500 focus:outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Ekstra Haz Menüsü */}
+                            <div className="space-y-3 bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                                <h4 className="text-sm font-bold uppercase tracking-wider text-purple-400">
+                                    ✨ Ekstra Haz Menüsü
+                                </h4>
+                                <p className="text-[11px] text-gray-500 -mt-1">
+                                    Alıcıların seçebileceği ek hizmetler. Aktif ettikleriniz ilanlarda görünecek.
+                                </p>
+                                <div className="space-y-2">
+                                    {extras.map((extra) => (
+                                        <div
+                                            key={extra.id}
+                                            onClick={() => toggleExtra(extra.id)}
+                                            className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${extra.enabled
+                                                    ? "bg-purple-500/10 border-purple-500/30"
+                                                    : "bg-white/[0.02] border-white/5 hover:border-white/10"
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${extra.enabled
+                                                        ? "bg-purple-500 border-purple-500"
+                                                        : "border-gray-600"
+                                                    }`}>
+                                                    {extra.enabled && <Check className="w-3 h-3 text-white" />}
+                                                </div>
+                                                <span className={`text-sm ${extra.enabled ? "text-white" : "text-gray-400"}`}>
+                                                    {extra.label}
+                                                </span>
+                                            </div>
+                                            <span className="text-sm font-mono text-purple-400">
+                                                +{formatCurrency(extra.price)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Total Price Preview */}
+                            <div className="bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-xl p-4">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-widest">Tahmini Alıcı Bedeli</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            Taban {formatCurrency(basePriceNum)}
+                                            {durationExtra > 0 && ` + Süre ${formatCurrency(durationExtra)}`}
+                                            {extrasTotal > 0 && ` + Ekstra ${formatCurrency(extrasTotal)}`}
+                                        </p>
+                                    </div>
+                                    <p className="text-3xl font-bold text-transparent bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text font-mono">
+                                        {formatCurrency(totalPreview)}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Submit */}
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold py-4 rounded-xl transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        {isEditMode ? "Güncelleniyor..." : "Yükleniyor..."}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="w-5 h-5" />
+                                        {isEditMode ? "Değişiklikleri Kaydet" : "İlanı Yayınla"}
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}

@@ -1,40 +1,292 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  MapPin, 
-  Calendar, 
-  MessageCircle, 
-  Star, 
-  CheckCircle2, 
-  ShieldCheck, 
-  Eye, 
+import {
+  MapPin,
+  Calendar,
+  MessageCircle,
+  Star,
+  CheckCircle2,
+  ShieldCheck,
+  Eye,
   Heart,
-  ArrowLeft
+  ArrowLeft,
+  Package,
+  Edit3,
+  Loader2
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { SAMPLE_PRODUCTS } from "@/data/products";
-import { ROUTE_PATHS, User, cn } from "@/lib/index";
+import { ROUTE_PATHS, User as SellerUser, cn, formatCurrency } from "@/lib/index";
 import { springPresets, fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+
+interface DbProduct {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  image_url: string | null;
+  is_active: boolean;
+  created_at: string;
+}
 
 /**
- * Satıcı Profil Sayfası
- * Premium 'Digital Boudoir' estetiği ile tasarlanmış, doğrulama ve itibar odaklı.
+ * Profil Sayfası
+ * /profile/me → Giriş yapan kullanıcının kendi profili
+ * /profile/:id → Satıcı profili (statik veriden)
  */
 export default function Profile() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
 
-  // Örnek veriden satıcıyı ve ürünlerini bul
+  // If /profile/me, show the logged-in user's own profile
+  if (id === "me") {
+    return <MyProfile />;
+  }
+
+  // Otherwise, show seller profile from sample data
+  return <SellerProfile sellerId={id} />;
+}
+
+/** Logged-in user's own profile */
+function MyProfile() {
+  const { user } = useAuth();
+  const [myProducts, setMyProducts] = useState<DbProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [username, setUsername] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setUsername(user.user_metadata?.username || user.email?.split("@")[0] || "Kullanıcı");
+    }
+  }, [user]);
+
+  // Fetch my products from DB
+  useEffect(() => {
+    async function fetchMyProducts() {
+      if (!supabase || !user) {
+        setLoadingProducts(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (!error && data) {
+          setMyProducts(data as DbProduct[]);
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setLoadingProducts(false);
+      }
+    }
+    fetchMyProducts();
+  }, [user]);
+
+  const handleSaveUsername = async () => {
+    if (!supabase || !user) return;
+    setSaving(true);
+    try {
+      await supabase.auth.updateUser({
+        data: { username },
+      });
+    } catch {
+      // silently fail
+    } finally {
+      setSaving(false);
+      setEditing(false);
+    }
+  };
+
+  if (!user) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+          <div className="text-6xl mb-6">🔒</div>
+          <h2 className="text-2xl font-bold mb-3">Giriş Yapmanız Gerekiyor</h2>
+          <p className="text-muted-foreground mb-6">Profilinizi görmek için lütfen giriş yapın.</p>
+          <Link to={ROUTE_PATHS.HOME} className="text-primary hover:underline font-medium">
+            Ana Sayfaya Dön
+          </Link>
+        </div>
+      </Layout>
+    );
+  }
+
+  const role = user.user_metadata?.role || "buyer";
+  const joinDate = user.created_at ? new Date(user.created_at) : new Date();
+
+  return (
+    <Layout>
+      <div className="max-w-5xl mx-auto px-4 py-8 md:py-16">
+        {/* Profile Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative bg-card/50 backdrop-blur-md border border-border/50 rounded-2xl p-8 md:p-10 mb-10"
+        >
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            {/* Avatar */}
+            <div className="relative">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-4xl font-bold text-white shadow-lg shadow-primary/20">
+                {username.charAt(0).toUpperCase()}
+              </div>
+              <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
+                <div className="w-4 h-4 rounded-full bg-green-500 animate-pulse" />
+              </div>
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-3 mb-2">
+                {editing ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xl font-bold text-foreground focus:border-pink-500 focus:outline-none"
+                    />
+                    <button
+                      onClick={handleSaveUsername}
+                      disabled={saving}
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      {saving ? "..." : "Kaydet"}
+                    </button>
+                    <button
+                      onClick={() => setEditing(false)}
+                      className="px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      İptal
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-3xl font-bold">{username}</h1>
+                    <button
+                      onClick={() => setEditing(true)}
+                      className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
+                      title="Adını Düzenle"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider">
+                  {role === "seller" ? "Satıcı" : "Alıcı"}
+                </span>
+              </div>
+              <p className="text-muted-foreground text-sm">{user.email}</p>
+              <div className="flex items-center gap-4 mt-3 justify-center md:justify-start">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  <span>{joinDate.toLocaleDateString("tr-TR", { month: "long", year: "numeric" })}'den beri</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Package className="w-4 h-4 text-primary" />
+                  <span>{myProducts.length} ürün</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* My Products */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">
+              İlanlarım <span className="text-muted-foreground font-light font-mono ml-2">({myProducts.length})</span>
+            </h2>
+            <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
+          </div>
+
+          {loadingProducts ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : myProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {myProducts.map((product) => (
+                <MyProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="py-16 text-center text-muted-foreground border-2 border-dashed border-border/30 rounded-3xl">
+              <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground/40" />
+              <p className="text-lg font-medium mb-1">Henüz ilan eklemediniz</p>
+              <p className="text-sm text-muted-foreground/60">Header'daki "Ürün Sat" butonuyla ilk ilanınızı ekleyin!</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
+/** Card for user's own products */
+function MyProductCard({ product }: { product: DbProduct }) {
+  return (
+    <Link to={`/product/${product.id}`} className="block">
+      <div className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md cursor-pointer hover:border-primary/30 transition-all">
+        <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
+          {product.image_url ? (
+            <img src={product.image_url} alt={product.title} className="h-full w-full object-cover" loading="lazy" />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-muted-foreground/30">
+              <Package className="w-16 h-16" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+          <div className="absolute top-3 right-3">
+            <span className={cn(
+              "px-2 py-1 rounded-full text-[10px] uppercase tracking-wider font-medium",
+              product.is_active
+                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                : "bg-red-500/20 text-red-400 border border-red-500/30"
+            )}>
+              {product.is_active ? "Aktif" : "Pasif"}
+            </span>
+          </div>
+        </div>
+        <div className="p-4 space-y-2">
+          <div className="flex justify-between items-start">
+            <h3 className="text-sm font-semibold line-clamp-1">{product.title}</h3>
+            <span className="text-sm font-mono font-bold text-primary ml-2 shrink-0">
+              {formatCurrency(product.price)}
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground line-clamp-2">{product.description}</p>
+          <p className="text-[10px] text-muted-foreground/60">
+            {new Date(product.created_at).toLocaleDateString("tr-TR")}
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/** Seller profile from sample data */
+function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
   const { seller, sellerProducts } = useMemo(() => {
-    const products = SAMPLE_PRODUCTS.filter((p) => p.seller.id === id);
-    // Eğer ürün yoksa (ID geçersizse), ilk üründeki satıcıyı gösterelim (demo amaçlı)
+    const products = SAMPLE_PRODUCTS.filter((p) => p.seller.id === sellerId);
     const sellerInfo = products.length > 0 ? products[0].seller : SAMPLE_PRODUCTS[0].seller;
-    return { 
-      seller: sellerInfo, 
-      sellerProducts: products 
+    return {
+      seller: sellerInfo,
+      sellerProducts: products
     };
-  }, [id]);
+  }, [sellerId]);
 
   if (!seller) {
     return (
@@ -52,14 +304,14 @@ export default function Profile() {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-16">
-        {/* Geri Dön Navigasyonu */}
-        <motion.div 
+        {/* Geri Dön */}
+        <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="mb-8"
         >
-          <Link 
-            to={ROUTE_PATHS.PRODUCTS} 
+          <Link
+            to={ROUTE_PATHS.PRODUCTS}
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors group"
           >
             <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
@@ -69,25 +321,23 @@ export default function Profile() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Sol Kolon: Satıcı Bilgileri */}
-          <motion.div 
+          <motion.div
             variants={fadeInUp}
             initial="initial"
             animate="animate"
             className="lg:col-span-4 space-y-8"
           >
             <div className="relative group">
-              {/* Avatar ve Neon Efekti */}
               <div className="relative z-10 w-48 h-48 mx-auto lg:mx-0 rounded-2xl overflow-hidden border-2 border-primary/20 bg-card">
-                <img 
-                  src={seller.avatar} 
-                  alt={seller.username} 
+                <img
+                  src={seller.avatar}
+                  alt={seller.username}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 {seller.isVerified && (
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
                 )}
               </div>
-              {/* Arka plan ışıması */}
               <div className="absolute -inset-4 bg-primary/5 blur-2xl rounded-full -z-0 opacity-50" />
             </div>
 
@@ -172,7 +422,7 @@ export default function Profile() {
               </select>
             </div>
 
-            <motion.div 
+            <motion.div
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
@@ -191,7 +441,7 @@ export default function Profile() {
               )}
             </motion.div>
 
-            {/* Satıcı İstatistikleri (Detay) */}
+            {/* Satıcı İstatistikleri */}
             <div className="mt-16 pt-8 border-t border-border/30">
               <h3 className="text-xl font-semibold mb-6">Profil Etkinliği</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

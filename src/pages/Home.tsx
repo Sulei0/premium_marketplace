@@ -1,57 +1,64 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight, Sparkles, Zap, ShieldCheck } from "lucide-react";
+import { ChevronRight, Sparkles, Loader2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { TrustIndicators } from "@/components/TrustIndicators";
-import { RegistrationModal } from "@/components/RegistrationModal"; 
-import { LoginModal } from "@/components/LoginModal"; 
 import { SAMPLE_PRODUCTS } from "@/data/products";
 import { IMAGES } from "@/assets/images";
-import { springPresets, fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
+import { springPresets, staggerItem } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+import { formatCurrency } from "@/lib/index";
+
+/** DB product row shape */
+interface DbProduct {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  image_url: string | null;
+  is_active: boolean;
+  created_at: string;
+}
 
 export default function Home() {
-  // Modal durumlarını yöneten değişkenler
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<'seller' | 'buyer'>('buyer');
+  const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
+  const [loadingDb, setLoadingDb] = useState(true);
 
-  // FONKSİYON 1: Kayıt penceresini açar (Girişi kapatır)
-  const openRegistration = (role: 'seller' | 'buyer') => {
-    setSelectedRole(role);
-    setIsLoginOpen(false);      // Girişi Kapat
-    setTimeout(() => {
-      setIsRegisterOpen(true);  // Kayıdı Aç (Çakışmayı önlemek için milisaniyelik gecikme)
-    }, 50);
-  };
+  // Fetch products from Supabase
+  useEffect(() => {
+    async function fetchProducts() {
+      if (!supabase) {
+        setLoadingDb(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })
+          .limit(20);
 
-  // FONKSİYON 2: Giriş penceresini açar (Kayıdı kapatır)
-  const openLogin = () => {
-    setIsRegisterOpen(false);   // Kayıdı Kapat
-    setTimeout(() => {
-      setIsLoginOpen(true);     // Girişi Aç
-    }, 50);
-  };
+        if (!error && data) {
+          setDbProducts(data as DbProduct[]);
+        }
+      } catch {
+        // silently fail — fallback to SAMPLE_PRODUCTS
+      } finally {
+        setLoadingDb(false);
+      }
+    }
+    fetchProducts();
+  }, []);
 
   return (
     <Layout>
       <div className="flex flex-col w-full overflow-hidden">
-        
-        {/* --- MODALLAR BURADA YÖNETİLİYOR --- */}
-        
-        <RegistrationModal
-          isOpen={isRegisterOpen}
-          onClose={() => setIsRegisterOpen(false)}
-          initialRole={selectedRole}
-          onSwitchToLogin={openLogin} // "Giriş Yap" butonuna bu fonksiyonu bağladık
-        />
-
-        <LoginModal
-          isOpen={isLoginOpen}
-          onClose={() => setIsLoginOpen(false)}
-          onSwitchToRegister={() => openRegistration('buyer')} // "Kayıt Ol" butonuna bu fonksiyonu bağladık
-        />
 
         {/* Hero Section */}
         <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
@@ -72,36 +79,146 @@ export default function Home() {
             </motion.h1>
 
             <motion.p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.4 }}>
-              Sıradanlığın ötesinde, her parçanın bir ruhu ve yaşanmışlığı var. 
+              Sıradanlığın ötesinde, her parçanın bir ruhu ve yaşanmışlığı var.
               Dijital boudoir atmosferinde güvenli, gizli ve premium bir alışveriş deneyimi.
             </motion.p>
 
             <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.6 }}>
-              {/* BUTONLAR */}
-              <Button size="lg" className="h-14 px-8 rounded-full text-lg font-semibold group" onClick={() => openRegistration("seller")}>
-                Satıcıyım <ChevronRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </Button>
-              <Button variant="outline" size="lg" className="h-14 px-8 rounded-full text-lg border-primary/20 hover:bg-primary/5" onClick={() => openRegistration("buyer")}>
-                Alıcıyım
+              <Button size="lg" className="h-14 px-8 rounded-full text-lg font-semibold group" asChild>
+                <a href="#products-section">
+                  Keşfet <ChevronRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+                </a>
               </Button>
             </motion.div>
           </div>
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/20 blur-[120px] rounded-full z-0" />
         </section>
 
-        {/* Featured Section */}
-        <section className="py-24 bg-background relative">
-          <div className="container px-4">
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {SAMPLE_PRODUCTS.map((product) => (
-                <motion.div key={product.id} variants={staggerItem}>
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
+        {/* DB Products Section */}
+        {dbProducts.length > 0 && (
+          <section id="products-section" className="py-24 bg-background relative">
+            <div className="container px-4">
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight">Yeni İlanlar</h2>
+                  <p className="text-muted-foreground mt-2">Kullanıcılarımızın eklediği en yeni ürünler</p>
+                </div>
+                <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {dbProducts.map((product) => (
+                  <motion.div key={product.id} variants={staggerItem}>
+                    <DbProductCard product={product} />
+                  </motion.div>
+                ))}
+              </div>
             </div>
+          </section>
+        )}
+
+        {/* Featured Section (Sample Products) */}
+        <section className={dbProducts.length === 0 ? "py-24 bg-background relative" : "py-16 bg-background relative"}>
+          <div className="container px-4">
+            {dbProducts.length === 0 && !loadingDb && (
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight">Vitrin</h2>
+                  <p className="text-muted-foreground mt-2">Öne çıkan parçalar ve hikayeler</p>
+                </div>
+                <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
+              </div>
+            )}
+            {dbProducts.length > 0 && (
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight">Öne Çıkanlar</h2>
+                  <p className="text-muted-foreground mt-2">Editör seçimi hikaye odaklı parçalar</p>
+                </div>
+                <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
+              </div>
+            )}
+
+            {loadingDb ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {SAMPLE_PRODUCTS.map((product) => (
+                  <motion.div key={product.id} variants={staggerItem}>
+                    <ProductCard product={product} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </div>
     </Layout>
+  );
+}
+
+/** Simple card for DB products */
+function DbProductCard({ product }: { product: { id: string; title: string; description: string; price: number; category: string; image_url: string | null; created_at: string } }) {
+  const defaultImage = "/images/placeholder.webp";
+
+  return (
+    <Link to={`/product/${product.id}`} className="block">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md transition-all hover:border-primary/30 cursor-pointer"
+      >
+        {/* Image */}
+        <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
+          <img
+            src={product.image_url || defaultImage}
+            alt={product.title}
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+            loading="lazy"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = defaultImage;
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-black/20 opacity-60" />
+
+          {/* Category Badge */}
+          <div className="absolute top-3 right-3">
+            <span className="px-2 py-1 bg-black/40 backdrop-blur-md border border-white/10 text-[10px] uppercase tracking-wider text-white/90 rounded-full">
+              {product.category}
+            </span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex flex-col p-4 space-y-3">
+          <div className="flex justify-between items-start gap-2">
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold tracking-tight text-foreground/90 line-clamp-1 group-hover:text-primary transition-colors">
+                {product.title}
+              </h3>
+              <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
+                {product.description}
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="text-sm font-mono font-bold text-primary">
+                {formatCurrency(product.price)}
+              </span>
+            </div>
+          </div>
+
+          {/* Time ago */}
+          <p className="text-[10px] text-muted-foreground/60">
+            {new Date(product.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" })}
+          </p>
+        </div>
+
+        {/* Hover Glow */}
+        <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_50%_0%,rgba(255,46,126,0.1)_0%,transparent_70%)]" />
+      </motion.div>
+    </Link >
   );
 }
