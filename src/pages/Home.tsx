@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight, Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, ShoppingBag, Store } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { TrustIndicators } from "@/components/TrustIndicators";
@@ -69,10 +69,8 @@ export default function Home() {
           </div>
 
           <div className="container relative z-10 px-4 text-center">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={springPresets.smooth} className="mb-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium backdrop-blur-md">
-              <Sparkles className="w-4 h-4" />
-              <span>Seçkin ve Gizli: Yeni Koleksiyon Yayında</span>
-            </motion.div>
+
+
 
             <motion.h1 className="hero-shimmer-text text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-6 leading-tight" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.2 }}>
               Bir kadının Kirli Sepetini karıştırmaya ne dersin?
@@ -84,10 +82,22 @@ export default function Home() {
             </motion.p>
 
             <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.6 }}>
-              <Button size="lg" className="h-14 px-8 rounded-full text-lg font-semibold group" asChild>
-                <a href="#products-section">
-                  Keşfet <ChevronRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </a>
+              <Button
+                size="lg"
+                className="h-14 px-8 rounded-full text-lg font-semibold group bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 transition-all"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-register', { detail: { role: 'seller' } }))}
+              >
+                <Store className="mr-2 w-5 h-5" />
+                Satıcıyım
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 px-8 rounded-full text-lg font-semibold group border-primary/40 hover:border-primary hover:bg-primary/10 hover:shadow-[0_0_20px_var(--primary)] transition-all"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-register', { detail: { role: 'buyer' } }))}
+              >
+                <ShoppingBag className="mr-2 w-5 h-5" />
+                Alıcıyım
               </Button>
             </motion.div>
           </div>

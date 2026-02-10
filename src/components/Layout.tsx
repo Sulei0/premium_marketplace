@@ -31,6 +31,7 @@ export function Layout({ children }: LayoutProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [registerRole, setRegisterRole] = useState<'seller' | 'buyer'>('buyer');
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -43,6 +44,22 @@ export function Layout({ children }: LayoutProps) {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Listen for custom events from child components (e.g. Home hero buttons)
+  useEffect(() => {
+    const handleOpenRegister = (e: Event) => {
+      const role = (e as CustomEvent).detail?.role || 'buyer';
+      setRegisterRole(role);
+      openRegister();
+    };
+    const handleOpenLogin = () => openLogin();
+    window.addEventListener('open-register', handleOpenRegister);
+    window.addEventListener('open-login', handleOpenLogin);
+    return () => {
+      window.removeEventListener('open-register', handleOpenRegister);
+      window.removeEventListener('open-login', handleOpenLogin);
+    };
   }, []);
 
   // Close mobile menu on route change
@@ -82,7 +99,7 @@ export function Layout({ children }: LayoutProps) {
       <RegistrationModal
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
-        initialRole="buyer"
+        initialRole={registerRole}
         onSwitchToLogin={openLogin}
       />
       <AddProductModal
