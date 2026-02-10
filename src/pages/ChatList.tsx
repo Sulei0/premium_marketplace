@@ -36,7 +36,7 @@ export default function ChatList() {
     if (!user) return;
 
     async function fetchChats() {
-      // Fetch chats where user is buyer or seller
+      // Step 1: Fetch chats with products and messages (NO profile join — FK points to auth.users, not profiles)
       const { data: chatsData, error } = await supabase!
         .from('chats')
         .select(`
@@ -46,9 +46,7 @@ export default function ChatList() {
           buyer_id,
           seller_id,
           product_id,
-          products!inner(title, image_url),
-          buyer_profile:profiles!chats_buyer_id_fkey(username, avatar_url),
-          seller_profile:profiles!chats_seller_id_fkey(username, avatar_url),
+          products(title, image_url),
           messages(content, created_at, is_offer, read_at, sender_id)
         `)
         .or(`buyer_id.eq.${user!.id},seller_id.eq.${user!.id}`)
@@ -60,10 +58,36 @@ export default function ChatList() {
         return;
       }
 
-      // Process data to match ChatPreview interface
+      if (!chatsData || chatsData.length === 0) {
+        setChats([]);
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Collect all unique user IDs we need profiles for
+      const otherUserIds = new Set<string>();
+      chatsData.forEach((chat: any) => {
+        const otherId = chat.buyer_id === user!.id ? chat.seller_id : chat.buyer_id;
+        otherUserIds.add(otherId);
+      });
+
+      // Step 3: Batch-fetch all profiles at once
+      const { data: profilesData } = await supabase!
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', Array.from(otherUserIds));
+
+      // Build a lookup map: id -> profile
+      const profileMap = new Map<string, { username: string; avatar_url: string | null }>();
+      (profilesData || []).forEach((p: any) => {
+        profileMap.set(p.id, { username: p.username, avatar_url: p.avatar_url });
+      });
+
+      // Step 4: Process chats
       const processedChats: ChatPreview[] = chatsData.map((chat: any) => {
         const isBuyer = chat.buyer_id === user!.id;
-        const otherUser = isBuyer ? chat.seller_profile : chat.buyer_profile;
+        const otherUserId = isBuyer ? chat.seller_id : chat.buyer_id;
+        const otherUserProfile = profileMap.get(otherUserId) || { username: 'Kullanıcı', avatar_url: null };
 
         // Get last message
         const sortedMessages = chat.messages?.sort((a: any, b: any) =>
@@ -78,8 +102,8 @@ export default function ChatList() {
 
         return {
           id: chat.id,
-          product: chat.products,
-          other_user: otherUser,
+          product: chat.products || { title: 'Ürün', image_url: null },
+          other_user: otherUserProfile,
           last_message: lastMessage,
           unread_count: unreadCount,
         };
@@ -91,9 +115,12 @@ export default function ChatList() {
 
     fetchChats();
 
-    // Subscribe to new messages (simplified for now, ideally should use realtime)
-    const channel = supabase!.channel('public:chats')
+    // Subscribe to chat and message changes for real-time updates
+    const channel = supabase!.channel(`user-chats-${user!.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
+        fetchChats();
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
         fetchChats();
       })
       .subscribe();
