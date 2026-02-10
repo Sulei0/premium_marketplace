@@ -49,6 +49,13 @@ interface DbProduct {
   base_duration: number;
   max_duration: number;
   extras: { id: string; label: string; price: number }[];
+  seller?: {
+    username: string;
+    avatar_url: string | null;
+    is_verified: boolean;
+    rating: number;
+    whisper_count: number;
+  };
 }
 
 export default function ProductDetail() {
@@ -74,13 +81,17 @@ export default function ProductDetail() {
       return;
     }
     async function fetchProduct() {
+      // Fetch product and join with profiles table via user_id
       const { data, error } = await supabase!
         .from("products")
-        .select("*")
+        .select("*, seller:profiles!user_id(username, avatar_url, is_verified, rating, whisper_count)")
         .eq("id", id)
         .single();
+
       if (!error && data) {
-        setDbProduct(data as DbProduct);
+        // Supabase join might return array or object depending on relationship
+        const sellerData = Array.isArray(data.seller) ? data.seller[0] : data.seller;
+        setDbProduct({ ...data, seller: sellerData } as DbProduct);
       }
       setLoadingDb(false);
     }
@@ -138,6 +149,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
   onCloseEdit: () => void;
 }) {
   const navigate = useNavigate();
+  const { user } = useAuth(); // Add this line
   const baseDuration = product.base_duration || 1;
   const maxDuration = product.max_duration || 7;
   const extras = product.extras || [];
@@ -152,12 +164,78 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
   const durationExtra = (duration - 1) * PRICE_PER_DAY;
   const totalPrice = product.price + durationExtra + extrasTotal;
 
-  const handleWhisper = () => {
+
+
+  const handleWhisper = async () => {
+    if (!user) {
+      // TODO: Open login modal. For now, we rely on the header login button or redirect.
+      alert("Fısıldamak için giriş yapmalısınız.");
+      return;
+    }
+
+    if (isOwner) {
+      alert("Kendi ilanınıza fısıldayamazsınız.");
+      return;
+    }
+
     setIsWhispering(true);
-    setTimeout(() => {
+
+    try {
+      // 1. Check if chat exists
+      const { data: chatData } = await supabase!
+        .from('chats')
+        .select('id')
+        .eq('product_id', product.id)
+        .eq('buyer_id', user.id)
+        .eq('seller_id', product.user_id)
+        .maybeSingle();
+
+      let chatId = chatData?.id;
+
+      if (!chatId) {
+        // Create new chat
+        const { data: newChat, error: createError } = await supabase!
+          .from('chats')
+          .insert({
+            buyer_id: user.id,
+            seller_id: product.user_id,
+            product_id: product.id
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        chatId = newChat.id;
+      }
+
+      // 2. Send offer message
+      const offerDetails = {
+        duration,
+        extras: extras.filter(e => selectedExtras.includes(e.id)),
+        totalPrice
+      };
+
+      const { error: msgError } = await supabase!
+        .from('messages')
+        .insert({
+          chat_id: chatId,
+          sender_id: user.id,
+          content: `Merhaba, "${product.title}" için bir teklifim var.`,
+          is_offer: true,
+          offer_details: offerDetails
+        });
+
+      if (msgError) throw msgError;
+
+      // 3. Navigate to chat
+      navigate(ROUTE_PATHS.CHAT_DETAIL.replace(':id', chatId));
+
+    } catch (error) {
+      console.error("Error sending whisper:", error);
+      alert("Bir hata oluştu.");
+    } finally {
       setIsWhispering(false);
-      navigate(ROUTE_PATHS.HOME);
-    }, 800);
+    }
   };
 
   const editData: DbProductForEdit = {
@@ -224,6 +302,44 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
               variants={fadeInUp}
               className="space-y-4"
             >
+              {/* Seller Card (DB) */}
+              {product.seller && (
+                <motion.div
+                  whileHover={{ x: 4 }}
+                  onClick={() => navigate(getProfilePath(product.user_id))}
+                  className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/50 hover:border-primary/40 transition-colors cursor-pointer group mb-4"
+                >
+                  <div className="relative">
+                    <img
+                      src={product.seller.avatar_url || "/images/placeholder.webp"}
+                      alt={product.seller.username}
+                      className="w-12 h-12 rounded-full object-cover border border-border"
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/images/placeholder.webp"; }}
+                    />
+                    {product.seller.is_verified && (
+                      <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
+                        <ShieldCheck className="w-4 h-4 text-primary fill-primary/10" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold group-hover:text-primary transition-colors">
+                        {product.seller.username}
+                      </span>
+                      {product.seller.is_verified && (
+                        <span className="text-[10px] uppercase font-bold text-primary tracking-widest bg-primary/5 px-1.5 py-0.5 rounded border border-primary/20">
+                          Doğrulanmış
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {product.seller.whisper_count || 0} Fısıltı • {product.seller.rating || 0} Puan
+                    </p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </motion.div>
+              )}
               <h1 className="text-4xl font-bold tracking-tight">{product.title}</h1>
 
               <div className="text-muted-foreground leading-relaxed">

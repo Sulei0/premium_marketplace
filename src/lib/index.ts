@@ -3,6 +3,8 @@ export const ROUTE_PATHS = {
   PRODUCTS: "/products",
   PRODUCT_DETAIL: "/product/:id",
   PROFILE: "/profile/:id",
+  CHATS: "/messages",
+  CHAT_DETAIL: "/messages/:id",
 } as const;
 
 export interface User {
