@@ -20,7 +20,9 @@ import ChatDetail from "@/pages/ChatDetail";
 import Favorites from "@/pages/Favorites";
 import NotFound from "@/pages/not-found/Index";
 import AdminPanel from "@/pages/Admin";
-import { TermsOfService, PrivacyPolicy, KVKKPolicy } from "@/pages/Legal";
+import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
+import Kvkk from "@/pages/Kvkk";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,9 +57,10 @@ const App = () => {
                       <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
 
                       {/* Yasal sayfalar */}
-                      <Route path="/terms" element={<TermsOfService />} />
-                      <Route path="/privacy" element={<PrivacyPolicy />} />
-                      <Route path="/kvkk" element={<KVKKPolicy />} />
+
+                      <Route path="/terms" element={<Terms />} />
+                      <Route path="/privacy" element={<Privacy />} />
+                      <Route path="/kvkk" element={<Kvkk />} />
 
                       {/* Admin paneli */}
                       <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
