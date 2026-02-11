@@ -32,6 +32,7 @@ import { Separator } from '@/components/ui/separator';
 import { springPresets, fadeInUp } from '@/lib/motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFavorites } from '@/contexts/FavoritesContext';
 import { AddProductModal, type DbProductForEdit } from '@/components/AddProductModal';
 import { toast } from '@/hooks/use-toast';
 
@@ -45,6 +46,7 @@ interface DbProduct {
   price: number;
   category: string;
   image_url: string | null;
+  image_urls?: string[];
   is_active: boolean;
   created_at: string;
   base_duration: number;
@@ -187,10 +189,18 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
   onCloseEdit: () => void;
 }) {
   const navigate = useNavigate();
-  const { user } = useAuth(); // Add this line
+  const { user } = useAuth();
+  const { isFavorite, toggleFavorite, getFavoriteCount } = useFavorites();
   const baseDuration = product.base_duration || 1;
   const maxDuration = product.max_duration || 7;
   const extras = product.extras || [];
+
+  // Image carousel
+  const allImages = (product.image_urls?.length ? product.image_urls : product.image_url ? [product.image_url] : []);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const currentImage = allImages[activeImageIndex] || "/images/placeholder.webp";
+  const fav = isFavorite(product.id);
+  const favCount = getFavoriteCount(product.id);
 
   const [duration, setDuration] = useState(baseDuration);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
@@ -303,6 +313,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
     price: product.price,
     category: product.category,
     image_url: product.image_url,
+    image_urls: product.image_urls,
     base_duration: baseDuration,
     max_duration: maxDuration,
     extras: extras.map(e => ({ ...e, enabled: true })),
@@ -320,16 +331,51 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
       <div className="container mx-auto px-4 py-8 lg:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
 
-          {/* Sol Kolon: Görsel */}
+          {/* Sol Kolon: Görsel Carousel */}
           <div className="lg:col-span-7 space-y-4">
             <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted group">
-              <img
-                src={product.image_url || "/images/placeholder.webp"}
-                alt={product.title}
-                className="w-full h-full object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).src = "/images/placeholder.webp"; }}
-              />
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={activeImageIndex}
+                  src={currentImage}
+                  alt={product.title}
+                  className="w-full h-full object-cover"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  onError={(e) => { (e.target as HTMLImageElement).src = "/images/placeholder.webp"; }}
+                />
+              </AnimatePresence>
               <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+
+              {/* Arrow Navigation */}
+              {allImages.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setActiveImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-md text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setActiveImageIndex((prev) => (prev + 1) % allImages.length)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-md text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                  {/* Image counter */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                    {allImages.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveImageIndex(i)}
+                        className={`w-2 h-2 rounded-full transition-all ${i === activeImageIndex ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/60'}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
 
               {/* Category Badge */}
               <div className="absolute top-4 right-4">
@@ -337,6 +383,19 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                   {product.category}
                 </Badge>
               </div>
+
+              {/* Fav Button */}
+              <button
+                onClick={() => toggleFavorite(product.id)}
+                className="absolute top-4 right-4 mt-10 p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/60 transition-all"
+              >
+                <Heart className={`w-5 h-5 transition-all duration-300 ${fav ? 'text-pink-500 fill-pink-500' : 'text-white/70 hover:text-pink-400'}`} />
+                {favCount > 0 && (
+                  <span className="absolute -bottom-1 -right-1 bg-primary text-[10px] text-white font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {favCount}
+                  </span>
+                )}
+              </button>
 
               {/* Owner Edit Badge */}
               {isOwner && (
@@ -349,6 +408,21 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                 </button>
               )}
             </div>
+
+            {/* Thumbnail Strip */}
+            {allImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {allImages.map((url, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveImageIndex(i)}
+                    className={`relative w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${i === activeImageIndex ? 'border-primary ring-2 ring-primary/30' : 'border-white/10 hover:border-white/30'}`}
+                  >
+                    <img src={url} alt={`Görsel ${i + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Sağ Kolon: Detaylar */}

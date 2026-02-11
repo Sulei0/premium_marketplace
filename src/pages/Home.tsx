@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, Loader2, ShoppingBag, Store } from "lucide-react";
+import { Sparkles, Loader2, ShoppingBag, Store, Heart } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { IMAGES } from "@/assets/images";
 import { springPresets, staggerItem } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/index";
+import { useFavorites } from "@/contexts/FavoritesContext";
 
 /** DB product row shape */
 interface DbProduct {
@@ -102,16 +103,22 @@ export default function Home() {
         </section>
 
         {/* DB Products Section */}
-        {dbProducts.length > 0 && (
-          <section id="products-section" className="py-24 bg-background relative">
-            <div className="container px-4">
-              <div className="flex items-center justify-between mb-12">
-                <div>
-                  <h2 className="text-3xl font-bold tracking-tight">Yeni İlanlar</h2>
-                  <p className="text-muted-foreground mt-2">Kullanıcılarımızın eklediği en yeni ürünler</p>
-                </div>
-                <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
+        <section id="products-section" className="py-24 bg-background relative">
+          <div className="container px-4">
+            <div className="flex items-center justify-between mb-12">
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight">Koleksiyonu Keşfet</h2>
+                <p className="text-muted-foreground mt-2">Kullanıcılarımızın eklediği en yeni ürünler</p>
               </div>
+              <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
+            </div>
+
+            {loadingDb ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+                <p className="text-muted-foreground text-sm">Ürünler yükleniyor...</p>
+              </div>
+            ) : dbProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {dbProducts.map((product) => (
                   <motion.div key={product.id} variants={staggerItem}>
@@ -119,9 +126,32 @@ export default function Home() {
                   </motion.div>
                 ))}
               </div>
-            </div>
-          </section>
-        )}
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="flex flex-col items-center justify-center py-20 text-center"
+              >
+                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <Sparkles className="w-10 h-10 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-400">
+                  Henüz ürün eklenmedi
+                </h3>
+                <p className="text-muted-foreground max-w-md mb-6 leading-relaxed">
+                  Koleksiyonumuz şu an boş görünüyor. İlk ilanı sen ver, vitrini sen aç! ✨
+                </p>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-register', { detail: { role: 'seller' } }))}
+                  className="px-8 py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-semibold rounded-full shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 transition-all transform hover:scale-105 active:scale-95"
+                >
+                  İlk İlanı Ver 🚀
+                </button>
+              </motion.div>
+            )}
+          </div>
+        </section>
 
 
       </div>
@@ -132,16 +162,13 @@ export default function Home() {
 /** Simple card for DB products */
 function DbProductCard({ product }: { product: { id: string; title: string; description: string; price: number; category: string; image_url: string | null; created_at: string } }) {
   const defaultImage = "/images/placeholder.webp";
+  const { isFavorite, toggleFavorite, getFavoriteCount } = useFavorites();
+  const fav = isFavorite(product.id);
+  const count = getFavoriteCount(product.id);
 
   return (
-    <Link to={`/product/${product.id}`} className="block">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md transition-all hover:border-primary/30 cursor-pointer"
-      >
+    <div className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md transition-all hover:border-primary/30 cursor-pointer">
+      <Link to={`/product/${product.id}`} className="block">
         {/* Image */}
         <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
           <img
@@ -186,10 +213,23 @@ function DbProductCard({ product }: { product: { id: string; title: string; desc
             {new Date(product.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" })}
           </p>
         </div>
+      </Link>
 
-        {/* Hover Glow */}
-        <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_50%_0%,rgba(255,46,126,0.1)_0%,transparent_70%)]" />
-      </motion.div>
-    </Link >
+      {/* Fav Button */}
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(product.id); }}
+        className="absolute top-3 left-3 z-10 p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/60 transition-all group/fav"
+      >
+        <Heart className={`w-4 h-4 transition-all duration-300 ${fav ? 'text-pink-500 fill-pink-500 scale-110' : 'text-white/70 hover:text-pink-400'}`} />
+        {count > 0 && (
+          <span className="absolute -bottom-1 -right-1 bg-primary text-[9px] text-white font-bold rounded-full w-4 h-4 flex items-center justify-center">
+            {count}
+          </span>
+        )}
+      </button>
+
+      {/* Hover Glow */}
+      <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_50%_0%,rgba(255,46,126,0.1)_0%,transparent_70%)]" />
+    </div>
   );
 }

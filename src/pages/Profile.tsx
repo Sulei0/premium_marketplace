@@ -20,6 +20,7 @@ import { ROUTE_PATHS, cn, formatCurrency } from "@/lib/index";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { ReviewForm, ReviewList } from "@/components/Reviews";
 
 interface DbProduct {
   id: string;
@@ -277,6 +278,7 @@ function MyProductCard({ product }: { product: DbProduct }) {
 
 /** Seller profile — fetches real data from Supabase */
 function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
+  const { user } = useAuth();
   const [sellerProfile, setSellerProfile] = useState<{ username: string; role: string; created_at: string } | null>(null);
   const [sellerProducts, setSellerProducts] = useState<DbProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -501,6 +503,26 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
                 </div>
               )}
             </motion.div>
+
+            {/* Reviews Section */}
+            {sellerId && (
+              <div className="mt-12 space-y-8">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold">
+                    Değerlendirmeler
+                  </h2>
+                  <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
+                </div>
+
+                {/* Review Form — only for logged-in users who are not the seller */}
+                {user && user.id !== sellerId && (
+                  <ReviewForm sellerId={sellerId} />
+                )}
+
+                {/* Review List */}
+                <ReviewList sellerId={sellerId} />
+              </div>
+            )}
           </div>
         </div>
       </div>

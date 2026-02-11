@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { X, Upload, ImagePlus, Loader2, Check } from "lucide-react";
+import { X, Upload, ImagePlus, Loader2, Check, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/index";
@@ -20,6 +20,7 @@ export interface DbProductForEdit {
     price: number;
     category: string;
     image_url: string | null;
+    image_urls?: string[];
     base_duration: number;
     max_duration: number;
     extras: ExtraItem[];
@@ -44,6 +45,7 @@ const DEFAULT_EXTRAS: ExtraItem[] = [
 ];
 
 const PRICE_PER_DAY = 15; // ₺15/gün süre ek ücreti
+const MAX_IMAGES = 5;
 
 export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModalProps) {
     const { user } = useAuth();
@@ -58,8 +60,18 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
     const [extras, setExtras] = useState<ExtraItem[]>(
         editProduct?.extras?.length ? editProduct.extras : DEFAULT_EXTRAS.map(e => ({ ...e }))
     );
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(editProduct?.image_url ?? null);
+
+    // Multi-image state
+    const [imageFiles, setImageFiles] = useState<File[]>([]);
+    const [imagePreviews, setImagePreviews] = useState<string[]>(
+        editProduct?.image_urls?.length ? editProduct.image_urls :
+            editProduct?.image_url ? [editProduct.image_url] : []
+    );
+    const [existingUrls, setExistingUrls] = useState<string[]>(
+        editProduct?.image_urls?.length ? editProduct.image_urls :
+            editProduct?.image_url ? [editProduct.image_url] : []
+    );
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
@@ -76,13 +88,45 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
 
     if (!isOpen) return null;
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setImageFile(file);
-        const reader = new FileReader();
-        reader.onloadend = () => setImagePreview(reader.result as string);
-        reader.readAsDataURL(file);
+    const totalImages = imagePreviews.length;
+    const canAddMore = totalImages < MAX_IMAGES;
+
+    const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+
+        const slotsLeft = MAX_IMAGES - totalImages;
+        const filesToAdd = files.slice(0, slotsLeft);
+
+        const newFiles = [...imageFiles, ...filesToAdd];
+        setImageFiles(newFiles);
+
+        filesToAdd.forEach(file => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreviews(prev => [...prev, reader.result as string]);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Reset input
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
+    const removeImage = (index: number) => {
+        const preview = imagePreviews[index];
+        const isExisting = existingUrls.includes(preview);
+
+        setImagePreviews(prev => prev.filter((_, i) => i !== index));
+
+        if (isExisting) {
+            setExistingUrls(prev => prev.filter(url => url !== preview));
+        } else {
+            // Calculate which new file to remove
+            const existingCount = existingUrls.filter(url => imagePreviews.indexOf(url) < index).length;
+            const fileIndex = index - existingCount;
+            setImageFiles(prev => prev.filter((_, i) => i !== fileIndex));
+        }
     };
 
     const toggleExtra = (id: string) => {
@@ -98,8 +142,9 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
             setBaseDuration(1);
             setMaxDuration(7);
             setExtras(DEFAULT_EXTRAS.map(e => ({ ...e })));
-            setImageFile(null);
-            setImagePreview(null);
+            setImageFiles([]);
+            setImagePreviews([]);
+            setExistingUrls([]);
             setPreviewDuration(1);
         }
         setError(null);
@@ -122,18 +167,18 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
         setError(null);
 
         try {
-            let imageUrl: string | null = editProduct?.image_url ?? null;
+            // Upload new image files
+            const uploadedUrls: string[] = [...existingUrls];
 
-            // Upload image if a new file is selected
-            if (imageFile) {
-                const fileExt = imageFile.name.split(".").pop();
-                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+            for (const file of imageFiles) {
+                const fileExt = file.name.split(".").pop();
+                const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
                 const { error: uploadError } = await supabase.storage
                     .from("product-images")
-                    .upload(fileName, imageFile);
+                    .upload(fileName, file);
                 if (uploadError) throw new Error("Görsel yüklenemedi: " + uploadError.message);
                 const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(fileName);
-                imageUrl = urlData.publicUrl;
+                uploadedUrls.push(urlData.publicUrl);
             }
 
             const productData = {
@@ -141,7 +186,8 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                 description,
                 price: basePriceNum,
                 category,
-                image_url: imageUrl,
+                image_url: uploadedUrls[0] || null, // backward compat
+                image_urls: uploadedUrls,
                 base_duration: baseDuration,
                 max_duration: maxDuration,
                 extras: extras.filter(e => e.enabled).map(({ id, label, price }) => ({ id, label, price })),
@@ -215,35 +261,66 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                 </div>
                             )}
 
-                            {/* Image Upload */}
+                            {/* Multi-Image Upload */}
                             <div className="space-y-1.5">
-                                <label className="text-xs text-gray-400 ml-1">Ürün Görseli</label>
-                                <div
-                                    className="relative border-2 border-dashed border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-pink-500/40 transition-colors group"
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    {imagePreview ? (
-                                        <div className="relative aspect-video">
-                                            <img src={imagePreview} alt="Önizleme" className="w-full h-full object-cover" />
-                                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <p className="text-white text-sm font-medium">Görseli Değiştir</p>
-                                            </div>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs text-gray-400 ml-1">Ürün Görselleri</label>
+                                    <span className="text-[10px] text-gray-500 font-mono">{totalImages}/{MAX_IMAGES}</span>
+                                </div>
+
+                                {/* Image Preview Grid */}
+                                <div className="grid grid-cols-5 gap-2">
+                                    {imagePreviews.map((preview, index) => (
+                                        <div key={index} className="relative aspect-square rounded-lg overflow-hidden group border border-white/10">
+                                            <img src={preview} alt={`Görsel ${index + 1}`} className="w-full h-full object-cover" />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeImage(index)}
+                                                className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <Trash2 className="w-4 h-4 text-red-400" />
+                                            </button>
+                                            {index === 0 && (
+                                                <span className="absolute bottom-1 left-1 text-[8px] bg-pink-500 text-white px-1.5 py-0.5 rounded-full font-bold">
+                                                    KAPAK
+                                                </span>
+                                            )}
                                         </div>
-                                    ) : (
+                                    ))}
+
+                                    {/* Add More Button */}
+                                    {canAddMore && (
+                                        <div
+                                            className="aspect-square border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-pink-500/40 transition-colors"
+                                            onClick={() => fileInputRef.current?.click()}
+                                        >
+                                            <ImagePlus className="w-5 h-5 text-gray-600 mb-1" />
+                                            <span className="text-[9px] text-gray-500">Ekle</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {totalImages === 0 && (
+                                    <div
+                                        className="border-2 border-dashed border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-pink-500/40 transition-colors group"
+                                        onClick={() => fileInputRef.current?.click()}
+                                    >
                                         <div className="flex flex-col items-center justify-center py-8 text-gray-500">
                                             <ImagePlus className="w-10 h-10 mb-3 text-gray-600" />
                                             <p className="text-sm font-medium text-gray-400">Tıklayarak görsel yükle</p>
-                                            <p className="text-xs text-gray-600 mt-1">JPG, PNG, WEBP (Maks. 5MB)</p>
+                                            <p className="text-xs text-gray-600 mt-1">JPG, PNG, WEBP (Maks. 5 görsel)</p>
                                         </div>
-                                    )}
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="image/jpeg,image/png,image/webp"
-                                        className="hidden"
-                                        onChange={handleImageChange}
-                                    />
-                                </div>
+                                    </div>
+                                )}
+
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    multiple
+                                    className="hidden"
+                                    onChange={handleImagesChange}
+                                />
                             </div>
 
                             {/* Title + Category Row */}
@@ -409,14 +486,14 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                             key={extra.id}
                                             onClick={() => toggleExtra(extra.id)}
                                             className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${extra.enabled
-                                                    ? "bg-purple-500/10 border-purple-500/30"
-                                                    : "bg-white/[0.02] border-white/5 hover:border-white/10"
+                                                ? "bg-purple-500/10 border-purple-500/30"
+                                                : "bg-white/[0.02] border-white/5 hover:border-white/10"
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${extra.enabled
-                                                        ? "bg-purple-500 border-purple-500"
-                                                        : "border-gray-600"
+                                                    ? "bg-purple-500 border-purple-500"
+                                                    : "border-gray-600"
                                                     }`}>
                                                     {extra.enabled && <Check className="w-3 h-3 text-white" />}
                                                 </div>

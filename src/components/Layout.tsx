@@ -12,14 +12,18 @@ import {
   Search,
   ChevronRight,
   Plus,
-  LogOut
+  LogOut,
+  Sun,
+  Moon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ROUTE_PATHS, cn } from "@/lib/index";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { LoginModal } from "@/components/LoginModal";
 import { RegistrationModal } from "@/components/RegistrationModal";
 import { AddProductModal } from "@/components/AddProductModal";
+import { NotificationsPanel } from "@/components/NotificationsPanel";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -35,6 +39,7 @@ export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -80,9 +85,24 @@ export function Layout({ children }: LayoutProps) {
     setTimeout(() => setIsRegisterOpen(true), 50);
   };
 
-  const navLinks = [
+  const scrollToProducts = () => {
+    if (location.pathname === "/" || location.pathname === ROUTE_PATHS.HOME) {
+      const el = document.getElementById("products-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      navigate("/");
+      setTimeout(() => {
+        const el = document.getElementById("products-section");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 500);
+    }
+  };
+
+  const navLinks: { name: string; path: string | null; action?: () => void }[] = [
     { name: "Keşfet", path: ROUTE_PATHS.PRODUCTS },
-    { name: "En Yeniler", path: ROUTE_PATHS.PRODUCTS },
+    { name: "En Yeniler", path: null, action: scrollToProducts },
     { name: "Koleksiyonlar", path: ROUTE_PATHS.PRODUCTS },
   ];
 
@@ -125,24 +145,43 @@ export function Layout({ children }: LayoutProps) {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.name}
-                to={link.path}
-                className={({ isActive }) =>
-                  cn(
-                    "text-sm font-medium transition-colors hover:text-primary",
-                    isActive ? "text-primary" : "text-muted-foreground"
-                  )
-                }
-              >
-                {link.name}
-              </NavLink>
-            ))}
+            {navLinks.map((link) =>
+              link.action ? (
+                <button
+                  key={link.name}
+                  onClick={link.action}
+                  className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground cursor-pointer bg-transparent border-none"
+                >
+                  {link.name}
+                </button>
+              ) : (
+                <NavLink
+                  key={link.name}
+                  to={link.path!}
+                  className={({ isActive }) =>
+                    cn(
+                      "text-sm font-medium transition-colors hover:text-primary",
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    )
+                  }
+                >
+                  {link.name}
+                </NavLink>
+              )
+            )}
           </nav>
 
           {/* Actions */}
           <div className="flex items-center space-x-3 sm:space-x-4">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+              title={theme === 'dark' ? 'Aydınlık Mod' : 'Karanlık Mod'}
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+
             {/* Search */}
             <button className="text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
               <Search className="w-5 h-5" />
@@ -157,6 +196,20 @@ export function Layout({ children }: LayoutProps) {
                   title="Sohbetlerim"
                 >
                   <MessageSquare className="w-5 h-5" />
+                </Link>
+
+                {/* Bildirimler */}
+                <div className="hidden sm:block">
+                  <NotificationsPanel />
+                </div>
+
+                {/* Favorilerim */}
+                <Link
+                  to="/favorites"
+                  className="relative text-muted-foreground hover:text-pink-500 transition-colors hidden sm:block"
+                  title="Favorilerim"
+                >
+                  <Heart className="w-5 h-5" />
                 </Link>
 
                 {/* Ürün Sat Button */}
@@ -228,16 +281,27 @@ export function Layout({ children }: LayoutProps) {
             className="fixed inset-0 z-40 bg-background md:hidden pt-24 px-6 overflow-y-auto"
           >
             <nav className="flex flex-col space-y-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  className="text-2xl font-semibold border-b border-border pb-4 flex justify-between items-center group"
-                >
-                  {link.name}
-                  <ChevronRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-all" />
-                </Link>
-              ))}
+              {navLinks.map((link) =>
+                link.action ? (
+                  <button
+                    key={link.name}
+                    onClick={() => { setIsMenuOpen(false); link.action!(); }}
+                    className="text-2xl font-semibold border-b border-border pb-4 flex justify-between items-center group text-left bg-transparent cursor-pointer w-full"
+                  >
+                    {link.name}
+                    <ChevronRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-all" />
+                  </button>
+                ) : (
+                  <Link
+                    key={link.name}
+                    to={link.path!}
+                    className="text-2xl font-semibold border-b border-border pb-4 flex justify-between items-center group"
+                  >
+                    {link.name}
+                    <ChevronRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-all" />
+                  </Link>
+                )
+              )}
 
               {/* Mobile Auth Actions */}
               <div className="pt-4 flex flex-col space-y-3">
@@ -249,6 +313,13 @@ export function Layout({ children }: LayoutProps) {
                     >
                       <MessageSquare className="w-5 h-5" />
                       Sohbetlerim
+                    </Link>
+                    <Link
+                      to="/favorites"
+                      className="flex items-center gap-3 py-3 text-lg text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Heart className="w-5 h-5" />
+                      Favorilerim
                     </Link>
                     <button
                       onClick={() => { setIsMenuOpen(false); setIsAddProductOpen(true); }}
