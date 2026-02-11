@@ -6,6 +6,8 @@ import { Layout } from "@/components/Layout";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/index";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { usePageMeta } from "@/hooks/usePageMeta";
+import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 
 interface DbProduct {
   id: string;
@@ -27,6 +29,8 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<typeof CATEGORIES[number]>("Tümü");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  usePageMeta("Koleksiyon", "Giyenden'de en yeni ürünleri keşfet. Güvenli ve gizli alışveriş.");
 
   useEffect(() => {
     async function fetchProducts() {
@@ -260,14 +264,11 @@ function DbProductCard({ product }: { product: DbProduct }) {
       <Link to={`/product/${product.id}`} className="block">
         {/* Image */}
         <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
-          <img
+          <ImageWithSkeleton
             src={product.image_url || defaultImage}
             alt={product.title}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-            loading="lazy"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = defaultImage;
-            }}
+            fallbackSrc={defaultImage}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-black/20 opacity-60" />
 

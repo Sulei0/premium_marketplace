@@ -444,10 +444,9 @@ export function Layout({ children }: LayoutProps) {
             <div>
               <h4 className="font-bold mb-6 text-sm uppercase tracking-widest">Kurumsal</h4>
               <ul className="space-y-4 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-primary">Hakkımızda</a></li>
-                <li><a href="#" className="hover:text-primary">Gizlilik Politikası</a></li>
-                <li><a href="#" className="hover:text-primary">Kullanım Koşulları</a></li>
-                <li><a href="#" className="hover:text-primary">Satış Sözleşmesi</a></li>
+                <li><Link to="/terms" className="hover:text-primary">Kullanıcı Sözleşmesi</Link></li>
+                <li><Link to="/privacy" className="hover:text-primary">Gizlilik Politikası</Link></li>
+                <li><Link to="/kvkk" className="hover:text-primary">KVKK Aydınlatma Metni</Link></li>
               </ul>
             </div>
 

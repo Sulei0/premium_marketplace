@@ -228,3 +228,14 @@
   animation: shimmer-flow 6s ease-in-out infinite;
   filter: drop-shadow(0 0 12px oklch(0.5 0.2 330 / 0.4)) drop-shadow(0 1px 3px oklch(0 0 0 / 0.5));
 }
+
+/* Skeleton shimmer for image loading placeholders */
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.skeleton-shimmer {
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+

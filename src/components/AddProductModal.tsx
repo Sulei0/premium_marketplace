@@ -3,6 +3,15 @@ import { X, Upload, ImagePlus, Loader2, Check, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/index";
+import {
+    sanitizeText,
+    validateTitle,
+    validateDescription,
+    validatePrice,
+    validateImageFile,
+    MAX_TITLE_LENGTH,
+    MAX_DESCRIPTION_LENGTH,
+} from "@/lib/sanitize";
 
 interface AddProductModalProps {
     isOpen: boolean;
@@ -98,10 +107,23 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
         const slotsLeft = MAX_IMAGES - totalImages;
         const filesToAdd = files.slice(0, slotsLeft);
 
-        const newFiles = [...imageFiles, ...filesToAdd];
-        setImageFiles(newFiles);
+        // Güvenlik: Her dosyayı doğrula (tip, boyut, uzantı)
+        const validFiles: File[] = [];
+        for (const file of filesToAdd) {
+            const result = validateImageFile(file);
+            if (!result.valid) {
+                setError(result.error || "Geçersiz dosya.");
+                if (fileInputRef.current) fileInputRef.current.value = "";
+                return;
+            }
+            validFiles.push(file);
+        }
 
-        filesToAdd.forEach(file => {
+        const newFiles = [...imageFiles, ...validFiles];
+        setImageFiles(newFiles);
+        setError(null);
+
+        validFiles.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImagePreviews(prev => [...prev, reader.result as string]);
@@ -163,6 +185,20 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
             return;
         }
 
+        // ── Güvenlik: Input Validation ──
+        const titleResult = validateTitle(title);
+        if (!titleResult.valid) { setError(titleResult.error!); return; }
+
+        const descResult = validateDescription(description);
+        if (!descResult.valid) { setError(descResult.error!); return; }
+
+        const priceResult = validatePrice(basePrice);
+        if (!priceResult.valid) { setError(priceResult.error!); return; }
+
+        // Sanitize text inputs
+        const cleanTitle = sanitizeText(title);
+        const cleanDescription = sanitizeText(description);
+
         setLoading(true);
         setError(null);
 
@@ -171,6 +207,10 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
             const uploadedUrls: string[] = [...existingUrls];
 
             for (const file of imageFiles) {
+                // Güvenlik: Upload öncesi son kontrol
+                const fileCheck = validateImageFile(file);
+                if (!fileCheck.valid) throw new Error(fileCheck.error);
+
                 const fileExt = file.name.split(".").pop();
                 const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
                 const { error: uploadError } = await supabase.storage
@@ -182,8 +222,8 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
             }
 
             const productData = {
-                title,
-                description,
+                title: cleanTitle,
+                description: cleanDescription,
                 price: basePriceNum,
                 category,
                 image_url: uploadedUrls[0] || null, // backward compat
@@ -332,11 +372,13 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                     <input
                                         type="text"
                                         required
+                                        maxLength={MAX_TITLE_LENGTH}
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
                                         placeholder="Örn: Gece Yarısı Danteli"
                                     />
+                                    <span className="text-[10px] text-gray-600 ml-1">{title.length}/{MAX_TITLE_LENGTH}</span>
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs text-gray-400 ml-1">Kategori</label>
@@ -361,9 +403,20 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                     type="number"
                                     required
                                     min="1"
+                                    max="1000000"
                                     step="0.01"
                                     value={basePrice}
-                                    onChange={(e) => setBasePrice(e.target.value)}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        // Negatif değer girişini engelle
+                                        if (val === "" || parseFloat(val) >= 0) {
+                                            setBasePrice(val);
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        // Eksi işareti girişini engelle
+                                        if (e.key === "-" || e.key === "e") e.preventDefault();
+                                    }}
                                     className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
                                     placeholder="0.00"
                                 />
@@ -377,11 +430,13 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                 <textarea
                                     required
                                     rows={3}
+                                    maxLength={MAX_DESCRIPTION_LENGTH}
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors resize-none"
                                     placeholder="Ürününün hikayesini anlat..."
                                 />
+                                <span className="text-[10px] text-gray-600 ml-1">{description.length}/{MAX_DESCRIPTION_LENGTH}</span>
                             </div>
 
                             {/* Duration Range Selector */}

@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -68,6 +69,11 @@ export default function ProductDetail() {
   const [loadingDb, setLoadingDb] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
+  usePageMeta(
+    dbProduct ? dbProduct.title : undefined,
+    dbProduct ? dbProduct.description?.substring(0, 160) : undefined
+  );
+
   useEffect(() => {
     if (!supabase || !id) {
       setLoadingDb(false);
@@ -97,14 +103,14 @@ export default function ProductDetail() {
         .maybeSingle();
 
       if (profileFetchError) {
-        console.warn("Seller profile fetch error:", profileFetchError);
+        // Profile fetch failed silently
       }
 
       if (profileResult) {
         sellerData = profileResult;
       } else {
         // Profile doesn't exist — try to auto-create it
-        console.warn("Profile not found for user_id:", productData.user_id, "— attempting to create...");
+        // Profile not found — attempting auto-creation
 
         const { error: upsertError } = await supabase!
           .from("profiles")
@@ -115,7 +121,7 @@ export default function ProductDetail() {
           }, { onConflict: "id" });
 
         if (upsertError) {
-          console.warn("Could not auto-create profile:", upsertError);
+          // Auto-create failed silently
         } else {
           // Re-fetch after creation
           const { data: newProfile } = await supabase!
@@ -130,8 +136,7 @@ export default function ProductDetail() {
         }
       }
 
-      console.log('Product user_id:', productData.user_id);
-      console.log('Seller data:', sellerData);
+
 
       // Always provide seller info — fallback to defaults if profile still not found
       const sellerInfo = sellerData || { username: 'Satıcı', role: 'seller' };
@@ -244,7 +249,6 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
         .maybeSingle();
 
       if (fetchError) {
-        console.error("Error checking for existing chat:", fetchError);
         toast({ title: "Hata", description: "Sohbet kontrolü başarısız. Lütfen tekrar deneyin.", variant: "destructive" });
         throw fetchError;
       }
@@ -263,7 +267,6 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
           .single();
 
         if (createError) {
-          console.error('Chat creation error:', createError);
           toast({ title: "Hata", description: `Sohbet oluşturulamadı: ${createError.message}`, variant: "destructive" });
           throw createError;
         }
@@ -290,7 +293,6 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
         });
 
       if (msgError) {
-        console.error('Message send error:', msgError);
         toast({ title: "Hata", description: `Mesaj gönderilemedi: ${msgError.message}`, variant: "destructive" });
         throw msgError;
       }
@@ -299,7 +301,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
       navigate(ROUTE_PATHS.CHAT_DETAIL.replace(':id', chatId));
 
     } catch (error: any) {
-      console.error("Error sending whisper:", error);
+      // Error already handled via toast notifications
     } finally {
       setIsWhispering(false);
     }

@@ -8,6 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import { MessageSquare, Clock, ArrowRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 interface ChatPreview {
   id: string;
@@ -32,6 +33,8 @@ export default function ChatList() {
   const [chats, setChats] = useState<ChatPreview[]>([]);
   const [loading, setLoading] = useState(true);
 
+  usePageMeta("Fısıltılarım", "Sohbetleriniz ve teklifleriniz");
+
   useEffect(() => {
     if (!user) return;
 
@@ -53,7 +56,6 @@ export default function ChatList() {
         .order('updated_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching chats:', error);
         setLoading(false);
         return;
       }

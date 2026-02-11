@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/index";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { usePageMeta } from "@/hooks/usePageMeta";
+import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 
 /** DB product row shape */
 interface DbProduct {
@@ -26,6 +28,8 @@ interface DbProduct {
 export default function Home() {
   const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
   const [loadingDb, setLoadingDb] = useState(true);
+
+  usePageMeta(undefined, "Türkiye'nin ilk premium C2C pazar yeri. Güvenli, gizli ve özel alışveriş deneyimi.");
 
   // Fetch products from Supabase
   useEffect(() => {
@@ -171,14 +175,11 @@ function DbProductCard({ product }: { product: { id: string; title: string; desc
       <Link to={`/product/${product.id}`} className="block">
         {/* Image */}
         <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
-          <img
+          <ImageWithSkeleton
             src={product.image_url || defaultImage}
             alt={product.title}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-            loading="lazy"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = defaultImage;
-            }}
+            fallbackSrc={defaultImage}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-black/20 opacity-60" />
 
