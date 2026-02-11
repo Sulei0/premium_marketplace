@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Sparkles, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,8 +42,9 @@ export default function Favorites() {
                     .order("created_at", { ascending: false });
 
                 if (data) setProducts(data);
-            } catch {
-                // silent
+            } catch (error) {
+                console.error("Favoriler yüklenirken hata:", error);
+                toast.error("Favoriler yüklenirken bir sorun oluştu.");
             } finally {
                 setLoading(false);
             }

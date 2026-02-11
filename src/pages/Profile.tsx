@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -43,7 +43,6 @@ interface DbProduct {
  */
 export default function Profile() {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
 
   // If /profile/me, show the logged-in user's own profile
   if (id === "me") {
@@ -58,55 +57,87 @@ export default function Profile() {
 function MyProfile() {
   const { user } = useAuth();
   const [myProducts, setMyProducts] = useState<DbProduct[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  // Local state for immediate UI updates
   const [username, setUsername] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // 1. Initial Load from Auth
   useEffect(() => {
     if (user) {
       setUsername(user.user_metadata?.username || user.email?.split("@")[0] || "Kullanıcı");
+      // Use existing metadata mainly for initial render
+      setAvatarUrl(user.user_metadata?.avatar_url || null);
     }
   }, [user]);
 
-  // Fetch my products from DB
+  // 2. Refresh from Database (The Truth)
   useEffect(() => {
-    async function fetchMyProducts() {
+    async function fetchFreshData() {
       if (!supabase || !user) {
-        setLoadingProducts(false);
+        setLoading(false);
         return;
       }
       try {
-        const { data, error } = await supabase
+        // A. Profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username, avatar_url")
+          .eq("id", user.id)
+          .maybeSingle(); // Use maybeSingle to avoid errors if profile missing
+
+        if (profile) {
+          if (profile.username) setUsername(profile.username);
+          // If DB has an avatar, use it. Append time to force refresh if it's the same URL but content changed.
+          if (profile.avatar_url) {
+            setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
+          }
+        }
+
+        // B. Products
+        const { data: products } = await supabase
           .from("products")
           .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
-        if (!error && data) {
-          setMyProducts(data as DbProduct[]);
+        if (products) {
+          setMyProducts(products as DbProduct[]);
         }
-      } catch {
-        // silently fail
+      } catch (err) {
+        console.error("Data fetch error", err);
       } finally {
-        setLoadingProducts(false);
+        setLoading(false);
       }
     }
-    fetchMyProducts();
+    fetchFreshData();
   }, [user]);
 
   const handleSaveUsername = async () => {
     if (!supabase || !user) return;
     setSaving(true);
     try {
-      await supabase.auth.updateUser({
-        data: { username },
-      });
-    } catch {
-      // silently fail
+      // 1. Update DB
+      const { error } = await supabase
+        .from('profiles')
+        .update({ username })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // 2. Update Auth
+      await supabase.auth.updateUser({ data: { username } });
+
+      toast.success("Kullanıcı adı güncellendi");
+      setEditing(false);
+    } catch (error: any) {
+      toast.error("Hata: " + error.message);
     } finally {
       setSaving(false);
-      setEditing(false);
     }
   };
 
@@ -115,62 +146,66 @@ function MyProfile() {
     const file = e.target.files?.[0];
     if (!file || !supabase || !user) return;
 
-    // Validate
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Dosya boyutu 2MB'dan büyük olamaz.");
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      toast.error(validation.error || "Geçersiz dosya.");
       return;
     }
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      // Create a unique filename to avoid strict RLS collisions on overwrite if policy is tight
+      // or just to be clean.
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${user.id}/avatar_${Date.now()}.${fileExt}`;
 
       // Upload
       const { error: uploadError } = await supabase.storage
-        .from('avatars') // Make sure this bucket exists or use 'product-images' if we want to reuse
-        .upload(fileName, file);
+        .from('avatars')
+        .upload(fileName, file, {
+          contentType: file.type,
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      const publicUrl = urlData.publicUrl;
 
-      // Update profile
+      // 1. Update DB
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: urlData.publicUrl })
+        .update({ avatar_url: publicUrl })
         .eq('id', user.id);
 
       if (updateError) throw updateError;
 
-      // Reload page to show new avatar (or could update local state)
-      window.location.reload();
+      // 2. Update Auth Metadata
+      await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl }
+      });
+
+      // 3. Force UI Update with Timestamp to bust cache
+      const uniqueUrl = `${publicUrl}?t=${Date.now()}`;
+      setAvatarUrl(uniqueUrl);
+
+      toast.success("Profil fotoğrafı güncellendi!");
 
     } catch (error: any) {
-      alert("Profil fotoğrafı yüklenemedi: " + error.message);
+      console.error(error);
+      toast.error("Yükleme hatası: " + (error.message || "Bilinmeyen hata"));
     }
   };
 
-  // Account Deletion
   const handleDeleteAccount = async () => {
     if (!supabase || !user) return;
-
-    if (!window.confirm("Hesabınızı kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) {
-      return;
-    }
-
-    if (!window.confirm("SON UYARI: Hesabınız ve tüm verileriniz silinecek. Onaylıyor musunuz?")) {
-      return;
-    }
-
+    if (!window.confirm("Hesabınızı kalıcı olarak silmek istediğinize emin misiniz?")) return;
     try {
       setSaving(true);
-      const { error } = await supabase.rpc('delete_account');
-      if (error) throw error;
-
+      await supabase.rpc('delete_account');
       await supabase.auth.signOut();
       window.location.href = "/";
     } catch (error: any) {
-      alert("Hesap silinirken hata oluştu: " + error.message);
+      toast.error("Hata: " + error.message);
       setSaving(false);
     }
   };
@@ -181,10 +216,7 @@ function MyProfile() {
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
           <div className="text-6xl mb-6">🔒</div>
           <h2 className="text-2xl font-bold mb-3">Giriş Yapmanız Gerekiyor</h2>
-          <p className="text-muted-foreground mb-6">Profilinizi görmek için lütfen giriş yapın.</p>
-          <Link to={ROUTE_PATHS.HOME} className="text-primary hover:underline font-medium">
-            Ana Sayfaya Dön
-          </Link>
+          <Link to={ROUTE_PATHS.HOME} className="text-primary hover:underline font-medium">Ana Sayfaya Dön</Link>
         </div>
       </Layout>
     );
@@ -192,6 +224,7 @@ function MyProfile() {
 
   const role = user.user_metadata?.role || "buyer";
   const joinDate = user.created_at ? new Date(user.created_at) : new Date();
+  const firstLetter = username.charAt(0).toUpperCase();
 
   return (
     <Layout>
@@ -207,13 +240,16 @@ function MyProfile() {
             <div className="relative group cursor-pointer">
               <label htmlFor="avatar-upload" className="cursor-pointer block">
                 <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-transparent group-hover:border-primary/50 transition-all shadow-lg shadow-primary/20">
-                  {user.user_metadata?.avatar_url || (myProducts[0]?.image_url && false) ? (
-                    <img src={user.user_metadata?.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      key={avatarUrl} // Key change forces React to re-mount the img
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <span className="text-4xl font-bold text-white">{username.charAt(0).toUpperCase()}</span>
+                    <span className="text-4xl font-bold text-white">{firstLetter}</span>
                   )}
-
-                  {/* Overlay */}
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Edit3 className="w-6 h-6 text-white" />
                   </div>
@@ -226,9 +262,6 @@ function MyProfile() {
                 className="hidden"
                 onChange={handleAvatarUpload}
               />
-              <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
-                <div className="w-4 h-4 rounded-full bg-green-500 animate-pulse" />
-              </div>
             </div>
 
             {/* Info */}
@@ -242,30 +275,13 @@ function MyProfile() {
                       onChange={(e) => setUsername(e.target.value)}
                       className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xl font-bold text-foreground focus:border-pink-500 focus:outline-none"
                     />
-                    <button
-                      onClick={handleSaveUsername}
-                      disabled={saving}
-                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-                    >
-                      {saving ? "..." : "Kaydet"}
-                    </button>
-                    <button
-                      onClick={() => setEditing(false)}
-                      className="px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      İptal
-                    </button>
+                    <button onClick={handleSaveUsername} disabled={saving} className="btn-primary px-4 py-2 rounded-lg text-sm">Kaydet</button>
+                    <button onClick={() => setEditing(false)} className="px-3 py-2 text-muted-foreground">İptal</button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <h1 className="text-3xl font-bold">{username}</h1>
-                    <button
-                      onClick={() => setEditing(true)}
-                      className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
-                      title="Adını Düzenle"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
+                    <button onClick={() => setEditing(true)} className="p-1.5 text-muted-foreground hover:text-primary"><Edit3 className="w-4 h-4" /></button>
                   </div>
                 )}
                 <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider">
@@ -289,28 +305,17 @@ function MyProfile() {
 
         {/* My Products */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">
-              İlanlarım <span className="text-muted-foreground font-light font-mono ml-2">({myProducts.length})</span>
-            </h2>
-            <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
-          </div>
-
-          {loadingProducts ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
+          <h2 className="text-2xl font-bold mb-6">İlanlarım ({myProducts.length})</h2>
+          {loading ? (
+            <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
           ) : myProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {myProducts.map((product) => (
-                <MyProductCard key={product.id} product={product} />
-              ))}
+              {myProducts.map((product) => <MyProductCard key={product.id} product={product} />)}
             </div>
           ) : (
             <div className="py-16 text-center text-muted-foreground border-2 border-dashed border-border/30 rounded-3xl">
               <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground/40" />
-              <p className="text-lg font-medium mb-1">Henüz ilan eklemediniz</p>
-              <p className="text-sm text-muted-foreground/60">Header'daki "Ürün Sat" butonuyla ilk ilanınızı ekleyin!</p>
+              <p>Henüz ilan eklemediniz.</p>
             </div>
           )}
         </div>
@@ -319,7 +324,6 @@ function MyProfile() {
   );
 }
 
-/** Card for user's own products */
 function MyProductCard({ product }: { product: DbProduct }) {
   return (
     <Link to={`/product/${product.id}`} className="block">
@@ -328,18 +332,11 @@ function MyProductCard({ product }: { product: DbProduct }) {
           {product.image_url ? (
             <img src={product.image_url} alt={product.title} className="h-full w-full object-cover" loading="lazy" />
           ) : (
-            <div className="h-full w-full flex items-center justify-center text-muted-foreground/30">
-              <Package className="w-16 h-16" />
-            </div>
+            <div className="h-full w-full flex items-center justify-center text-muted-foreground/30"><Package className="w-16 h-16" /></div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
           <div className="absolute top-3 right-3">
-            <span className={cn(
-              "px-2 py-1 rounded-full text-[10px] uppercase tracking-wider font-medium",
-              product.is_active
-                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                : "bg-red-500/20 text-red-400 border border-red-500/30"
-            )}>
+            <span className={cn("px-2 py-1 rounded-full text-[10px] uppercase font-medium", product.is_active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400")}>
               {product.is_active ? "Aktif" : "Pasif"}
             </span>
           </div>
@@ -347,14 +344,9 @@ function MyProductCard({ product }: { product: DbProduct }) {
         <div className="p-4 space-y-2">
           <div className="flex justify-between items-start">
             <h3 className="text-sm font-semibold line-clamp-1">{product.title}</h3>
-            <span className="text-sm font-mono font-bold text-primary ml-2 shrink-0">
-              {formatCurrency(product.price)}
-            </span>
+            <span className="text-sm font-mono font-bold text-primary ml-2 shrink-0">{formatCurrency(product.price)}</span>
           </div>
           <p className="text-[11px] text-muted-foreground line-clamp-2">{product.description}</p>
-          <p className="text-[10px] text-muted-foreground/60">
-            {new Date(product.created_at).toLocaleDateString("tr-TR")}
-          </p>
         </div>
       </div>
     </Link>

@@ -232,13 +232,23 @@ export function Layout({ children }: LayoutProps) {
                   </>
                 )}
 
-                {/* Profile */}
+                {/* Profile Avatar Trigger in Header */}
                 <Link
                   to="/profile/me"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="relative group transition-all"
                   title="Profilim"
                 >
-                  <User className="w-5 h-5" />
+                  <div className="w-8 h-8 rounded-full overflow-hidden border border-border group-hover:border-primary transition-colors bg-muted flex items-center justify-center">
+                    {user.user_metadata?.avatar_url ? (
+                      <img
+                        src={`${user.user_metadata.avatar_url}?t=${Date.now()}`} // Force fresh fetch on mount
+                        alt="Profil"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-5 h-5 text-muted-foreground group-hover:text-foreground" />
+                    )}
+                  </div>
                 </Link>
 
                 {/* Logout */}
@@ -428,7 +438,7 @@ export function Layout({ children }: LayoutProps) {
 
         {/* Footer Links & Info */}
         <div className="container mx-auto px-4 py-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
             <div className="col-span-2 md:col-span-1">
               <Link to={ROUTE_PATHS.HOME} className="text-2xl font-bold tracking-tighter">
                 GIYEN<span className="text-primary">DEN</span>
@@ -463,15 +473,7 @@ export function Layout({ children }: LayoutProps) {
               </ul>
             </div>
 
-            <div>
-              <h4 className="font-bold mb-6 text-sm uppercase tracking-widest">Destek</h4>
-              <ul className="space-y-4 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-primary">Yardım Merkezi</a></li>
-                <li><a href="#" className="hover:text-primary">Güvenlik Rehberi</a></li>
-                <li><a href="#" className="hover:text-primary">Bize Ulaşın</a></li>
-                <li><a href="#" className="hover:text-primary">SSS</a></li>
-              </ul>
-            </div>
+
           </div>
 
           <div className="mt-16 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground space-y-4 md:space-y-0">

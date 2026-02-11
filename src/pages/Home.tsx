@@ -180,7 +180,7 @@ export default function Home() {
           <div className="container relative z-10 px-4 text-center">
 
             <motion.h1 className="hero-shimmer-text text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-6 leading-tight" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.2 }}>
-              Bir kadının Kirli Sepetini karıştırmaya ne dersin?
+              Kirli sepetleri karıştırmaya ne dersin?
             </motion.h1>
 
             <motion.p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.4 }}>
