@@ -1,8 +1,10 @@
 import React from "react";
 import { Layout } from "@/components/Layout";
 import { motion } from "framer-motion";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 export default function Kvkk() {
+    usePageMeta("KVKK Aydınlatma Metni", "Kişisel verilerin korunması kanunu aydınlatma metni.");
     return (
         <Layout>
             <div className="container mx-auto px-4 py-12 max-w-4xl">

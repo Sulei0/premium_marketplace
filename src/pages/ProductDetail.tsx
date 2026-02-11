@@ -56,6 +56,7 @@ interface DbProduct {
   seller?: {
     username: string;
     role: string;
+    avatar_url?: string;
   };
 }
 
@@ -98,7 +99,7 @@ export default function ProductDetail() {
 
       const { data: profileResult, error: profileFetchError } = await supabase!
         .from("profiles")
-        .select("username, role")
+        .select("username, role, avatar_url")
         .eq("id", productData.user_id)
         .maybeSingle();
 
@@ -126,7 +127,7 @@ export default function ProductDetail() {
           // Re-fetch after creation
           const { data: newProfile } = await supabase!
             .from("profiles")
-            .select("username, role")
+            .select("username, role, avatar_url")
             .eq("id", productData.user_id)
             .maybeSingle();
 
@@ -443,8 +444,12 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                   className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/50 hover:border-primary/40 transition-colors cursor-pointer group mb-4"
                 >
                   <div className="relative">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg border-2 border-white/10">
-                      {product.seller.username.substring(0, 1).toUpperCase()}
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg border-2 border-white/10 overflow-hidden">
+                      {product.seller.avatar_url ? (
+                        <img src={product.seller.avatar_url} alt={product.seller.username} className="w-full h-full object-cover" />
+                      ) : (
+                        product.seller.username.substring(0, 1).toUpperCase()
+                      )}
                     </div>
                   </div>
                   <div className="flex-1">

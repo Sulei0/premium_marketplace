@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ROUTE_PATHS, cn, formatCurrency } from "@/lib/index";
+import { validateImageFile } from "@/lib/sanitize";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -108,6 +110,71 @@ function MyProfile() {
     }
   };
 
+  // Avatar Upload
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase || !user) return;
+
+    // Validate
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Dosya boyutu 2MB'dan büyük olamaz.");
+      return;
+    }
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      // Upload
+      const { error: uploadError } = await supabase.storage
+        .from('avatars') // Make sure this bucket exists or use 'product-images' if we want to reuse
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+      // Update profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: urlData.publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Reload page to show new avatar (or could update local state)
+      window.location.reload();
+
+    } catch (error: any) {
+      alert("Profil fotoğrafı yüklenemedi: " + error.message);
+    }
+  };
+
+  // Account Deletion
+  const handleDeleteAccount = async () => {
+    if (!supabase || !user) return;
+
+    if (!window.confirm("Hesabınızı kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) {
+      return;
+    }
+
+    if (!window.confirm("SON UYARI: Hesabınız ve tüm verileriniz silinecek. Onaylıyor musunuz?")) {
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const { error } = await supabase.rpc('delete_account');
+      if (error) throw error;
+
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    } catch (error: any) {
+      alert("Hesap silinirken hata oluştu: " + error.message);
+      setSaving(false);
+    }
+  };
+
   if (!user) {
     return (
       <Layout>
@@ -137,10 +204,28 @@ function MyProfile() {
         >
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             {/* Avatar */}
-            <div className="relative">
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-4xl font-bold text-white shadow-lg shadow-primary/20">
-                {username.charAt(0).toUpperCase()}
-              </div>
+            <div className="relative group cursor-pointer">
+              <label htmlFor="avatar-upload" className="cursor-pointer block">
+                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-transparent group-hover:border-primary/50 transition-all shadow-lg shadow-primary/20">
+                  {user.user_metadata?.avatar_url || (myProducts[0]?.image_url && false) ? (
+                    <img src={user.user_metadata?.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-4xl font-bold text-white">{username.charAt(0).toUpperCase()}</span>
+                  )}
+
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Edit3 className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </label>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
               <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
                 <div className="w-4 h-4 rounded-full bg-green-500 animate-pulse" />
               </div>
@@ -296,7 +381,7 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
         // Fetch seller profile from profiles table
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("username, role, created_at")
+          .select("username, role, created_at, avatar_url")
           .eq("id", sellerId)
           .single();
 
@@ -384,8 +469,12 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
           >
             <div className="relative group">
               <div className="relative z-10 w-48 h-48 mx-auto lg:mx-0 rounded-2xl overflow-hidden border-2 border-primary/20 bg-card flex items-center justify-center">
-                <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-6xl font-bold text-white">
-                  {sellerProfile.username.charAt(0).toUpperCase()}
+                <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-6xl font-bold text-white overflow-hidden">
+                  {(sellerProfile as any).avatar_url ? (
+                    <img src={(sellerProfile as any).avatar_url} alt={sellerProfile.username} className="w-full h-full object-cover" />
+                  ) : (
+                    sellerProfile.username.charAt(0).toUpperCase()
+                  )}
                 </div>
               </div>
               <div className="absolute -inset-4 bg-primary/5 blur-2xl rounded-full -z-0 opacity-50" />

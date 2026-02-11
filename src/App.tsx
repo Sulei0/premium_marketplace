@@ -11,6 +11,8 @@ import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { AgeGate } from "@/components/AgeGate";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
+import { SellerRoute } from "@/components/SellerRoute";
+import MyProducts from "@/pages/dashboard/MyProducts";
 import Home from "@/pages/Home";
 import Products from "@/pages/Products";
 import ProductDetail from "@/pages/ProductDetail";
@@ -61,6 +63,8 @@ const App = () => {
                       <Route path="/terms" element={<Terms />} />
                       <Route path="/privacy" element={<Privacy />} />
                       <Route path="/kvkk" element={<Kvkk />} />
+                      {/* Satıcı rotaları */}
+                      <Route path="/dashboard/products" element={<SellerRoute><MyProducts /></SellerRoute>} />
 
                       {/* Admin paneli */}
                       <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />

@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { X, Upload, ImagePlus, Loader2, Check, Trash2 } from "lucide-react";
+import { X, Upload, ImagePlus, Loader2, Check, Trash2, Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/index";
@@ -528,37 +528,86 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                             </div>
 
                             {/* Ekstra Haz Menüsü */}
-                            <div className="space-y-3 bg-white/[0.02] border border-white/5 rounded-xl p-4">
-                                <h4 className="text-sm font-bold uppercase tracking-wider text-purple-400">
-                                    ✨ Ekstra Haz Menüsü
-                                </h4>
-                                <p className="text-[11px] text-gray-500 -mt-1">
-                                    Alıcıların seçebileceği ek hizmetler. Aktif ettikleriniz ilanlarda görünecek.
-                                </p>
-                                <div className="space-y-2">
-                                    {extras.map((extra) => (
+                            <div className="space-y-4 bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h4 className="text-sm font-bold uppercase tracking-wider text-purple-400">
+                                            ✨ Ekstra Haz Menüsü
+                                        </h4>
+                                        <p className="text-[11px] text-gray-500">
+                                            Alıcıların seçebileceği ek hizmetler.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const newId = Math.random().toString(36).substring(7);
+                                            setExtras(prev => [...prev, { id: newId, label: "", price: 50, enabled: true }]);
+                                        }}
+                                        className="text-xs flex items-center gap-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 px-3 py-1.5 rounded-lg transition-colors border border-purple-500/20"
+                                    >
+                                        <Plus className="w-3 h-3" />
+                                        Yeni Ekle
+                                    </button>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {extras.map((extra, index) => (
                                         <div
                                             key={extra.id}
-                                            onClick={() => toggleExtra(extra.id)}
-                                            className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${extra.enabled
-                                                ? "bg-purple-500/10 border-purple-500/30"
-                                                : "bg-white/[0.02] border-white/5 hover:border-white/10"
+                                            className={`flex flex-col sm:flex-row gap-3 p-3 rounded-xl border transition-all ${extra.enabled
+                                                ? "bg-purple-500/5 border-purple-500/30"
+                                                : "bg-white/[0.02] border-white/5"
                                                 }`}
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${extra.enabled
-                                                    ? "bg-purple-500 border-purple-500"
-                                                    : "border-gray-600"
-                                                    }`}>
-                                                    {extra.enabled && <Check className="w-3 h-3 text-white" />}
-                                                </div>
-                                                <span className={`text-sm ${extra.enabled ? "text-white" : "text-gray-400"}`}>
-                                                    {extra.label}
-                                                </span>
+                                            {/* Enable Toggle */}
+                                            <div className="flex items-center gap-3 flex-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleExtra(extra.id)}
+                                                    className={`w-8 h-8 rounded-lg border-2 flex shrink-0 items-center justify-center transition-all ${extra.enabled
+                                                        ? "bg-purple-500 border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.4)]"
+                                                        : "border-gray-600 hover:border-gray-500"
+                                                        }`}
+                                                >
+                                                    {extra.enabled && <Check className="w-4 h-4 text-white" />}
+                                                </button>
+
+                                                <input
+                                                    type="text"
+                                                    value={extra.label}
+                                                    onChange={(e) => {
+                                                        const newLabel = e.target.value;
+                                                        setExtras(prev => prev.map(item => item.id === extra.id ? { ...item, label: newLabel } : item));
+                                                    }}
+                                                    placeholder="Seçenek Adı (Örn: Parfüm)"
+                                                    className="flex-1 bg-transparent border-none text-sm text-white focus:ring-0 placeholder:text-gray-600 p-0"
+                                                />
                                             </div>
-                                            <span className="text-sm font-mono text-purple-400">
-                                                +{formatCurrency(extra.price)}
-                                            </span>
+
+                                            {/* Price & Delete */}
+                                            <div className="flex items-center gap-2">
+                                                <div className="relative">
+                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-mono">₺</span>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={extra.price}
+                                                        onChange={(e) => {
+                                                            const newPrice = parseFloat(e.target.value) || 0;
+                                                            setExtras(prev => prev.map(item => item.id === extra.id ? { ...item, price: newPrice } : item));
+                                                        }}
+                                                        className="w-20 bg-black/20 border border-white/10 rounded-lg py-1.5 pl-5 pr-2 text-right text-sm font-mono text-purple-400 focus:border-purple-500 focus:outline-none"
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setExtras(prev => prev.filter(item => item.id !== extra.id))}
+                                                    className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

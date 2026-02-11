@@ -63,22 +63,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, [fetchRole]);
 
-  // Update role in Supabase profiles
-  const setRole = useCallback(
-    async (newRole: UserRole) => {
-      if (!supabase || !user) return;
-
-      const { error } = await supabase
-        .from("profiles")
-        .update({ role: newRole })
-        .eq("id", user.id);
-
-      if (error) throw error;
-
-      setRoleState(newRole);
-    },
-    [user]
-  );
+  // Update role in Supabase profiles - REMOVED FOR SECURITY
+  // Roles should only be updated via Admin panel or secure backend functions
+  const setRole = useCallback(async (newRole: UserRole) => {
+    console.warn("Manual role update from client is disabled for security.");
+    // In a real app, you would call an Edge Function here
+    // For now, we rely on the initial signup role and Admin changes
+  }, []);
 
   const signUp = async (email: string, password: string, username: string, signupRole: string) => {
     if (!supabase)
