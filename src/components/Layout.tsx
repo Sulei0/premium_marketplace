@@ -38,7 +38,7 @@ export function Layout({ children }: LayoutProps) {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -212,14 +212,16 @@ export function Layout({ children }: LayoutProps) {
                   <Heart className="w-5 h-5" />
                 </Link>
 
-                {/* Ürün Sat Button */}
-                <button
-                  onClick={() => setIsAddProductOpen(true)}
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-sm font-semibold rounded-full transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/25"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Ürün Sat</span>
-                </button>
+                {/* Ürün Sat Button — Sadece Satıcı */}
+                {role === "seller" && (
+                  <button
+                    onClick={() => setIsAddProductOpen(true)}
+                    className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-sm font-semibold rounded-full transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/25"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Ürün Sat</span>
+                  </button>
+                )}
 
                 {/* Profile */}
                 <Link
@@ -321,13 +323,15 @@ export function Layout({ children }: LayoutProps) {
                       <Heart className="w-5 h-5" />
                       Favorilerim
                     </Link>
-                    <button
-                      onClick={() => { setIsMenuOpen(false); setIsAddProductOpen(true); }}
-                      className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl transition-all active:scale-95"
-                    >
-                      <Plus className="w-5 h-5" />
-                      Ürün Sat / İlan Ver
-                    </button>
+                    {role === "seller" && (
+                      <button
+                        onClick={() => { setIsMenuOpen(false); setIsAddProductOpen(true); }}
+                        className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl transition-all active:scale-95"
+                      >
+                        <Plus className="w-5 h-5" />
+                        Ürün Sat / İlan Ver
+                      </button>
+                    )}
                     <Link
                       to="/profile/me"
                       className="flex items-center gap-3 py-3 text-lg text-muted-foreground hover:text-foreground transition-colors"

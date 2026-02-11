@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Sparkles, Loader2, ShoppingBag, Store, Heart } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Loader2, ShoppingBag, Store, Heart, Check } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { IMAGES } from "@/assets/images";
 import { springPresets, staggerItem } from "@/lib/motion";
@@ -11,6 +11,8 @@ import { formatCurrency } from "@/lib/index";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
+import { useAuth, type UserRole } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 /** DB product row shape */
 interface DbProduct {
@@ -26,10 +28,52 @@ interface DbProduct {
 }
 
 export default function Home() {
+  const { user, role, setRole } = useAuth();
   const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
   const [loadingDb, setLoadingDb] = useState(true);
+  const [roleModal, setRoleModal] = useState<{ open: boolean; targetRole: UserRole }>({ open: false, targetRole: "buyer" });
+  const [roleUpdating, setRoleUpdating] = useState(false);
 
   usePageMeta(undefined, "Türkiye'nin ilk premium C2C pazar yeri. Güvenli, gizli ve özel alışveriş deneyimi.");
+
+  const handleRoleClick = (targetRole: UserRole) => {
+    if (!user) {
+      // Kullanıcı giriş yapmamış → Kayıt modalına yönlendir
+      window.dispatchEvent(new CustomEvent('open-register', { detail: { role: targetRole } }));
+      return;
+    }
+
+    if (role === targetRole) {
+      toast({
+        title: targetRole === "seller" ? "Zaten Satıcısınız" : "Zaten Alıcısınız",
+        description: `Hesap türünüz zaten ${targetRole === "seller" ? "Satıcı" : "Alıcı"} olarak ayarlanmış.`,
+      });
+      return;
+    }
+
+    // Onay modalı aç
+    setRoleModal({ open: true, targetRole });
+  };
+
+  const confirmRoleChange = async () => {
+    setRoleUpdating(true);
+    try {
+      await setRole(roleModal.targetRole);
+      toast({
+        title: "✅ Hesap Türü Güncellendi",
+        description: `Hesabınız başarıyla ${roleModal.targetRole === "seller" ? "Satıcı" : "Alıcı"} olarak değiştirildi.`,
+      });
+      setRoleModal({ open: false, targetRole: "buyer" });
+    } catch {
+      toast({
+        title: "Hata",
+        description: "Hesap türü güncellenirken bir sorun oluştu. Tekrar deneyin.",
+        variant: "destructive",
+      });
+    } finally {
+      setRoleUpdating(false);
+    }
+  };
 
   // Fetch products from Supabase
   useEffect(() => {
@@ -50,7 +94,7 @@ export default function Home() {
           setDbProducts(data as DbProduct[]);
         }
       } catch {
-        // silently fail — fallback to SAMPLE_PRODUCTS
+        // silently fail
       } finally {
         setLoadingDb(false);
       }
@@ -60,6 +104,69 @@ export default function Home() {
 
   return (
     <Layout>
+      {/* Role Confirmation Modal */}
+      <AnimatePresence>
+        {roleModal.open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={() => !roleUpdating && setRoleModal({ open: false, targetRole: "buyer" })}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-sm bg-card border border-border rounded-2xl p-8 shadow-2xl text-center"
+            >
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+                {roleModal.targetRole === "seller" ? (
+                  <Store className="w-8 h-8 text-primary" />
+                ) : (
+                  <ShoppingBag className="w-8 h-8 text-primary" />
+                )}
+              </div>
+
+              <h3 className="text-xl font-bold mb-2">Hesap Türü Değişikliği</h3>
+              <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+                Hesap türünüz{" "}
+                <span className="font-semibold text-primary">
+                  {roleModal.targetRole === "seller" ? "Satıcı" : "Alıcı"}
+                </span>{" "}
+                olarak güncellenecektir. Onaylıyor musunuz?
+              </p>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-full"
+                  onClick={() => setRoleModal({ open: false, targetRole: "buyer" })}
+                  disabled={roleUpdating}
+                >
+                  Vazgeç
+                </Button>
+                <Button
+                  className="flex-1 rounded-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white"
+                  onClick={confirmRoleChange}
+                  disabled={roleUpdating}
+                >
+                  {roleUpdating ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 mr-1" />
+                      Onayla
+                    </>
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col w-full overflow-hidden">
 
         {/* Hero Section */}
@@ -71,8 +178,6 @@ export default function Home() {
           </div>
 
           <div className="container relative z-10 px-4 text-center">
-
-
 
             <motion.h1 className="hero-shimmer-text text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-6 leading-tight" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.2 }}>
               Bir kadının Kirli Sepetini karıştırmaya ne dersin?
@@ -87,19 +192,21 @@ export default function Home() {
               <Button
                 size="lg"
                 className="h-14 px-8 rounded-full text-lg font-semibold group bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 transition-all"
-                onClick={() => window.dispatchEvent(new CustomEvent('open-register', { detail: { role: 'seller' } }))}
+                onClick={() => handleRoleClick("seller")}
               >
                 <Store className="mr-2 w-5 h-5" />
                 Satıcıyım
+                {user && role === "seller" && <Check className="ml-2 w-4 h-4 text-green-300" />}
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 className="h-14 px-8 rounded-full text-lg font-semibold group border-primary/40 hover:border-primary hover:bg-primary/10 hover:shadow-[0_0_20px_var(--primary)] transition-all"
-                onClick={() => window.dispatchEvent(new CustomEvent('open-register', { detail: { role: 'buyer' } }))}
+                onClick={() => handleRoleClick("buyer")}
               >
                 <ShoppingBag className="mr-2 w-5 h-5" />
                 Alıcıyım
+                {user && role === "buyer" && <Check className="ml-2 w-4 h-4 text-green-400" />}
               </Button>
             </motion.div>
           </div>
