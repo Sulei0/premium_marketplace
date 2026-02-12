@@ -363,7 +363,7 @@ function MyProductCard({ product }: { product: DbProduct }) {
 
 /** Seller profile — fetches real data from Supabase */
 function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [sellerProfile, setSellerProfile] = useState<{ username: string; role: string; created_at: string; badges: string[] } | null>(null);
   const [sellerProducts, setSellerProducts] = useState<DbProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -537,7 +537,7 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
             </div>
 
             {/* Admin Controls */}
-            {sellerProfile && (user?.user_metadata?.role === 'admin' || (user && user.user_metadata?.role === 'admin')) && (
+            {sellerProfile && role === 'admin' && (
               <div className="bg-card/50 backdrop-blur-md border border-red-500/20 rounded-2xl p-6 space-y-4">
                 <div className="flex items-center gap-2 text-red-500 font-bold border-b border-red-500/20 pb-2 mb-2">
                   <ShieldAlert className="w-5 h-5" />

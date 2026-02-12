@@ -23,37 +23,11 @@ interface AdminProductActionsProps {
 }
 
 export function AdminProductActions({ productId, sellerId }: AdminProductActionsProps) {
-    const { user } = useAuth();
+    const { user, role } = useAuth();
     const navigate = useNavigate();
-    const [isAdmin, setIsAdmin] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        // Strict admin check
-        const checkAdmin = async () => {
-            if (!user) return;
-
-            // 1. Metadata check
-            if (user.user_metadata?.role === 'admin') {
-                setIsAdmin(true);
-                return;
-            }
-
-            // 2. DB check
-            const { data } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .single();
-
-            if (data?.role === 'admin') {
-                setIsAdmin(true);
-            }
-        };
-        checkAdmin();
-    }, [user]);
-
-    if (!isAdmin) return null;
+    if (role !== "admin") return null;
 
     const handleDeleteProduct = async () => {
         setLoading(true);

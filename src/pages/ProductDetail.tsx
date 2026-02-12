@@ -291,8 +291,10 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
         .insert({
           chat_id: chatId,
           sender_id: user.id,
-          content: `Merhaba, "${product.title}" için bir teklifim var.`,
+          content: `Teklif: ${totalPrice} TL`,
           is_offer: true,
+          offer_amount: parseFloat(totalPrice.toFixed(2)),
+          offer_status: "pending",
           offer_details: offerDetails
         });
 
@@ -301,7 +303,21 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
         throw msgError;
       }
 
-      // 3. Navigate to chat
+      // 3. Send notification to the owner
+      if (product.user_id !== user.id) {
+        await supabase!
+          .from("notifications")
+          .insert({
+            user_id: product.user_id,
+            type: "new_offer",
+            title: "Yeni Teklif!",
+            body: `${user.email} ürünün için ${totalPrice} TL teklif verdi.`,
+            link: `/messages/${chatId}`,
+            is_read: false
+          });
+      }
+
+      // 4. Navigate to chat
       navigate(ROUTE_PATHS.CHAT_DETAIL.replace(':id', chatId));
 
     } catch (error: any) {
@@ -392,7 +408,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
 
               {/* Fav Button */}
               <button
-                onClick={() => toggleFavorite(product.id)}
+                onClick={() => toggleFavorite(product.id, product.user_id)}
                 className="absolute top-4 right-4 mt-10 p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/60 transition-all"
               >
                 <Heart className={`w-5 h-5 transition-all duration-300 ${fav ? 'text-pink-500 fill-pink-500' : 'text-white/70 hover:text-pink-400'}`} />

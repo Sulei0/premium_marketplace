@@ -12,7 +12,7 @@ export interface DbProduct {
     category: string;
     image_url: string | null;
     created_at: string;
-    // Optional if needed for other contexts, but keep minimal for now based on usage
+    user_id: string; // Required for notifications
 }
 
 interface DbProductCardProps {
@@ -73,7 +73,7 @@ export function DbProductCard({ product }: DbProductCardProps) {
 
             {/* Fav Button */}
             <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(product.id); }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(product.id, product.user_id); }}
                 className="absolute top-3 left-3 z-10 p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/60 transition-all group/fav"
             >
                 <Heart className={`w-4 h-4 transition-all duration-300 ${fav ? 'text-pink-500 fill-pink-500 scale-110' : 'text-white/70 hover:text-pink-400'}`} />

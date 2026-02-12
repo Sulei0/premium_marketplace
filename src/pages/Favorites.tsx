@@ -17,6 +17,7 @@ interface DbProduct {
     category: string;
     image_url: string | null;
     created_at: string;
+    user_id: string; // Added user_id
 }
 
 export default function Favorites() {
@@ -36,7 +37,7 @@ export default function Favorites() {
             try {
                 const { data } = await supabase
                     .from("products")
-                    .select("id, title, description, price, category, image_url, created_at")
+                    .select("id, title, description, price, category, image_url, created_at, user_id")
                     .in("id", Array.from(favorites))
                     .eq("is_active", true)
                     .order("created_at", { ascending: false });
@@ -123,7 +124,7 @@ export default function Favorites() {
                                 >
                                     <FavProductCard
                                         product={product}
-                                        onToggleFav={() => toggleFavorite(product.id)}
+                                        onToggleFav={() => toggleFavorite(product.id, product.user_id)}
                                         favCount={getFavoriteCount(product.id)}
                                     />
                                 </motion.div>

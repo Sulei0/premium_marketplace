@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 interface FavoritesContextType {
     favorites: Set<string>;
     favoriteCounts: Map<string, number>;
-    toggleFavorite: (productId: string) => Promise<void>;
+    toggleFavorite: (productId: string, sellerId?: string) => Promise<void>;
     isFavorite: (productId: string) => boolean;
     getFavoriteCount: (productId: string) => number;
     loading: boolean;
@@ -73,7 +73,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         fetchCounts();
     }, [favorites]); // Re-fetch when favorites change
 
-    const toggleFavorite = useCallback(async (productId: string) => {
+    const toggleFavorite = useCallback(async (productId: string, sellerId?: string) => {
         if (!user || !supabase) return;
 
         const isFav = favorites.has(productId);
@@ -108,6 +108,24 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
                 await supabase
                     .from("favorites")
                     .insert({ user_id: user.id, product_id: productId });
+
+                // Send notification to seller if:
+                // 1. We have a sellerId
+                // 2. The seller is NOT the current user (don't notify self)
+                if (sellerId && sellerId !== user.id) {
+                    // Check if notification already exists to avoid spam (optional but good)
+                    // For now, simple insert.
+                    await supabase
+                        .from("notifications")
+                        .insert({
+                            user_id: sellerId,
+                            type: "new_favorite",
+                            title: "Yeni Favori!",
+                            body: "Bir kullanıcı ürününü favorilerine ekledi.",
+                            link: `/product/${productId}`,
+                            is_read: false
+                        });
+                }
             }
         } catch {
             // Revert on error

@@ -197,10 +197,7 @@ export function Layout({ children }: LayoutProps) {
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
 
-            {/* Search */}
-            <button className="text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
-              <Search className="w-5 h-5" />
-            </button>
+
 
             {user ? (
               <>

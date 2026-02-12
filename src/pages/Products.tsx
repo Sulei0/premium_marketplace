@@ -30,33 +30,54 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<typeof CATEGORIES[number]>("Tümü");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const ITEMS_PER_PAGE = 50;
 
   usePageMeta("Koleksiyon", "Giyenden'de en yeni ürünleri keşfet. Güvenli ve gizli alışveriş.");
 
-  useEffect(() => {
-    async function fetchProducts() {
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const { data, error } = await supabase
-          .from("products")
-          .select("id, title, description, price, category, image_url, created_at, user_id, is_active")
-          .eq("is_active", true)
-          .order("created_at", { ascending: false });
-
-        if (!error && data) {
-          setProducts(data as DbProduct[]);
-        }
-      } catch {
-        // silently fail
-      } finally {
-        setLoading(false);
-      }
+  const fetchProducts = async (pageNumber: number) => {
+    if (!supabase) {
+      setLoading(false);
+      return;
     }
-    fetchProducts();
+
+    try {
+      const from = pageNumber * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, title, description, price, category, image_url, created_at, user_id, is_active")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      if (!error && data) {
+        const newProducts = data as DbProduct[];
+
+        if (newProducts.length < ITEMS_PER_PAGE) {
+          setHasMore(false);
+        }
+
+        setProducts(prev => pageNumber === 0 ? newProducts : [...prev, ...newProducts]);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts(0);
   }, []);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchProducts(nextPage);
+  };
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
