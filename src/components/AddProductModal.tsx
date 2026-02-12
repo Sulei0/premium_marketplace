@@ -309,9 +309,9 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                 </div>
 
                                 {/* Image Preview Grid */}
-                                <div className="grid grid-cols-5 gap-2">
+                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                                     {imagePreviews.map((preview, index) => (
-                                        <div key={index} className="relative aspect-square rounded-lg overflow-hidden group border border-white/10">
+                                        <div key={preview} className="relative aspect-square rounded-lg overflow-hidden group border border-white/10">
                                             <img src={preview} alt={`Görsel ${index + 1}`} className="w-full h-full object-cover" />
                                             <button
                                                 type="button"
