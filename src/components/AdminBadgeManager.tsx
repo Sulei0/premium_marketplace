@@ -22,61 +22,12 @@ interface AdminBadgeManagerProps {
 }
 
 export function AdminBadgeManager({ targetUserId, currentBadges = [], onBadgeUpdate }: AdminBadgeManagerProps) {
-    const { user } = useAuth();
+    const { user, role } = useAuth();
     const [loading, setLoading] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
 
     // Allow only if current user is admin
-    // Note: RLS/RPC will also block it, but UI should be hidden too
-    const [isAdmin, setIsAdmin] = useState(false);
-    const [checkingRole, setCheckingRole] = useState(true);
-
-    // Check admin role source of truth (Database)
-    React.useEffect(() => {
-        const checkAdminStatus = async () => {
-            if (!user) {
-                setCheckingRole(false);
-                return;
-            }
-
-            // 1. Fast check: Metadata (optimization)
-            if (user.user_metadata?.role === 'admin') {
-                setIsAdmin(true);
-                setCheckingRole(false);
-                // We could still verify against DB in background, but metadata is usually trusted for UI
-                // However, for this specific "I manually made them admin" case, we MUST check DB if metadata fails
-                return;
-            }
-
-            // 2. Deep check: Database
-            // If metadata says NOT admin, we double check DB because maybe it was just updated manually
-            try {
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('role')
-                    .eq('id', user.id)
-                    .single();
-
-                if (data && data.role === 'admin') {
-                    setIsAdmin(true);
-
-                    // Optional: Sync metadata if out of sync (nice to have)
-                    await supabase.auth.updateUser({
-                        data: { role: 'admin' }
-                    });
-                }
-            } catch (e) {
-                console.error("Admin check failed", e);
-            } finally {
-                setCheckingRole(false);
-            }
-        };
-
-        checkAdminStatus();
-    }, [user]);
-
-    if (checkingRole) return null; // Or a transparent placeholder
-    if (!isAdmin) return null;
+    if (role !== "admin") return null;
 
     const handleAssignBadge = async (badgeName: BadgeType) => {
         if (loading) return;
