@@ -44,6 +44,8 @@ export default function Home() {
       return;
     }
 
+    if (role === 'admin') return;
+
     if (role === targetRole) {
       toast({
         title: targetRole === "seller" ? "Zaten Satıcısınız" : "Zaten Alıcısınız",

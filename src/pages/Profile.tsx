@@ -59,7 +59,7 @@ export default function Profile() {
 
 /** Logged-in user's own profile */
 function MyProfile() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [myProducts, setMyProducts] = useState<DbProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -230,7 +230,6 @@ function MyProfile() {
     );
   }
 
-  const role = user.user_metadata?.role || "buyer";
   const joinDate = user.created_at ? new Date(user.created_at) : new Date();
   const firstLetter = username.charAt(0).toUpperCase();
 
