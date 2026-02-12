@@ -36,6 +36,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { AddProductModal, type DbProductForEdit } from '@/components/AddProductModal';
 import { toast } from '@/hooks/use-toast';
+import { BadgeDisplay } from '@/components/BadgeDisplay';
+import { AdminProductActions } from '@/components/admin/AdminProductActions';
 
 const PRICE_PER_DAY = 15;
 
@@ -57,6 +59,7 @@ interface DbProduct {
     username: string;
     role: string;
     avatar_url?: string;
+    badges?: string[];
   };
 }
 
@@ -95,11 +98,11 @@ export default function ProductDetail() {
       }
 
       // 2. Fetch seller profile
-      let sellerData: { username: string; role: string } | null = null;
+      let sellerData: { username: string; role: string; badges?: string[] } | null = null;
 
       const { data: profileResult, error: profileFetchError } = await supabase!
         .from("profiles")
-        .select("username, role, avatar_url")
+        .select("username, role, avatar_url, badges")
         .eq("id", productData.user_id)
         .maybeSingle();
 
@@ -460,6 +463,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                       <span className="text-[10px] uppercase font-bold text-pink-400 tracking-widest bg-pink-500/10 px-1.5 py-0.5 rounded border border-pink-500/20">
                         {product.seller.role === 'seller' ? 'Satıcı' : 'Kullanıcı'}
                       </span>
+                      <BadgeDisplay badges={product.seller.badges || []} size="sm" />
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Profili görüntüle →
@@ -614,6 +618,10 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                   <CheckCircle2 className="w-3 h-3 text-primary" /> Güvenli Ödeme
                 </div>
               </div>
+
+              {/* Admin Actions */}
+              <AdminProductActions productId={product.id} sellerId={product.user_id} />
+
             </div>
           </div>
         </div>

@@ -21,7 +21,10 @@ import ChatList from "@/pages/ChatList";
 import ChatDetail from "@/pages/ChatDetail";
 import Favorites from "@/pages/Favorites";
 import NotFound from "@/pages/not-found/Index";
-import AdminPanel from "@/pages/Admin";
+import AdminLayout from "@/components/admin/AdminLayout";
+import AdminDashboard from "@/pages/admin/Index";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminProducts from "@/pages/admin/AdminProducts";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Kvkk from "@/pages/Kvkk";
@@ -67,7 +70,12 @@ const App = () => {
                       <Route path="/dashboard/products" element={<SellerRoute><MyProducts /></SellerRoute>} />
 
                       {/* Admin paneli */}
-                      <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+                      {/* Admin paneli */}
+                      <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="users" element={<AdminUsers />} />
+                        <Route path="products" element={<AdminProducts />} />
+                      </Route>
 
                       {/* 404 */}
                       <Route path="*" element={<NotFound />} />

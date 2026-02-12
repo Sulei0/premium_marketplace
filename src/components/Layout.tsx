@@ -143,8 +143,23 @@ export function Layout({ children }: LayoutProps) {
             GIYEN<span className="text-primary group-hover:drop-shadow-[0_0_8px_var(--primary)] transition-all">DEN</span>
           </Link>
 
+
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
+            {role === 'admin' && (
+              <NavLink
+                to="/admin"
+                className={({ isActive }) =>
+                  cn(
+                    "text-sm font-bold text-red-500 hover:text-red-600 transition-colors flex items-center gap-1",
+                    isActive ? "text-red-600" : ""
+                  )
+                }
+              >
+                <ShieldCheck className="w-4 h-4" />
+                YÖNETİM
+              </NavLink>
+            )}
             {navLinks.map((link) =>
               link.action ? (
                 <button
@@ -302,6 +317,19 @@ export function Layout({ children }: LayoutProps) {
             className="fixed inset-0 z-40 bg-background md:hidden pt-24 px-6 overflow-y-auto"
           >
             <nav className="flex flex-col space-y-6">
+              {role === 'admin' && (
+                <Link
+                  to="/admin"
+                  className="text-2xl font-bold border-b border-border pb-4 flex justify-between items-center group text-red-500"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-6 h-6" />
+                    YÖNETİM PANELİ
+                  </div>
+                  <ChevronRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-all" />
+                </Link>
+              )}
               {navLinks.map((link) =>
                 link.action ? (
                   <button

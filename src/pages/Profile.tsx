@@ -14,7 +14,8 @@ import {
   ArrowLeft,
   Package,
   Edit3,
-  Loader2
+  Loader2,
+  ShieldAlert
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ROUTE_PATHS, cn, formatCurrency } from "@/lib/index";
@@ -23,6 +24,9 @@ import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { ReviewForm, ReviewList } from "@/components/Reviews";
+import { BadgeDisplay } from "@/components/BadgeDisplay";
+import { AdminBadgeManager } from "@/components/AdminBadgeManager";
+import { AdminBanButton } from "@/components/admin/AdminBanButton";
 
 interface DbProduct {
   id: string;
@@ -62,6 +66,7 @@ function MyProfile() {
   // Local state for immediate UI updates
   const [username, setUsername] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [badges, setBadges] = useState<string[]>([]);
 
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -86,7 +91,7 @@ function MyProfile() {
         // A. Profile
         const { data: profile } = await supabase
           .from("profiles")
-          .select("username, avatar_url")
+          .select("username, avatar_url, badges")
           .eq("id", user.id)
           .maybeSingle(); // Use maybeSingle to avoid errors if profile missing
 
@@ -95,6 +100,9 @@ function MyProfile() {
           // If DB has an avatar, use it. Append time to force refresh if it's the same URL but content changed.
           if (profile.avatar_url) {
             setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
+          }
+          if (profile.badges) {
+            setBadges(profile.badges);
           }
         }
 
@@ -281,6 +289,7 @@ function MyProfile() {
                 ) : (
                   <div className="flex items-center gap-2">
                     <h1 className="text-3xl font-bold">{username}</h1>
+                    <BadgeDisplay badges={badges} />
                     <button onClick={() => setEditing(true)} className="p-1.5 text-muted-foreground hover:text-primary"><Edit3 className="w-4 h-4" /></button>
                   </div>
                 )}
@@ -356,7 +365,7 @@ function MyProductCard({ product }: { product: DbProduct }) {
 /** Seller profile — fetches real data from Supabase */
 function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
   const { user } = useAuth();
-  const [sellerProfile, setSellerProfile] = useState<{ username: string; role: string; created_at: string } | null>(null);
+  const [sellerProfile, setSellerProfile] = useState<{ username: string; role: string; created_at: string; badges: string[] } | null>(null);
   const [sellerProducts, setSellerProducts] = useState<DbProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -373,7 +382,7 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
         // Fetch seller profile from profiles table
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("username, role, created_at, avatar_url")
+          .select("username, role, created_at, avatar_url, badges")
           .eq("id", sellerId)
           .single();
 
@@ -407,6 +416,19 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
 
     fetchSellerData();
   }, [sellerId]);
+
+  const handleBadgeUpdate = () => {
+    // Re-fetch profile data to update badges
+    if (!sellerId) return;
+    supabase
+      .from("profiles")
+      .select("username, role, created_at, avatar_url, badges")
+      .eq("id", sellerId)
+      .single()
+      .then(({ data }) => {
+        if (data) setSellerProfile(data as any);
+      });
+  };
 
   if (loading) {
     return (
@@ -474,17 +496,16 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
 
             <div className="space-y-4 text-center lg:text-left">
               <div className="flex flex-col gap-2 items-center lg:items-start">
-                <h1 className="text-4xl font-bold tracking-tight">
+                <h1 className="text-4xl font-bold tracking-tight flex items-center gap-2">
                   {sellerProfile.username}
+                  <BadgeDisplay badges={sellerProfile.badges} size="lg" />
                 </h1>
                 <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider">
                   {sellerProfile.role === "seller" ? "Satıcı" : "Alıcı"}
                 </span>
               </div>
 
-              <p className="text-muted-foreground leading-relaxed italic text-lg">
-                "Sessizliğin içindeki hikayeleri keşfedin."
-              </p>
+
 
               <div className="flex flex-wrap gap-4 pt-4 justify-center lg:justify-start">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -516,19 +537,25 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
               </div>
             </div>
 
-            <div className="pt-4 space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Güvenlik Rozetleri
-              </h3>
-              <div className="flex gap-4">
-                <div className="p-3 rounded-lg bg-secondary/50 border border-border/50 group hover:border-primary/50 transition-colors">
-                  <ShieldCheck className="text-primary" size={24} />
+            {/* Admin Controls */}
+            {sellerProfile && (user?.user_metadata?.role === 'admin' || (user && user.user_metadata?.role === 'admin')) && (
+              <div className="bg-card/50 backdrop-blur-md border border-red-500/20 rounded-2xl p-6 space-y-4">
+                <div className="flex items-center gap-2 text-red-500 font-bold border-b border-red-500/20 pb-2 mb-2">
+                  <ShieldAlert className="w-5 h-5" />
+                  Admin Kontrol Paneli
                 </div>
-                <div className="p-3 rounded-lg bg-secondary/50 border border-border/50 group hover:border-primary/50 transition-colors">
-                  <CheckCircle2 className="text-primary" size={24} />
+
+                <AdminBadgeManager
+                  targetUserId={sellerId!}
+                  currentBadges={sellerProfile.badges || []}
+                  onBadgeUpdate={handleBadgeUpdate}
+                />
+
+                <div className="pt-4 border-t border-border/50">
+                  <AdminBanButton targetUserId={sellerId!} />
                 </div>
               </div>
-            </div>
+            )}
           </motion.div>
 
           {/* Sağ Kolon: Ürünler */}
