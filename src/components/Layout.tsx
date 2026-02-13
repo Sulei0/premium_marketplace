@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Menu,
   X,
@@ -70,9 +71,44 @@ export function Layout({ children }: LayoutProps) {
     setIsMenuOpen(false);
   }, [location]);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
+  const handleSignOut = () => {
+    toast.custom((t) => (
+      <div className="bg-background border border-border rounded-xl shadow-2xl p-4 w-full max-w-sm flex flex-col gap-3 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-1 h-full bg-red-500" />
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-red-500/10 rounded-full text-red-500">
+            <LogOut size={24} />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-lg">Çıkış Yapılıyor</h3>
+            <p className="text-muted-foreground text-sm">
+              Hesabınızdan çıkış yapmak istediğinize emin misiniz?
+            </p>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-2">
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted transition-colors"
+          >
+            Vazgeç
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t);
+              await signOut();
+              navigate("/");
+              toast.success("Başarıyla çıkış yapıldı", {
+                description: "Tekrar görüşmek üzere!",
+              });
+            }}
+            className="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-lg shadow-red-500/20"
+          >
+            Çıkış Yap
+          </button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
 
   const openLogin = () => {
@@ -266,7 +302,7 @@ export function Layout({ children }: LayoutProps) {
                 {/* Logout */}
                 <button
                   onClick={handleSignOut}
-                  className="text-muted-foreground hover:text-red-400 transition-colors hidden sm:block"
+                  className="relative z-50 cursor-pointer text-muted-foreground hover:text-red-400 transition-colors hidden sm:block"
                   title="Çıkış Yap"
                 >
                   <LogOut className="w-5 h-5" />

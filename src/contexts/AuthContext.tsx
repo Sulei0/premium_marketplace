@@ -103,11 +103,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) throw error;
   };
 
-  const signOut = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-    setRoleState("buyer");
-  };
+  const signOut = useCallback(async () => {
+    console.log("AuthContext: Identifying signOut call");
+    if (!supabase) {
+      console.error("AuthContext: Supabase client missing during signOut");
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("AuthContext: Supabase signOut error:", error);
+      } else {
+        console.log("AuthContext: Supabase signOut successful");
+      }
+      setRoleState("buyer");
+      setUser(null); // Explicitly clear user state immediately
+    } catch (err) {
+      console.error("AuthContext: Unexpected error during signOut:", err);
+    }
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, role, setRole, signUp, signIn, signOut, loading }}>

@@ -10,7 +10,7 @@ interface Review {
     rating: number;
     comment: string | null;
     created_at: string;
-    reviewer?: { username: string };
+    reviewer?: { username: string; avatar_url?: string | null };
 }
 
 /** Star Rating component */
@@ -36,8 +36,8 @@ function StarRating({ rating, onChange, interactive = false, size = "w-5 h-5" }:
                 >
                     <Star
                         className={`${size} transition-colors ${star <= (hover || rating)
-                                ? 'text-yellow-400 fill-yellow-400'
-                                : 'text-gray-600'
+                            ? 'text-yellow-400 fill-yellow-400'
+                            : 'text-gray-600'
                             }`}
                     />
                 </button>
@@ -109,6 +109,16 @@ export function ReviewForm({ sellerId, onReviewSubmitted }: { sellerId: string; 
                         comment: comment.trim() || null,
                     });
                 if (insertErr) throw insertErr;
+
+                // Send Notification
+                await supabase.from("notifications").insert({
+                    user_id: sellerId,
+                    type: "new_review",
+                    title: "Yeni Değerlendirme",
+                    body: `${user.user_metadata?.username || "Bir kullanıcı"} profilinizi değerlendirdi: ${rating} Yıldız`,
+                    link: `/profile/me`,
+                    is_read: false
+                });
             }
 
             setSuccess(true);
@@ -192,7 +202,7 @@ export function ReviewList({ sellerId }: { sellerId: string }) {
                 const reviewerIds = [...new Set(reviewData.map(r => r.reviewer_id))];
                 const { data: profiles } = await supabase
                     .from("profiles")
-                    .select("id, username")
+                    .select("id, username, avatar_url")
                     .in("id", reviewerIds);
 
                 const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
@@ -248,8 +258,12 @@ export function ReviewList({ sellerId }: { sellerId: string }) {
                         <div key={review.id} className="bg-card/30 border border-border/30 rounded-xl p-4">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                                        {review.reviewer?.username?.substring(0, 1).toUpperCase() || "?"}
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+                                        {review.reviewer?.avatar_url ? (
+                                            <img src={review.reviewer.avatar_url} alt={review.reviewer.username} className="w-full h-full object-cover" />
+                                        ) : (
+                                            review.reviewer?.username?.substring(0, 1).toUpperCase() || "?"
+                                        )}
                                     </div>
                                     <span className="text-sm font-medium">{review.reviewer?.username || "Anonim"}</span>
                                 </div>

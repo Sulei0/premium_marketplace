@@ -15,7 +15,9 @@ import {
   Package,
   Edit3,
   Loader2,
-  ShieldAlert
+  ShieldAlert,
+  Save,
+  X
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ROUTE_PATHS, cn, formatCurrency } from "@/lib/index";
@@ -40,119 +42,196 @@ interface DbProduct {
   created_at: string;
 }
 
-/**
- * Profil Sayfası
- * /profile/me → Giriş yapan kullanıcının kendi profili
- * /profile/:id → Satıcı profili (veritabanından)
- */
-export default function Profile() {
-  const { id } = useParams<{ id: string }>();
-
-  // If /profile/me, show the logged-in user's own profile
-  if (id === "me") {
-    return <MyProfile />;
-  }
-
-  // Otherwise, show seller profile from database
-  return <SellerProfile sellerId={id} />;
+interface ProfileData {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  role: string;
+  badges: string[];
+  created_at: string;
+  username_changes: number;
 }
 
-/** Logged-in user's own profile */
-function MyProfile() {
+export default function Profile() {
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+
+  // If /profile/me
+  if (id === "me") {
+    if (!user) {
+      return (
+        <Layout>
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+            <div className="text-6xl mb-6">🔒</div>
+            <h2 className="text-2xl font-bold mb-3">Giriş Yapmanız Gerekiyor</h2>
+            <Link to={ROUTE_PATHS.HOME} className="text-primary hover:underline font-medium">Ana Sayfaya Dön</Link>
+          </div>
+        </Layout>
+      );
+    }
+    return <UserProfile userId={user.id} isOwnProfile={true} />;
+  }
+
+  // If /profile/:id
+  if (!id) return null;
+
+  // Check if viewing own profile via ID
+  const isOwnProfile = user?.id === id;
+  return <UserProfile userId={id} isOwnProfile={isOwnProfile} />;
+}
+
+function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: boolean }) {
   const { user, role } = useAuth();
-  const [myProducts, setMyProducts] = useState<DbProduct[]>([]);
+
+  // Data State
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [products, setProducts] = useState<DbProduct[]>([]);
+  const [stats, setStats] = useState({ averageRating: 0, whisperCount: 0, loading: true });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  // Local state for immediate UI updates
-  const [username, setUsername] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [badges, setBadges] = useState<string[]>([]);
-
+  // Edit State
   const [editing, setEditing] = useState(false);
+  const [editUsername, setEditUsername] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // 1. Initial Load from Auth
+  // Fetch Data
   useEffect(() => {
-    if (user) {
-      setUsername(user.user_metadata?.username || user.email?.split("@")[0] || "Kullanıcı");
-      // Use existing metadata mainly for initial render
-      setAvatarUrl(user.user_metadata?.avatar_url || null);
-    }
-  }, [user]);
+    async function fetchData() {
+      if (!supabase) return;
+      setLoading(true);
+      setError(false);
 
-  // 2. Refresh from Database (The Truth)
-  useEffect(() => {
-    async function fetchFreshData() {
-      if (!supabase || !user) {
-        setLoading(false);
-        return;
-      }
       try {
-        // A. Profile
-        const { data: profile } = await supabase
+        // 1. Fetch Profile
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("username, avatar_url, badges")
-          .eq("id", user.id)
-          .maybeSingle(); // Use maybeSingle to avoid errors if profile missing
+          .select("*")
+          .eq("id", userId)
+          .single();
 
-        if (profile) {
-          if (profile.username) setUsername(profile.username);
-          // If DB has an avatar, use it. Append time to force refresh if it's the same URL but content changed.
-          if (profile.avatar_url) {
-            setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
-          }
-          if (profile.badges) {
-            setBadges(profile.badges);
-          }
+        if (profileError || !profileData) {
+          console.error("Profile fetch error:", profileError);
+          setError(true);
+          setLoading(false);
+          return;
         }
 
-        // B. Products
-        const { data: products } = await supabase
+        setProfile(profileData as ProfileData);
+        setEditUsername(profileData.username);
+
+        // 2. Fetch Products
+        // If own profile, show all. If other, show only active.
+        let query = supabase
           .from("products")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .order("created_at", { ascending: false });
 
-        if (products) {
-          setMyProducts(products as DbProduct[]);
+        if (!isOwnProfile) {
+          query = query.eq("is_active", true);
         }
+
+        const { data: productsData } = await query;
+        if (productsData) setProducts(productsData as DbProduct[]);
+
+        // 3. Fetch Stats (Reviews & Whispers)
+        // Parallel fetch for potential performance win
+        const [reviewsRes, chatsRes] = await Promise.all([
+          supabase.from("reviews").select("rating").eq("seller_id", userId),
+          supabase.from("chats").select("buyer_id").eq("seller_id", userId)
+        ]);
+
+        // Calculate Average Rating
+        let avgRating = 0;
+        if (reviewsRes.data && reviewsRes.data.length > 0) {
+          const sum = reviewsRes.data.reduce((acc, curr) => acc + curr.rating, 0);
+          avgRating = sum / reviewsRes.data.length;
+        }
+
+        // Calculate Unique Whispers
+        const uniqueBuyers = new Set(chatsRes.data?.map(c => c.buyer_id) || []).size;
+
+        setStats({
+          averageRating: avgRating,
+          whisperCount: uniqueBuyers,
+          loading: false
+        });
+
       } catch (err) {
-        console.error("Data fetch error", err);
+        console.error("Error fetching data:", err);
+        setError(true);
       } finally {
         setLoading(false);
       }
     }
-    fetchFreshData();
-  }, [user]);
 
+    fetchData();
+  }, [userId, isOwnProfile]);
+
+  // Actions
   const handleSaveUsername = async () => {
-    if (!supabase || !user) return;
+    if (!supabase || !user || !profile) return;
     setSaving(true);
     try {
-      // 1. Update DB
+      if (profile.username === editUsername) {
+        setEditing(false);
+        setSaving(false);
+        return;
+      }
+
+      // Check change limit
+      if ((profile.username_changes || 0) >= 3) {
+        toast.error("Kullanıcı adınızı en fazla 3 kez değiştirebilirsiniz.");
+        setSaving(false);
+        return;
+      }
+
+      // Check uniqueness
+      const { data: existingUser, error: uniquenessError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', editUsername)
+        .neq('id', user.id)
+        .maybeSingle();
+
+      if (uniquenessError) throw uniquenessError;
+      if (existingUser) {
+        toast.error("Bu kullanıcı adı başkası tarafından kullanılıyor.");
+        setSaving(false);
+        return;
+      }
+
+      // Update DB
       const { error } = await supabase
         .from('profiles')
-        .update({ username })
+        .update({
+          username: editUsername,
+          username_changes: (profile.username_changes || 0) + 1
+        })
         .eq('id', user.id);
 
       if (error) throw error;
 
-      // 2. Update Auth
-      await supabase.auth.updateUser({ data: { username } });
+      // Update Auth
+      await supabase.auth.updateUser({ data: { username: editUsername } });
 
-      toast.success("Kullanıcı adı güncellendi");
+      // Update Local State
+      setProfile(prev => prev ? ({ ...prev, username: editUsername, username_changes: (prev.username_changes || 0) + 1 }) : null);
+
+      toast.success(`Kullanıcı adı güncellendi. Kalan hakkınız: ${2 - (profile.username_changes || 0)}`);
       setEditing(false);
     } catch (error: any) {
+      console.error(error);
       toast.error("Hata: " + error.message);
     } finally {
       setSaving(false);
     }
   };
 
-  // Avatar Upload
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !supabase || !user) return;
+    if (!file || !supabase || !user || !profile) return;
 
     const validation = validateImageFile(file);
     if (!validation.valid) {
@@ -161,25 +240,19 @@ function MyProfile() {
     }
 
     try {
-      // Create a unique filename to avoid strict RLS collisions on overwrite if policy is tight
-      // or just to be clean.
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${user.id}/avatar_${Date.now()}.${fileExt}`;
 
-      // Upload
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, {
-          contentType: file.type,
-          upsert: true
-        });
+        .upload(fileName, file, { contentType: file.type, upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
       const publicUrl = urlData.publicUrl;
 
-      // 1. Update DB
+      // Update DB
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
@@ -187,246 +260,17 @@ function MyProfile() {
 
       if (updateError) throw updateError;
 
-      // 2. Update Auth Metadata
-      await supabase.auth.updateUser({
-        data: { avatar_url: publicUrl }
-      });
+      // Update Auth
+      await supabase.auth.updateUser({ data: { avatar_url: publicUrl } });
 
-      // 3. Force UI Update with Timestamp to bust cache
-      const uniqueUrl = `${publicUrl}?t=${Date.now()}`;
-      setAvatarUrl(uniqueUrl);
-
+      // Force UI Refresh (bust cache with timestamp)
+      setProfile(prev => prev ? ({ ...prev, avatar_url: `${publicUrl}?t=${Date.now()}` }) : null);
       toast.success("Profil fotoğrafı güncellendi!");
 
     } catch (error: any) {
       console.error(error);
-      toast.error("Yükleme hatası: " + (error.message || "Bilinmeyen hata"));
+      toast.error("Yükleme hatası: " + error.message);
     }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!supabase || !user) return;
-    if (!window.confirm("Hesabınızı kalıcı olarak silmek istediğinize emin misiniz?")) return;
-    try {
-      setSaving(true);
-      await supabase.rpc('delete_account');
-      await supabase.auth.signOut();
-      window.location.href = "/";
-    } catch (error: any) {
-      toast.error("Hata: " + error.message);
-      setSaving(false);
-    }
-  };
-
-  if (!user) {
-    return (
-      <Layout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-          <div className="text-6xl mb-6">🔒</div>
-          <h2 className="text-2xl font-bold mb-3">Giriş Yapmanız Gerekiyor</h2>
-          <Link to={ROUTE_PATHS.HOME} className="text-primary hover:underline font-medium">Ana Sayfaya Dön</Link>
-        </div>
-      </Layout>
-    );
-  }
-
-  const joinDate = user.created_at ? new Date(user.created_at) : new Date();
-  const firstLetter = username.charAt(0).toUpperCase();
-
-  return (
-    <Layout>
-      <div className="max-w-5xl mx-auto px-4 py-8 md:py-16">
-        {/* Profile Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative bg-card/50 backdrop-blur-md border border-border/50 rounded-2xl p-8 md:p-10 mb-10"
-        >
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            {/* Avatar */}
-            <div className="relative group cursor-pointer">
-              <label htmlFor="avatar-upload" className="cursor-pointer block">
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-transparent group-hover:border-primary/50 transition-all shadow-lg shadow-primary/20">
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      key={avatarUrl} // Key change forces React to re-mount the img
-                      alt="Avatar"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-4xl font-bold text-white">{firstLetter}</span>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Edit3 className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-              </label>
-              <input
-                id="avatar-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarUpload}
-              />
-            </div>
-
-            {/* Info */}
-            <div className="flex-1 text-center md:text-left">
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-3 mb-2">
-                {editing ? (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xl font-bold text-foreground focus:border-pink-500 focus:outline-none"
-                    />
-                    <button onClick={handleSaveUsername} disabled={saving} className="btn-primary px-4 py-2 rounded-lg text-sm">Kaydet</button>
-                    <button onClick={() => setEditing(false)} className="px-3 py-2 text-muted-foreground">İptal</button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-3xl font-bold">{username}</h1>
-                    <BadgeDisplay badges={badges} />
-                    <button onClick={() => setEditing(true)} className="p-1.5 text-muted-foreground hover:text-primary"><Edit3 className="w-4 h-4" /></button>
-                  </div>
-                )}
-                <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider">
-                  {role === "seller" ? "Satıcı" : "Alıcı"}
-                </span>
-              </div>
-              <p className="text-muted-foreground text-sm">{user.email}</p>
-              <div className="flex items-center gap-4 mt-3 justify-center md:justify-start">
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  <span>{joinDate.toLocaleDateString("tr-TR", { month: "long", year: "numeric" })}'den beri</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Package className="w-4 h-4 text-primary" />
-                  <span>{myProducts.length} ürün</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* My Products */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-6">İlanlarım ({myProducts.length})</h2>
-          {loading ? (
-            <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
-          ) : myProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {myProducts.map((product) => <MyProductCard key={product.id} product={product} />)}
-            </div>
-          ) : (
-            <div className="py-16 text-center text-muted-foreground border-2 border-dashed border-border/30 rounded-3xl">
-              <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground/40" />
-              <p>Henüz ilan eklemediniz.</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </Layout>
-  );
-}
-
-function MyProductCard({ product }: { product: DbProduct }) {
-  return (
-    <Link to={`/product/${product.id}`} className="block">
-      <div className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md cursor-pointer hover:border-primary/30 transition-all">
-        <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
-          {product.image_url ? (
-            <img src={product.image_url} alt={product.title} className="h-full w-full object-cover" loading="lazy" />
-          ) : (
-            <div className="h-full w-full flex items-center justify-center text-muted-foreground/30"><Package className="w-16 h-16" /></div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
-          <div className="absolute top-3 right-3">
-            <span className={cn("px-2 py-1 rounded-full text-[10px] uppercase font-medium", product.is_active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400")}>
-              {product.is_active ? "Aktif" : "Pasif"}
-            </span>
-          </div>
-        </div>
-        <div className="p-4 space-y-2">
-          <div className="flex justify-between items-start">
-            <h3 className="text-sm font-semibold line-clamp-1">{product.title}</h3>
-            <span className="text-sm font-mono font-bold text-primary ml-2 shrink-0">{formatCurrency(product.price)}</span>
-          </div>
-          <p className="text-[11px] text-muted-foreground line-clamp-2">{product.description}</p>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-/** Seller profile — fetches real data from Supabase */
-function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
-  const { user, role } = useAuth();
-  const [sellerProfile, setSellerProfile] = useState<{ username: string; role: string; created_at: string; badges: string[] } | null>(null);
-  const [sellerProducts, setSellerProducts] = useState<DbProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    async function fetchSellerData() {
-      if (!supabase || !sellerId) {
-        setLoading(false);
-        setError(true);
-        return;
-      }
-
-      try {
-        // Fetch seller profile from profiles table
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("username, role, created_at, avatar_url, badges")
-          .eq("id", sellerId)
-          .single();
-
-        if (profileError || !profileData) {
-          console.error("Error fetching seller profile:", profileError);
-          setError(true);
-          setLoading(false);
-          return;
-        }
-
-        setSellerProfile(profileData);
-
-        // Fetch seller's products
-        const { data: productsData, error: productsError } = await supabase
-          .from("products")
-          .select("*")
-          .eq("user_id", sellerId)
-          .eq("is_active", true)
-          .order("created_at", { ascending: false });
-
-        if (!productsError && productsData) {
-          setSellerProducts(productsData as DbProduct[]);
-        }
-      } catch (err) {
-        console.error("Error fetching seller data:", err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchSellerData();
-  }, [sellerId]);
-
-  const handleBadgeUpdate = () => {
-    // Re-fetch profile data to update badges
-    if (!sellerId) return;
-    supabase
-      .from("profiles")
-      .select("username, role, created_at, avatar_url, badges")
-      .eq("id", sellerId)
-      .single()
-      .then(({ data }) => {
-        if (data) setSellerProfile(data as any);
-      });
   };
 
   if (loading) {
@@ -439,72 +283,111 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
     );
   }
 
-  if (error || !sellerProfile) {
+  if (error || !profile) {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           <h2 className="text-2xl font-bold mb-4">Profil bulunamadı.</h2>
-          <Link to={ROUTE_PATHS.HOME} className="text-primary hover:underline">
-            Ana Sayfaya Dön
-          </Link>
+          <Link to={ROUTE_PATHS.HOME} className="text-primary hover:underline">Ana Sayfaya Dön</Link>
         </div>
       </Layout>
     );
   }
 
-  const joinDate = sellerProfile.created_at ? new Date(sellerProfile.created_at) : new Date();
+  const joinDate = profile.created_at ? new Date(profile.created_at) : new Date();
+  const firstLetter = profile.username.charAt(0).toUpperCase();
 
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-16">
-        {/* Geri Dön */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="mb-8"
-        >
-          <Link
-            to={ROUTE_PATHS.PRODUCTS}
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors group"
+        {/* Back Button (Only if not own profile) */}
+        {!isOwnProfile && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="mb-8"
           >
-            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-            <span>Koleksiyonlara Dön</span>
-          </Link>
-        </motion.div>
+            <Link
+              to={ROUTE_PATHS.PRODUCTS}
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors group"
+            >
+              <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+              <span>Koleksiyonlara Dön</span>
+            </Link>
+          </motion.div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* Sol Kolon: Satıcı Bilgileri */}
+          {/* Left Column: Profile Info */}
           <motion.div
             variants={fadeInUp}
             initial="initial"
             animate="animate"
             className="lg:col-span-4 space-y-8"
           >
-            <div className="relative group">
-              <div className="relative z-10 w-48 h-48 mx-auto lg:mx-0 rounded-2xl overflow-hidden border-2 border-primary/20 bg-card flex items-center justify-center">
-                <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-6xl font-bold text-white overflow-hidden">
-                  {(sellerProfile as any).avatar_url ? (
-                    <img src={(sellerProfile as any).avatar_url} alt={sellerProfile.username} className="w-full h-full object-cover" />
+            {/* Avatar Section */}
+            <div className="relative group mx-auto lg:mx-0 w-48">
+              {isOwnProfile ? (
+                <label htmlFor="avatar-upload" className="cursor-pointer block relative">
+                  <div className="w-48 h-48 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-transparent group-hover:border-primary/50 transition-all shadow-lg shadow-primary/20">
+                    {profile.avatar_url ? (
+                      <img key={profile.avatar_url} src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-6xl font-bold text-white">{firstLetter}</span>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Edit3 className="w-8 h-8 text-white" />
+                    </div>
+                  </div>
+                  <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                </label>
+              ) : (
+                <div className="w-48 h-48 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-primary/20 shadow-lg">
+                  {profile.avatar_url ? (
+                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
-                    sellerProfile.username.charAt(0).toUpperCase()
+                    <span className="text-6xl font-bold text-white">{firstLetter}</span>
                   )}
                 </div>
-              </div>
-              <div className="absolute -inset-4 bg-primary/5 blur-2xl rounded-full -z-0 opacity-50" />
+              )}
             </div>
 
+            {/* Profile Details */}
             <div className="space-y-4 text-center lg:text-left">
               <div className="flex flex-col gap-2 items-center lg:items-start">
-                <h1 className="text-4xl font-bold tracking-tight flex items-center gap-2">
-                  {sellerProfile.username}
-                  <BadgeDisplay badges={sellerProfile.badges} size="lg" />
-                </h1>
+
+                {/* Username Editing */}
+                {editing && isOwnProfile ? (
+                  <div className="flex items-center gap-2 w-full justify-center lg:justify-start">
+                    <input
+                      type="text"
+                      value={editUsername}
+                      onChange={(e) => setEditUsername(e.target.value)}
+                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xl font-bold text-foreground focus:border-pink-500 focus:outline-none w-full max-w-[200px]"
+                    />
+                    <button onClick={handleSaveUsername} disabled={saving} className="p-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    </button>
+                    <button onClick={() => { setEditing(false); setEditUsername(profile.username); }} className="p-2 text-muted-foreground hover:bg-white/5 rounded-lg">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <h1 className="text-4xl font-bold tracking-tight flex items-center gap-2">
+                    {profile.username}
+                    <BadgeDisplay badges={profile.badges} size="lg" />
+                    {isOwnProfile && (
+                      <button onClick={() => setEditing(true)} className="p-1.5 text-muted-foreground hover:text-primary transition-colors">
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </h1>
+                )}
+
                 <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider">
-                  {sellerProfile.role === "seller" ? "Satıcı" : "Alıcı"}
+                  {profile.role === "seller" ? "Satıcı" : "Alıcı"}
                 </span>
               </div>
-
-
 
               <div className="flex flex-wrap gap-4 pt-4 justify-center lg:justify-start">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -513,55 +396,61 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Package className="w-4 h-4 text-primary" />
-                  <span>{sellerProducts.length} ürün</span>
+                  <span>{products.length} ürün</span>
                 </div>
               </div>
             </div>
 
-            {/* İtibar Kartı */}
+            {/* Stats Card (Always Visible now!) */}
             <div className="bg-card/50 backdrop-blur-md border border-border/50 rounded-2xl p-6 grid grid-cols-2 gap-4">
               <div className="text-center space-y-1">
                 <div className="flex items-center justify-center gap-1 text-primary">
                   <Star size={18} fill="currentColor" />
-                  <span className="text-xl font-bold">—</span>
+                  <span className="text-xl font-bold">
+                    {stats.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (stats.averageRating > 0 ? stats.averageRating.toFixed(1) : "—")}
+                  </span>
                 </div>
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">Puan</p>
               </div>
               <div className="text-center space-y-1">
                 <div className="flex items-center justify-center gap-1 text-primary">
                   <MessageCircle size={18} fill="currentColor" />
-                  <span className="text-xl font-bold">—</span>
+                  <span className="text-xl font-bold">
+                    {stats.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : stats.whisperCount}
+                  </span>
                 </div>
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">Fısıltı</p>
               </div>
             </div>
 
             {/* Admin Controls */}
-            {sellerProfile && role === 'admin' && (
+            {role === 'admin' && !isOwnProfile && (
               <div className="bg-card/50 backdrop-blur-md border border-red-500/20 rounded-2xl p-6 space-y-4">
                 <div className="flex items-center gap-2 text-red-500 font-bold border-b border-red-500/20 pb-2 mb-2">
                   <ShieldAlert className="w-5 h-5" />
                   Admin Kontrol Paneli
                 </div>
-
                 <AdminBadgeManager
-                  targetUserId={sellerId!}
-                  currentBadges={sellerProfile.badges || []}
-                  onBadgeUpdate={handleBadgeUpdate}
+                  targetUserId={userId}
+                  currentBadges={profile.badges || []}
+                  onBadgeUpdate={() => {
+                    // Refresh logic could be improved, but simple re-fetch works
+                    window.location.reload();
+                  }}
                 />
-
                 <div className="pt-4 border-t border-border/50">
-                  <AdminBanButton targetUserId={sellerId!} />
+                  <AdminBanButton targetUserId={userId} />
                 </div>
               </div>
             )}
           </motion.div>
 
-          {/* Sağ Kolon: Ürünler */}
+          {/* Right Column: Products & Reviews */}
           <div className="lg:col-span-8">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold">
-                Gardırop <span className="text-muted-foreground font-light font-mono ml-2">({sellerProducts.length})</span>
+                {isOwnProfile ? "İlanlarım" : "Gardırop"}
+                <span className="text-muted-foreground font-light font-mono ml-2">({products.length})</span>
               </h2>
               <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
             </div>
@@ -572,67 +461,68 @@ function SellerProfile({ sellerId }: { sellerId: string | undefined }) {
               animate="visible"
               className="grid grid-cols-1 md:grid-cols-2 gap-6"
             >
-              {sellerProducts.length > 0 ? (
-                sellerProducts.map((product) => (
-                  <motion.div key={product.id} variants={staggerItem}>
-                    <Link to={`/product/${product.id}`} className="block">
-                      <div className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md cursor-pointer hover:border-primary/30 transition-all">
-                        <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
-                          {product.image_url ? (
-                            <img src={product.image_url} alt={product.title} className="h-full w-full object-cover" loading="lazy" />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center text-muted-foreground/30">
-                              <Package className="w-16 h-16" />
-                            </div>
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
-                        </div>
-                        <div className="p-4 space-y-2">
-                          <div className="flex justify-between items-start">
-                            <h3 className="text-sm font-semibold line-clamp-1">{product.title}</h3>
-                            <span className="text-sm font-mono font-bold text-primary ml-2 shrink-0">
-                              {formatCurrency(product.price)}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-muted-foreground line-clamp-2">{product.description}</p>
-                          <p className="text-[10px] text-muted-foreground/60">
-                            {new Date(product.created_at).toLocaleDateString("tr-TR")}
-                          </p>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))
+              {products.length > 0 ? (
+                products.map((product) => <ProductCard key={product.id} product={product} />)
               ) : (
                 <div className="col-span-full py-20 text-center text-muted-foreground border-2 border-dashed border-border/30 rounded-3xl">
                   <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground/40" />
-                  <p>Bu satıcının henüz aktif ilanı bulunmuyor.</p>
+                  <p>{isOwnProfile ? "Henüz ilan eklemediniz." : "Bu satıcının henüz aktif ilanı bulunmuyor."}</p>
                 </div>
               )}
             </motion.div>
 
-            {/* Reviews Section */}
-            {sellerId && (
-              <div className="mt-12 space-y-8">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold">
-                    Değerlendirmeler
-                  </h2>
-                  <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
-                </div>
-
-                {/* Review Form — only for logged-in users who are not the seller */}
-                {user && user.id !== sellerId && (
-                  <ReviewForm sellerId={sellerId} />
-                )}
-
-                {/* Review List */}
-                <ReviewList sellerId={sellerId} />
+            {/* Reviews Section (Always Visible!) */}
+            <div className="mt-12 space-y-8">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Değerlendirmeler</h2>
+                <div className="h-px flex-1 bg-border/30 mx-6 hidden sm:block" />
               </div>
-            )}
+
+              {/* Review Form: Only for others, if logged in */}
+              {!isOwnProfile && user && (
+                <ReviewForm sellerId={userId} />
+              )}
+
+              <ReviewList sellerId={userId} />
+            </div>
+
           </div>
         </div>
       </div>
     </Layout>
+  );
+}
+
+function ProductCard({ product }: { product: DbProduct }) {
+  return (
+    <Link to={`/product/${product.id}`} className="block">
+      <div className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md cursor-pointer hover:border-primary/30 transition-all">
+        <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
+          {product.image_url ? (
+            <img src={product.image_url} alt={product.title} className="h-full w-full object-cover" loading="lazy" />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-muted-foreground/30"><Package className="w-16 h-16" /></div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+
+          {/* Active/Passive Badge (Useful for own profile) */}
+          <div className="absolute top-3 right-3">
+            <span className={cn("px-2 py-1 rounded-full text-[10px] uppercase font-medium", product.is_active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400")}>
+              {product.is_active ? "Aktif" : "Pasif"}
+            </span>
+          </div>
+        </div>
+        <div className="p-4 space-y-2">
+          <div className="flex justify-between items-start">
+            <h3 className="text-sm font-semibold line-clamp-1">{product.title}</h3>
+            <span className="text-sm font-mono font-bold text-primary ml-2 shrink-0">{formatCurrency(product.price)}</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground line-clamp-2">{product.description}</p>
+          <p className="text-[10px] text-muted-foreground/60">
+            {new Date(product.created_at).toLocaleDateString("tr-TR")}
+          </p>
+        </div>
+      </div>
+    </Link>
   );
 }

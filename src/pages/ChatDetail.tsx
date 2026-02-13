@@ -186,9 +186,27 @@ export default function ChatDetail() {
 
         fetchChatData();
 
-        // ------ Realtime: new messages ------
-        const messagesChannel = supabase!
-            .channel(`chat-messages:${id}`)
+    }, [id, user, navigate]);
+
+    // ------ Realtime: Single Channel for Messages & Presence ------
+    const channelRef = useRef<any>(null);
+
+    useEffect(() => {
+        if (!id || !user || !supabase) return;
+
+        // Use a single channel for the chat room
+        const channel = supabase.channel(`room:${id}`, {
+            config: {
+                presence: {
+                    key: user.id,
+                },
+            },
+        });
+
+        channelRef.current = channel;
+
+        channel
+            // Listen for new messages
             .on(
                 "postgres_changes",
                 {
@@ -199,18 +217,15 @@ export default function ChatDetail() {
                 },
                 (payload) => {
                     const newMsg = payload.new as Message;
-
-                    // ✅ FIX: Skip if message is from current user (already added via optimistic update)
-                    if (newMsg.sender_id === user!.id) return;
+                    if (newMsg.sender_id === user.id) return; // Skip own messages (handled optimistically)
 
                     setMessages((prev) => {
-                        // Also skip if already exists (safety)
                         if (prev.some((m) => m.id === newMsg.id)) return prev;
                         return [...prev, newMsg];
                     });
                 }
             )
-            // Listen for read_at updates (so sender sees blue ticks in real-time)
+            // Listen for read receipts
             .on(
                 "postgres_changes",
                 {
@@ -226,40 +241,38 @@ export default function ChatDetail() {
                     );
                 }
             )
-            .subscribe();
-
-        // ------ Realtime: typing indicator (Presence) ------
-        const presenceChannel = supabase!.channel(`typing:${id}`, {
-            config: { presence: { key: user!.id } },
-        });
-
-        presenceChannel
+            // Listen for presence (typing)
             .on("presence", { event: "sync" }, () => {
-                const state = presenceChannel.presenceState();
-                // Check if any OTHER user is typing
+                const state = channel.presenceState();
                 const othersTyping = Object.entries(state).some(
                     ([key, presences]: [string, any]) =>
-                        key !== user!.id &&
-                        presences.some((p: any) => p.typing === true)
+                        key !== user.id && presences.some((p: any) => p.typing === true)
                 );
                 setIsTyping(othersTyping);
             })
-            .subscribe();
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    // console.log('Connected to chat room');
+                }
+            });
 
         return () => {
-            supabase!.removeChannel(messagesChannel);
-            supabase!.removeChannel(presenceChannel);
+            supabase.removeChannel(channel);
+            channelRef.current = null;
         };
-    }, [id, user, navigate]);
+    }, [id, user]);
 
     // ------ Typing broadcast ------
     const broadcastTyping = useCallback(
-        (typing: boolean) => {
-            if (!supabase || !id || !user) return;
-            const channel = supabase.channel(`typing:${id}`);
-            channel.track({ typing });
+        async (typing: boolean) => {
+            if (!channelRef.current || !user) return;
+            try {
+                await channelRef.current.track({ typing });
+            } catch (error) {
+                console.error("Typing broadcast error:", error);
+            }
         },
-        [id, user]
+        [user]
     );
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
