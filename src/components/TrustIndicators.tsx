@@ -56,6 +56,14 @@ const WhisperIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// --- Animated Pattern Icons (Hearts) ---
+
+const HeartIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+  </svg>
+);
+
 
 const indicators = [
   {
@@ -124,22 +132,31 @@ export function TrustIndicators({ className }: TrustIndicatorProps) {
           ))}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="mt-16 flex justify-center"
-        >
-          <div className="flex items-center space-x-3 px-5 py-2 rounded-full border border-[#ff0080]/20 bg-[#ff0080]/5 backdrop-blur-sm shadow-[0_0_20px_-5px_rgba(255,0,128,0.2)]">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff0080] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#ff0080] shadow-[0_0_10px_#ff0080]"></span>
-            </span>
-            <span className="text-[11px] uppercase tracking-[0.2em] font-mono text-[#ff0080] font-bold text-shadow-sm">
-              Digital Boudoir Certified
-            </span>
-          </div>
-        </motion.div>
+        {/* Animated Marquee Pattern */}
+        <div className="mt-16 relative w-full overflow-hidden mask-linear-fade">
+          <motion.div
+            className="flex space-x-12 w-max"
+            animate={{ x: [0, -1000] }} // Arbitrary large number for loop, better to duplicate array
+            transition={{
+              repeat: Infinity,
+              ease: "linear",
+              duration: 20,
+            }}
+          >
+            {/* Duplicated array for seamless loop */}
+            {[...Array(20)].map((_, i) => (
+              <div key={i} className="flex items-center space-x-8 opacity-40 hover:opacity-80 transition-opacity duration-500">
+                <HeartIcon className="w-8 h-8 text-[#ff0080]" />
+                <HeartIcon className="w-8 h-8 text-[#ff0080]" />
+                <HeartIcon className="w-8 h-8 text-[#ff0080]" />
+              </div>
+            ))}
+          </motion.div>
+
+          {/* Gradient Overlay for Fade Out Effect */}
+          <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-background to-transparent pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+        </div>
       </div>
     </div>
   );

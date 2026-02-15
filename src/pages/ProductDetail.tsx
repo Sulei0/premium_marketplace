@@ -4,6 +4,16 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ShieldCheck,
   Heart,
   Eye,
@@ -220,6 +230,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const [isWhispering, setIsWhispering] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [showPaymentDisclaimer, setShowPaymentDisclaimer] = useState(false);
 
   // If sold, we might want to disable interactions
   const isSold = product.is_sold;
@@ -232,17 +243,24 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
 
 
 
-  const handleWhisper = async () => {
+  const handleWhisperClick = () => {
     if (!user) {
       toast({ title: "Giriş yapmalısınız", description: "Fısıldamak için lütfen giriş yapın.", variant: "destructive" });
       window.dispatchEvent(new Event('open-login'));
       return;
     }
-
     if (isOwner) {
       toast({ title: "Hata", description: "Kendi ilanınıza fısıldayamazsınız.", variant: "destructive" });
       return;
     }
+    // Show disclaimer first
+    setShowPaymentDisclaimer(true);
+  };
+
+  const executeWhisper = async () => {
+    setShowPaymentDisclaimer(false);
+
+    if (!user) return; // Should be handled by click check but for safety
 
     if (!supabase) {
       toast({ title: "Bağlantı hatası", description: "Lütfen sayfayı yenileyin.", variant: "destructive" });
@@ -628,7 +646,7 @@ input[type="range"]::-moz-range-thumb {
                   </p>
                 </div>
                 <Badge variant="outline" className="text-[10px] font-mono border-green-500/30 text-green-500 flex items-center gap-1">
-                  <Lock className="w-3 h-3" /> GİZLİ ÖDEME
+                  <Lock className="w-3 h-3" /> P2P ÖDEME
                 </Badge>
               </div>
 
@@ -646,7 +664,7 @@ input[type="range"]::-moz-range-thumb {
                   "w-full h-16 rounded-2xl text-lg font-bold shadow-[0_8px_30px_rgba(var(--primary),0.3)] hover:shadow-[0_12px_40px_rgba(var(--primary),0.4)] hover:scale-[1.01] active:scale-[0.98] transition-all group overflow-hidden relative",
                   isSold ? "bg-muted text-muted-foreground shadow-none hover:shadow-none hover:scale-100 cursor-not-allowed" : "bg-primary text-primary-foreground"
                 )}
-                onClick={handleWhisper}
+                onClick={handleWhisperClick}
                 disabled={isWhispering || isSold}
               >
                 {isSold ? (
@@ -672,7 +690,7 @@ input[type="range"]::-moz-range-thumb {
                   <CheckCircle2 className="w-3 h-3 text-primary" /> Anonim Gönderim
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3 h-3 text-primary" /> Güvenli Ödeme
+                  <CheckCircle2 className="w-3 h-3 text-primary" /> Doğrudan İletişim
                 </div>
               </div>
 
@@ -693,6 +711,36 @@ input[type="range"]::-moz-range-thumb {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={showPaymentDisclaimer} onOpenChange={setShowPaymentDisclaimer}>
+        <AlertDialogContent className="max-w-md bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold text-primary flex items-center gap-2">
+              <ShieldCheck className="w-6 h-6" />
+              Önemli Güvenlik Uyarısı
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed space-y-2 pt-2">
+              <p>
+                <strong>Giyenden</strong> ödeme işlemlerine aracılık etmemektedir. Ödemeler doğrudan kullanıcılar (P2P) arasındadır.
+              </p>
+              <ul className="list-disc pl-4 space-y-1">
+                <li>Güvenliğiniz için ödeme kanıtlarınızı (dekont vb.) saklayınız.</li>
+                <li>Tanımadığınız kişilere ödeme yaparken dikkatli olunuz.</li>
+                <li>Ticaretiniz ve anlaşmanız tamamen sizin sorumluluğunuzdadır.</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:space-x-4">
+            <AlertDialogCancel className="rounded-xl">Vazgeç</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={executeWhisper}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
+            >
+              Okudum, Onaylıyorum
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 }
