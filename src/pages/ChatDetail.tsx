@@ -510,16 +510,20 @@ export default function ChatDetail() {
                     </Button>
 
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <Avatar className="w-10 h-10 border">
-                            <AvatarImage src={chat?.other_user.avatar_url || ""} />
-                            <AvatarFallback>
-                                {chat?.other_user.username.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
+                        <Link to={`/profile/${chat?.other_user.id}`}>
+                            <Avatar className="w-10 h-10 border hover:opacity-80 transition-opacity">
+                                <AvatarImage src={chat?.other_user.avatar_url || ""} />
+                                <AvatarFallback>
+                                    {chat?.other_user.username.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                        </Link>
                         <div className="truncate">
-                            <h2 className="font-bold text-sm truncate">
-                                {chat?.other_user.username}
-                            </h2>
+                            <Link to={`/profile/${chat?.other_user.id}`} className="hover:underline">
+                                <h2 className="font-bold text-sm truncate">
+                                    {chat?.other_user.username}
+                                </h2>
+                            </Link>
                             {isTyping ? (
                                 <span className="text-xs text-primary animate-pulse">
                                     Yazıyor...

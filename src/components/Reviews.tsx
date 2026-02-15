@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Star, Send, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -258,14 +259,18 @@ export function ReviewList({ sellerId }: { sellerId: string }) {
                         <div key={review.id} className="bg-card/30 border border-border/30 rounded-xl p-4">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden">
-                                        {review.reviewer?.avatar_url ? (
-                                            <img src={review.reviewer.avatar_url} alt={review.reviewer.username} className="w-full h-full object-cover" />
-                                        ) : (
-                                            review.reviewer?.username?.substring(0, 1).toUpperCase() || "?"
-                                        )}
-                                    </div>
-                                    <span className="text-sm font-medium">{review.reviewer?.username || "Anonim"}</span>
+                                    <Link to={`/profile/${review.reviewer_id}`} className="block shrink-0">
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden hover:opacity-80 transition-opacity">
+                                            {review.reviewer?.avatar_url ? (
+                                                <img src={review.reviewer.avatar_url} alt={review.reviewer.username} className="w-full h-full object-cover" />
+                                            ) : (
+                                                review.reviewer?.username?.substring(0, 1).toUpperCase() || "?"
+                                            )}
+                                        </div>
+                                    </Link>
+                                    <Link to={`/profile/${review.reviewer_id}`} className="hover:underline">
+                                        <span className="text-sm font-medium">{review.reviewer?.username || "Anonim"}</span>
+                                    </Link>
                                 </div>
                                 <span className="text-[10px] text-muted-foreground">
                                     {new Date(review.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" })}
