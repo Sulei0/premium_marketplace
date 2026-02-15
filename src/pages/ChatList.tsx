@@ -127,8 +127,14 @@ export default function ChatList() {
       })
       .subscribe();
 
+    // Poll for updates every 10 seconds
+    const interval = setInterval(() => {
+      fetchChats();
+    }, 10000);
+
     return () => {
       supabase!.removeChannel(channel);
+      clearInterval(interval);
     };
 
   }, [user]);

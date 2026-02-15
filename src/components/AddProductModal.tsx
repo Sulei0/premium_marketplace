@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { X, Upload, ImagePlus, Loader2, Check, Trash2, Plus } from "lucide-react";
+import { X, Upload, Plus, Trash2, Check, AlertCircle, Wind, ImagePlus, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/index";
@@ -33,6 +33,7 @@ export interface DbProductForEdit {
     base_duration: number;
     max_duration: number;
     extras: ExtraItem[];
+    is_sold?: boolean; // Added field
 }
 
 interface ExtraItem {
@@ -59,6 +60,8 @@ const MAX_IMAGES = 5;
 export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModalProps) {
     const { user } = useAuth();
     const isEditMode = !!editProduct;
+    // logic fix: prevent editing sold products
+    const isProductSold = editProduct?.is_sold === true;
 
     const [title, setTitle] = useState(editProduct?.title ?? "");
     const [description, setDescription] = useState(editProduct?.description ?? "");
@@ -96,6 +99,34 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
     const totalPreview = basePriceNum + durationExtra + extrasTotal;
 
     if (!isOpen) return null;
+
+    if (isProductSold) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                <div className="relative w-full max-w-md bg-[#121212] border border-red-500/30 rounded-2xl shadow-2xl p-6 text-center">
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Check className="w-8 h-8 text-red-500" />
+                    </div>
+                    <h2 className="text-xl font-bold text-white mb-2">Bu Ürün Satılmıştır</h2>
+                    <p className="text-gray-400 text-sm mb-6">
+                        Satılan ürünler üzerinde değişiklik yapılamaz. Ürün bilgileri, alıcı ile yapılan anlaşmanın bir parçası olarak kilitlenmiştir.
+                    </p>
+                    <button
+                        onClick={onClose}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-colors"
+                    >
+                        Anlaşıldı
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     const totalImages = imagePreviews.length;
     const canAddMore = totalImages < MAX_IMAGES;
@@ -440,31 +471,34 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                             </div>
 
                             {/* Duration Range Selector */}
-                            <div className="space-y-3 bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                            {/* Süre Slider */}
+                            <div className="space-y-4 pt-2">
                                 <div className="flex justify-between items-center">
-                                    <h4 className="text-sm font-bold uppercase tracking-wider text-pink-400">
-                                        🔥 Tenin Sıcaklığı (Gün)
-                                    </h4>
-                                    <span className="text-lg font-mono font-bold text-pink-400">
-                                        {previewDuration} Gün
+                                    <label className="flex items-center gap-2 text-sm font-medium text-pink-500">
+                                        <Wind className="w-4 h-4 animate-steam" />
+                                        Tenin Sıcaklığı (Maksimum Gün)
+                                    </label>
+                                    <span className="text-xs font-mono bg-pink-500/10 text-pink-400 px-2 py-1 rounded">
+                                        {previewDuration} Gün Seçilirse: +{formatCurrency(durationExtra)}
                                     </span>
                                 </div>
+                            </div>
 
-                                {/* Neon Pink Slider */}
-                                <div className="relative px-1">
-                                    <input
-                                        type="range"
-                                        min={1}
-                                        max={14}
-                                        step={1}
-                                        value={previewDuration}
-                                        onChange={(e) => setPreviewDuration(parseInt(e.target.value))}
-                                        className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                                        style={{
-                                            background: `linear-gradient(to right, #ec4899 0%, #ec4899 ${((previewDuration - 1) / 13) * 100}%, rgba(255,255,255,0.1) ${((previewDuration - 1) / 13) * 100}%, rgba(255,255,255,0.1) 100%)`,
-                                        }}
-                                    />
-                                    <style>{`
+                            {/* Neon Pink Slider */}
+                            <div className="relative px-1">
+                                <input
+                                    type="range"
+                                    min={1}
+                                    max={14}
+                                    step={1}
+                                    value={previewDuration}
+                                    onChange={(e) => setPreviewDuration(parseInt(e.target.value))}
+                                    className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                                    style={{
+                                        background: `linear-gradient(to right, #ec4899 0%, #ec4899 ${((previewDuration - 1) / 13) * 100}%, rgba(255,255,255,0.1) ${((previewDuration - 1) / 13) * 100}%, rgba(255,255,255,0.1) 100%)`,
+                                    }}
+                                />
+                                <style>{`
                     input[type="range"]::-webkit-slider-thumb {
                       -webkit-appearance: none;
                       appearance: none;
@@ -486,46 +520,46 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                       border: 2px solid white;
                     }
                   `}</style>
-                                    <div className="flex justify-between mt-1.5 text-[10px] text-gray-500 font-mono uppercase">
-                                        <span>Taze</span>
-                                        <span>Yoğun</span>
-                                        <span>Mühürlenmiş</span>
-                                    </div>
-                                </div>
-
-                                {/* Duration Price Info */}
-                                {previewDuration > 1 && (
-                                    <div className="text-xs text-pink-300/70 text-right">
-                                        +{formatCurrency(durationExtra)} süre ek ücreti ({previewDuration - 1} × {formatCurrency(PRICE_PER_DAY)}/gün)
-                                    </div>
-                                )}
-
-                                {/* Min/Max Duration for seller */}
-                                <div className="grid grid-cols-2 gap-3 mt-2">
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] text-gray-500 ml-1">Min Süre (Gün)</label>
-                                        <input
-                                            type="number"
-                                            min={1}
-                                            max={maxDuration}
-                                            value={baseDuration}
-                                            onChange={(e) => { const v = parseInt(e.target.value) || 1; setBaseDuration(v); if (previewDuration < v) setPreviewDuration(v); }}
-                                            className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:border-pink-500 focus:outline-none"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] text-gray-500 ml-1">Max Süre (Gün)</label>
-                                        <input
-                                            type="number"
-                                            min={baseDuration}
-                                            max={30}
-                                            value={maxDuration}
-                                            onChange={(e) => { const v = parseInt(e.target.value) || 7; setMaxDuration(v); if (previewDuration > v) setPreviewDuration(v); }}
-                                            className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:border-pink-500 focus:outline-none"
-                                        />
-                                    </div>
+                                <div className="flex justify-between mt-1.5 text-[10px] text-gray-500 font-mono uppercase">
+                                    <span>Taze</span>
+                                    <span>Yoğun</span>
+                                    <span>Mühürlenmiş</span>
                                 </div>
                             </div>
+
+                            {/* Duration Price Info */}
+                            {previewDuration > 1 && (
+                                <div className="text-xs text-pink-300/70 text-right">
+                                    +{formatCurrency(durationExtra)} süre ek ücreti ({previewDuration - 1} × {formatCurrency(PRICE_PER_DAY)}/gün)
+                                </div>
+                            )}
+
+                            {/* Min/Max Duration for seller */}
+                            <div className="grid grid-cols-2 gap-3 mt-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-gray-500 ml-1">Min Süre (Gün)</label>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        max={maxDuration}
+                                        value={baseDuration}
+                                        onChange={(e) => { const v = parseInt(e.target.value) || 1; setBaseDuration(v); if (previewDuration < v) setPreviewDuration(v); }}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:border-pink-500 focus:outline-none"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-gray-500 ml-1">Max Süre (Gün)</label>
+                                    <input
+                                        type="number"
+                                        min={baseDuration}
+                                        max={30}
+                                        value={maxDuration}
+                                        onChange={(e) => { const v = parseInt(e.target.value) || 7; setMaxDuration(v); if (previewDuration > v) setPreviewDuration(v); }}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:border-pink-500 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
 
                             {/* Ekstra Haz Menüsü */}
                             <div className="space-y-4 bg-white/[0.02] border border-white/5 rounded-xl p-4">
@@ -565,10 +599,10 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                                 <button
                                                     type="button"
                                                     onClick={() => toggleExtra(extra.id)}
-                                                    className={`w-8 h-8 rounded-lg border-2 flex shrink-0 items-center justify-center transition-all ${extra.enabled
+                                                    className={"w-8 h-8 rounded-lg border-2 flex shrink-0 items-center justify-center transition-all " + (extra.enabled
                                                         ? "bg-purple-500 border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.4)]"
-                                                        : "border-gray-600 hover:border-gray-500"
-                                                        }`}
+                                                        : "border-gray-600 hover:border-gray-500")
+                                                    }
                                                 >
                                                     {extra.enabled && <Check className="w-4 h-4 text-white" />}
                                                 </button>

@@ -48,7 +48,7 @@ export default function Products() {
 
       const { data, error } = await supabase
         .from("products")
-        .select("id, title, description, price, category, image_url, created_at, user_id, is_active")
+        .select("id, title, description, price, category, image_url, created_at, user_id, is_active, is_sold")
         .eq("is_active", true)
         .order("created_at", { ascending: false })
         .range(from, to);

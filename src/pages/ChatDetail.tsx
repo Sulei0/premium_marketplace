@@ -12,12 +12,20 @@ import { tr } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
+interface OfferDetails {
+    duration: number;
+    extras: Array<{ id: string; label: string; price: number }>;
+    totalPrice: number;
+}
+
 interface Message {
     id: string;
     sender_id: string;
     content: string;
     is_offer: boolean;
-    offer_details: any;
+    offer_amount?: number;
+    offer_status?: 'pending' | 'accepted' | 'rejected';
+    offer_details: OfferDetails | null;
     created_at: string;
     read_at: string | null;
 }
@@ -262,6 +270,55 @@ export default function ChatDetail() {
         };
     }, [id, user]);
 
+    // ------ Polling Fallback ------
+    useEffect(() => {
+        if (!id || !user || !supabase) return;
+
+        const interval = setInterval(async () => {
+            // Only poll if we're not already sending a message to avoid race conditions
+            if (sending) return;
+
+            const { data: latestMessages, error } = await supabase!
+                .from("messages")
+                .select("*")
+                .eq("chat_id", id)
+                .order("created_at", { ascending: true });
+
+            if (!error && latestMessages) {
+                setMessages((prev) => {
+                    // Simple merge: if length is different or last message ID diff, update
+                    // We can be smarter: create a map of existing IDs data
+                    const existingIds = new Set(prev.map(m => m.id));
+                    const newMsgs = latestMessages.filter(m => !existingIds.has(m.id));
+
+                    if (newMsgs.length > 0) {
+                        // Combine and sort to be safe
+                        const combined = [...prev, ...newMsgs].sort(
+                            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                        );
+                        return combined;
+                    }
+                    // Also check for read status updates
+                    // (Optional optimization: only update if something changed)
+                    return prev;
+                });
+
+                // Also update read status if needed
+                const unreadIds = latestMessages
+                    .filter((m) => m.sender_id !== user.id && !m.read_at)
+                    .map((m) => m.id);
+
+                if (unreadIds.length > 0) {
+                    // Trigger read update (it will be handled by the other effect or we can call it here)
+                    // markMessagesAsRead() is dependent on 'messages' state, so let's let the effect handle it
+                    // But we need to make sure 'setMessages' above eventually triggers it.
+                }
+            }
+        }, 5000); // Poll every 5 seconds
+
+        return () => clearInterval(interval);
+    }, [id, user, sending]);
+
     // ------ Typing broadcast ------
     const broadcastTyping = useCallback(
         async (typing: boolean) => {
@@ -284,6 +341,74 @@ export default function ChatDetail() {
         typingTimeoutRef.current = setTimeout(() => {
             broadcastTyping(false);
         }, 2000);
+    };
+
+    // ------ Accept Offer ------
+    const handleAcceptOffer = async (messageId: string, offerAmount: number) => {
+        if (!chat || !user) return;
+
+        try {
+            // 0. PRE-CHECK: Is product already sold?
+            const { data: currentProduct, error: checkError } = await supabase!
+                .from("products")
+                .select("is_sold")
+                .eq("id", chat.product.id)
+                .single();
+
+            if (checkError) throw checkError;
+
+            if (currentProduct?.is_sold) {
+                toast({
+                    title: "İşlem Başarısız",
+                    description: "Bu ürün az önce satıldı! Artık bu teklifi kabul edemezsiniz.",
+                    variant: "destructive"
+                });
+                // Update local state to reflect reality (optional but good UX)
+                // We might want to refresh the chat or product info here
+                return;
+            }
+
+            // 1. Update message status
+            const { error: msgError } = await supabase!
+                .from("messages")
+                .update({ offer_status: 'accepted' })
+                .eq("id", messageId);
+
+            if (msgError) throw msgError;
+
+            // 2. Update product status
+            const { error: prodError } = await supabase!
+                .from("products")
+                .update({ is_sold: true })
+                .eq("id", chat.product.id);
+
+            if (prodError) throw prodError;
+
+            // 3. Update local state
+            setMessages(prev => prev.map(m => m.id === messageId ? { ...m, offer_status: 'accepted' } : m));
+
+            // 4. Send system notification message
+            const systemMsg = `🎉 Teklif kabul edildi! Ürün ${formatCurrency(offerAmount)} tutarına satıldı.`;
+            await handleSendSystemMessage(systemMsg);
+
+            toast({ title: "Başarılı", description: "Teklif kabul edildi ve ürün satıldı olarak işaretlendi." });
+
+        } catch (error) {
+            console.error("Error accepting offer:", error);
+            toast({ title: "Hata", description: "İşlem sırasında bir hata oluştu.", variant: "destructive" });
+        }
+    };
+
+    const handleSendSystemMessage = async (content: string) => {
+        if (!user || !id) return;
+        await supabase!
+            .from("messages")
+            .insert({
+                chat_id: id,
+                sender_id: user.id, // Technically sender is user, but we treat it as system info
+                content: content,
+                is_offer: false
+            });
     };
 
     // ------ Send message ------
@@ -332,10 +457,28 @@ export default function ChatDetail() {
             setMessages((prev) => prev.filter((m) => m.id !== optimisticMessage.id));
             setNewMessage(messageContent);
         } else if (inserted) {
-            // Replace optimistic message with real one (has real ID and server timestamp)
+            // Replace optimistic message with real one
             setMessages((prev) =>
                 prev.map((m) => (m.id === optimisticMessage.id ? (inserted as Message) : m))
             );
+
+            // --- SEND NOTIFICATION ---
+            if (chat && chat.other_user) {
+                const { error: notifError } = await supabase!
+                    .from("notifications")
+                    .insert({
+                        user_id: chat.other_user.id,
+                        type: "new_message",
+                        title: `@${user.user_metadata?.username || "kullanıcı"} size bir mesaj gönderdi`,
+                        body: messageContent,
+                        link: `/messages/${id}`,
+                        is_read: false,
+                    });
+
+                if (notifError) {
+                    console.error("Bildirim gönderilemedi:", notifError);
+                }
+            }
         }
 
         setSending(false);
@@ -454,7 +597,7 @@ export default function ChatDetail() {
                                                         </span>
                                                         <div className="mt-1 flex flex-wrap gap-1">
                                                             {msg.offer_details.extras.map(
-                                                                (extra: any, i: number) => (
+                                                                (extra, i) => (
                                                                     <span
                                                                         key={i}
                                                                         className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full border border-primary/20"
@@ -473,6 +616,34 @@ export default function ChatDetail() {
                                                     {formatCurrency(msg.offer_details?.totalPrice || 0)}
                                                 </span>
                                             </div>
+
+                                            {/* Action Buttons for Seller */}
+                                            {msg.sender_id !== user?.id && msg.offer_status === 'pending' && (
+                                                <div className="flex gap-2 pt-2 mt-1">
+                                                    <Button
+                                                        size="sm"
+                                                        className="flex-1 bg-green-600 hover:bg-green-500 text-white text-xs h-8"
+                                                        onClick={() => handleAcceptOffer(msg.id, msg.offer_details?.totalPrice || 0)}
+                                                    >
+                                                        Kabul Et
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="flex-1 text-xs h-8 border-primary/30 hover:bg-primary/10"
+                                                        onClick={() => inputRef.current?.focus()}
+                                                    >
+                                                        Pazarlık Et
+                                                    </Button>
+                                                </div>
+                                            )}
+
+                                            {/* Status Badge */}
+                                            {msg.offer_status === 'accepted' && (
+                                                <div className="pt-2 mt-1 flex items-center justify-center text-green-500 text-xs font-bold uppercase tracking-widest border-t border-green-500/20">
+                                                    <CheckCheck className="w-3 h-3 mr-1" /> Kabul Edildi
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ) : (

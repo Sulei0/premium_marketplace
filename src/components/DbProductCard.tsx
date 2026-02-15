@@ -13,6 +13,7 @@ export interface DbProduct {
     image_url: string | null;
     created_at: string;
     user_id: string; // Required for notifications
+    is_sold?: boolean;
 }
 
 interface DbProductCardProps {
@@ -44,6 +45,14 @@ export function DbProductCard({ product }: DbProductCardProps) {
                             {product.category}
                         </span>
                     </div>
+
+                    {product.is_sold && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] z-20">
+                            <span className="transform -rotate-12 border-4 border-red-500 text-red-500 font-black text-2xl uppercase tracking-widest px-4 py-1 rounded-sm opacity-90 shadow-2xl">
+                                SATILDI
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Content */}

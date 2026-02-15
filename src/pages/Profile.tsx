@@ -312,7 +312,7 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
               className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors group"
             >
               <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-              <span>Koleksiyonlara Dön</span>
+              <span>Keşfet'e Dön</span>
             </Link>
           </motion.div>
         )}

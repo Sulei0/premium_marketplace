@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import {
   Menu,
   X,
+  Bell,
   MessageSquare,
   User,
   ShieldCheck,
@@ -25,6 +26,7 @@ import { LoginModal } from "@/components/LoginModal";
 import { RegistrationModal } from "@/components/RegistrationModal";
 import { AddProductModal } from "@/components/AddProductModal";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
+import { useNotifications } from "@/contexts/NotificationsContext";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -41,6 +43,7 @@ export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const { user, role, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -139,7 +142,6 @@ export function Layout({ children }: LayoutProps) {
   const navLinks: { name: string; path: string | null; action?: () => void }[] = [
     { name: "Keşfet", path: ROUTE_PATHS.PRODUCTS },
     { name: "En Yeniler", path: null, action: scrollToProducts },
-    { name: "Koleksiyonlar", path: ROUTE_PATHS.PRODUCTS },
   ];
 
   return (
@@ -395,6 +397,18 @@ export function Layout({ children }: LayoutProps) {
                     >
                       <MessageSquare className="w-5 h-5" />
                       Sohbetlerim
+                    </Link>
+                    <Link
+                      to="/notifications"
+                      className="flex items-center gap-3 py-3 text-lg text-muted-foreground hover:text-foreground transition-colors relative"
+                    >
+                      <Bell className="w-5 h-5" />
+                      Bildirimler
+                      {unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
+                          {unreadCount}
+                        </span>
+                      )}
                     </Link>
                     <Link
                       to="/favorites"

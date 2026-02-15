@@ -25,9 +25,11 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/Index";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminProducts from "@/pages/admin/AdminProducts";
+import AdminReports from "@/pages/admin/AdminReports";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Kvkk from "@/pages/Kvkk";
+import Notifications from "@/pages/Notifications";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,6 +62,7 @@ const App = () => {
                       <Route path={ROUTE_PATHS.CHATS} element={<ProtectedRoute><ChatList /></ProtectedRoute>} />
                       <Route path={ROUTE_PATHS.CHAT_DETAIL} element={<ProtectedRoute><ChatDetail /></ProtectedRoute>} />
                       <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+                      <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
                       {/* Yasal sayfalar */}
 
@@ -75,6 +78,7 @@ const App = () => {
                         <Route index element={<AdminDashboard />} />
                         <Route path="users" element={<AdminUsers />} />
                         <Route path="products" element={<AdminProducts />} />
+                        <Route path="reports" element={<AdminReports />} />
                       </Route>
 
                       {/* 404 */}

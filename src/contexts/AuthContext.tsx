@@ -24,43 +24,67 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Fetch role from profiles table
   const fetchRole = useCallback(async (userId: string) => {
     if (!supabase) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
 
-    if (data?.role) {
-      setRoleState(data.role as UserRole);
+      if (error) {
+        console.error("Error fetching role:", error);
+        // Fallback to buyer on error
+        setRoleState("buyer");
+      } else if (data?.role) {
+        setRoleState(data.role as UserRole);
+      }
+    } catch (e) {
+      console.error("Exception fetching role:", e);
+      setRoleState("buyer");
+    } finally {
+      setLoading(false); // Role loaded, stop loading
     }
   }, []);
 
   useEffect(() => {
     if (!supabase) return;
 
+    let mounted = true;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       const currentUser = session?.user ?? null;
       setUser(currentUser);
+
       if (currentUser) {
+        // Don't set loading false yet, wait for fetchRole
         fetchRole(currentUser.id);
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
       const currentUser = session?.user ?? null;
       setUser(currentUser);
+
       if (currentUser) {
+        // Reset loading to true when user changes, wait for role
+        setLoading(true);
         fetchRole(currentUser.id);
       } else {
         setRoleState("buyer");
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [fetchRole]);
 
   // Update role in Supabase profiles
