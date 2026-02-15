@@ -42,7 +42,7 @@
           iconColor: 'white',
           customIconSrc: 'https://i.ibb.co/h1XYjK1y/giyendenlogofinal.png',
           autoWindowOpen: {
-            autoOpen: true,
+            autoOpen: false,
             openDelay: 2,
             autoOpenOnMobile: false
           }
@@ -54,33 +54,23 @@
           tooltipTextColor: 'white',
           tooltipFontSize: 16
         },
-        disclaimer: {
-          title: 'Uyarı',
-          message: "Bu botu kullanarak kairabot.com gizlilik şartlarını kabul etmiş sayılırsınız.",
-          textColor: '#FF10F0',
-          buttonColor: '#FF10F0',
-          buttonText: 'Hadi Başlayalım!',
-          buttonTextColor: 'white',
-          blurredBackgroundColor: 'rgba(0, 0, 0, 0.7)',
-          backgroundColor: '#121212'
-        },
         customCSS: `
-                    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-                    
-                    .canvas-chatbot-tooltip { 
-                        font-family: 'Poppins', sans-serif !important;
-                        font-weight: 600;
-                        letter-spacing: 0.5px;
-                    }
+                @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+                
+                .canvas-chatbot-tooltip { 
+                    font-family: 'Poppins', sans-serif !important;
+                    font-weight: 600;
+                    letter-spacing: 0.5px;
+                }
 
-                    .canvas-chatbot-messenger {
-                        font-family: 'Poppins', sans-serif !important;
-                    }
-                    
-                    .canvas-chatbot-input {
-                        font-family: 'Poppins', sans-serif !important;
-                    }
-                `,
+                .canvas-chatbot-messenger {
+                    font-family: 'Poppins', sans-serif !important;
+                }
+                
+                .canvas-chatbot-input {
+                    font-family: 'Poppins', sans-serif !important;
+                }
+            `,
         chatWindow: {
           showTitle: true,
           title: 'Buse',
@@ -111,7 +101,7 @@
           },
           footer: {
             textColor: '#444444',
-            text: 'Şıklıkla hazırlandı:',
+            text: 'Bu botu kullanarak şartlarımızı kabul etmiş sayılırsınız. ',
             company: 'kairabot.com',
             companyLink: 'https://kairabot.com'
           }
