@@ -188,8 +188,7 @@ export default function Home() {
             </motion.h1>
 
             <motion.p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.4 }}>
-              Sıradanlığın ötesinde, her parçanın bir ruhu ve yaşanmışlığı var.
-              Dijital boudoir atmosferinde güvenli, gizli ve premium bir alışveriş deneyimi.
+              Sıradan kıyafetlerin ötesinde; kokunun, sıcaklığın ve anıların dijital mabedine hoş geldiniz.
             </motion.p>
 
             <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.6 }}>

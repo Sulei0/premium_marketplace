@@ -230,7 +230,7 @@ export function Layout({ children }: LayoutProps) {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+              className="text-muted-foreground hover:text-foreground transition-colors hidden sm:flex items-center justify-center p-1"
               title={theme === 'dark' ? 'Aydınlık Mod' : 'Karanlık Mod'}
             >
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -243,21 +243,19 @@ export function Layout({ children }: LayoutProps) {
                 {/* Sohbetlerim */}
                 <Link
                   to={ROUTE_PATHS.CHATS}
-                  className="relative text-muted-foreground hover:text-primary transition-colors hidden sm:block"
+                  className="relative text-muted-foreground hover:text-primary transition-colors hidden sm:flex items-center justify-center p-1"
                   title="Sohbetlerim"
                 >
                   <MessageSquare className="w-5 h-5" />
                 </Link>
 
                 {/* Bildirimler */}
-                <div className="hidden sm:block">
-                  <NotificationsPanel />
-                </div>
+                <NotificationsPanel className="hidden sm:flex items-center justify-center p-1" />
 
                 {/* Favorilerim */}
                 <Link
                   to="/favorites"
-                  className="relative text-muted-foreground hover:text-pink-500 transition-colors hidden sm:block"
+                  className="relative text-muted-foreground hover:text-pink-500 transition-colors hidden sm:flex items-center justify-center p-1"
                   title="Favorilerim"
                 >
                   <Heart className="w-5 h-5" />
@@ -268,7 +266,7 @@ export function Layout({ children }: LayoutProps) {
                   <>
                     <Link
                       to="/dashboard/products"
-                      className="relative text-muted-foreground hover:text-foreground transition-colors hidden sm:block font-medium"
+                      className="relative text-muted-foreground hover:text-foreground transition-colors hidden sm:flex items-center justify-center font-medium px-1"
                       title="Ürünlerim"
                     >
                       Ürünlerim
@@ -286,7 +284,7 @@ export function Layout({ children }: LayoutProps) {
                 {/* Profile Avatar Trigger in Header */}
                 <Link
                   to="/profile/me"
-                  className="relative group transition-all"
+                  className="relative group transition-all flex items-center justify-center p-1"
                   title="Profilim"
                 >
                   <div className="w-8 h-8 rounded-full overflow-hidden border border-border group-hover:border-primary transition-colors bg-muted flex items-center justify-center">
@@ -305,7 +303,7 @@ export function Layout({ children }: LayoutProps) {
                 {/* Logout */}
                 <button
                   onClick={handleSignOut}
-                  className="relative z-50 cursor-pointer text-muted-foreground hover:text-red-400 transition-colors hidden sm:block"
+                  className="relative z-50 cursor-pointer text-muted-foreground hover:text-red-400 transition-colors hidden sm:flex items-center justify-center p-1"
                   title="Çıkış Yap"
                 >
                   <LogOut className="w-5 h-5" />

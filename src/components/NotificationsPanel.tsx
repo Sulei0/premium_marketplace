@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, MessageSquare, Heart, Star, Gift, Check, CheckCheck } from "lucide-react";
 import { useNotifications, type Notification } from "@/contexts/NotificationsContext";
+import { cn } from "@/lib/index";
 
 function getIcon(type: string) {
     switch (type) {
@@ -26,7 +27,7 @@ function timeAgo(dateStr: string): string {
     return `${days} gün`;
 }
 
-export function NotificationsPanel() {
+export function NotificationsPanel({ className }: { className?: string }) {
     const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
     const [isOpen, setIsOpen] = useState(false);
     const panelRef = useRef<HTMLDivElement>(null);
@@ -54,11 +55,11 @@ export function NotificationsPanel() {
     };
 
     return (
-        <div className="relative" ref={panelRef}>
+        <div className={cn("relative", className)} ref={panelRef}>
             {/* Bell Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative text-muted-foreground hover:text-foreground transition-colors"
+                className="relative text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
                 title="Bildirimler"
             >
                 <Bell className="w-5 h-5" />
