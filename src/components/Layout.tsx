@@ -552,12 +552,9 @@ export function Layout({ children }: LayoutProps) {
           </div>
 
           <div className="mt-16 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground space-y-4 md:space-y-0">
-            <p>© 2026 Giyenden / KirliSepeti. Tüm hakları saklıdır.</p>
+            <p>© 2026 Giyenden.com. Her hakkı saklıdır. Platformumuz 5651 sayılı kanun uyarınca Yer Sağlayıcı olarak hizmet vermektedir. Kullanıcılar tarafından yüklenen içeriklerden Giyenden sorumlu tutulamaz.</p>
             <div className="flex space-x-6">
-              <span className="flex items-center space-x-1">
-                <ShieldCheck className="w-3 h-3 text-primary" />
-                <span>SSL Secure Payment</span>
-              </span>
+
               <span>KVKK Uyumlu</span>
               <span>18+ Adult Content Only</span>
             </div>
