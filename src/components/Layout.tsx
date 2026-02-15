@@ -27,6 +27,7 @@ import { RegistrationModal } from "@/components/RegistrationModal";
 import { AddProductModal } from "@/components/AddProductModal";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { useNotifications } from "@/contexts/NotificationsContext";
+import { TrustIndicators } from "@/components/TrustIndicators";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -476,40 +477,7 @@ export function Layout({ children }: LayoutProps) {
 
       {/* --- FOOTER --- */}
       <footer className="bg-card border-t border-border mt-20">
-        {/* Trust Indicators Section */}
-        <div className="border-b border-border py-12">
-          <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="flex flex-col items-center space-y-3 group">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary transition-all group-hover:scale-110 group-hover:shadow-[0_0_20px_var(--primary)]">
-                <Truck className="w-7 h-7" />
-              </div>
-              <h3 className="font-semibold">Gizli Gönderim</h3>
-              <p className="text-sm text-muted-foreground px-4">
-                Paket içeriği dışarıdan belli olmaz, gizliliğiniz bizim için kutsaldır.
-              </p>
-            </div>
-
-            <div className="flex flex-col items-center space-y-3 group">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary transition-all group-hover:scale-110 group-hover:shadow-[0_0_20px_var(--primary)]">
-                <Verified className="w-7 h-7" />
-              </div>
-              <h3 className="font-semibold">Doğrulanmış Profiller</h3>
-              <p className="text-sm text-muted-foreground px-4">
-                Tüm satıcılar kimlik ve biyometrik doğrulama sürecinden geçer.
-              </p>
-            </div>
-
-            <div className="flex flex-col items-center space-y-3 group">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary transition-all group-hover:scale-110 group-hover:shadow-[0_0_20px_var(--primary)]">
-                <ShieldCheck className="w-7 h-7" />
-              </div>
-              <h3 className="font-semibold">Güvenli Bölge</h3>
-              <p className="text-sm text-muted-foreground px-4">
-                Ödemeniz, ürünü onaylayana kadar havuz hesabımızda güvende tutulur.
-              </p>
-            </div>
-          </div>
-        </div>
+        <TrustIndicators />
 
         {/* Footer Links & Info */}
         <div className="container mx-auto px-4 py-16">
@@ -535,7 +503,7 @@ export function Layout({ children }: LayoutProps) {
                 <li><Link to={ROUTE_PATHS.PRODUCTS} className="hover:text-primary">Çoraplar</Link></li>
                 <li><Link to={ROUTE_PATHS.PRODUCTS} className="hover:text-primary">İç Giyim</Link></li>
                 <li><Link to={ROUTE_PATHS.PRODUCTS} className="hover:text-primary">Aksesuarlar</Link></li>
-                <li><Link to={ROUTE_PATHS.PRODUCTS} className="hover:text-primary">Popüler Satıcılar</Link></li>
+
               </ul>
             </div>
 
