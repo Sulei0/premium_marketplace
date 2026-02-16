@@ -30,6 +30,7 @@ import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Kvkk from "@/pages/Kvkk";
 import Notifications from "@/pages/Notifications";
+import { SEOCanonical } from "@/components/SEOCanonical";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,6 +53,7 @@ const App = () => {
               <FavoritesProvider>
                 <AgeGate>
                   <HashRouter>
+                    <SEOCanonical />
                     <Routes>
                       <Route path={ROUTE_PATHS.HOME} element={<Home />} />
                       <Route path={ROUTE_PATHS.PRODUCTS} element={<Products />} />

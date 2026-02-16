@@ -4,110 +4,118 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Giyenden — Premium Pazar Yeri</title>
+  <title>Giyenden | Kullanılmış Çorap ve İç Çamaşırları Satın Alın!</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="canonical" href="https://giyenden.com" />
   <meta name="description"
-    content="Türkiye'nin ilk premium ve gizli odaklı C2C pazar yeri. Kişisel eşyalarınızı güvenle alıp satın." />
+    content="Giyenden: Güvenli, anonim pazar yeri. Onaylı satıcılardan özel kullanılmış iç giyim ve çorapları keşfedin. Gizli teslimatla hemen satın alın!" />
   <meta name="author" content="Giyenden" />
-  <meta name="keywords" content="giyenden, pazar yeri, marketplace, premium, güvenli alışveriş" />
+  <meta name="keywords"
+    content="giyenden, pazar yeri, marketplace, premium, güvenli alışveriş, kullanılmış iç çamaşırı, kullanılmış çorap" />
 
-  <meta property="og:title" content="Giyenden — Premium Pazar Yeri" />
-  <meta property="og:description" content="Türkiye'nin ilk premium ve gizli odaklı C2C pazar yeri." />
+  <meta property="og:title" content="Giyenden | Kullanılmış Çorap ve İç Çamaşırları Satın Alın!" />
+  <meta property="og:description"
+    content="Giyenden: Güvenli, anonim pazar yeri. Onaylı satıcılardan özel kullanılmış iç giyim ve çorapları keşfedin. Gizli teslimatla hemen satın alın!" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Giyenden" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Giyenden — Premium Pazar Yeri" />
-  <meta name="twitter:description" content="Türkiye'nin ilk premium ve gizli odaklı C2C pazar yeri." />
+  <meta name="twitter:title" content="Giyenden | Kullanılmış Çorap ve İç Çamaşırları Satın Alın!" />
+  <meta name="twitter:description"
+    content="Giyenden: Güvenli, anonim pazar yeri. Onaylı satıcılardan özel kullanılmış iç giyim ve çorapları keşfedin. Gizli teslimatla hemen satın alın!" />
 </head>
 
 <body style="margin:0;background:#0a0a0a;color:#fafafa;min-height:100vh">
   <div id="root" style="min-height:100vh"></div>
   <script type="module" src="/src/main.tsx"></script>
   <script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
-    Chatbot.init({
-      chatflowid: "a67c5229-2529-4d58-b8b8-a886f4eb8b2c",
-      apiHost: "https://app.kairabot.com",
-      chatflowConfig: {
-        /* Chatflow Config */
-      },
-      theme: {
-        button: {
-          backgroundColor: '#FF10F0',
-          right: 20,
-          bottom: 20,
-          size: 48,
-          dragAndDrop: true,
-          iconColor: 'white',
-          customIconSrc: 'https://i.ibb.co/h1XYjK1y/giyendenlogofinal.png',
-          autoWindowOpen: {
-            autoOpen: false,
-            openDelay: 2,
-            autoOpenOnMobile: false
-          }
+    try {
+      const { default: Chatbot } = await import("https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js");
+      Chatbot.init({
+        chatflowid: "a67c5229-2529-4d58-b8b8-a886f4eb8b2c",
+        apiHost: "https://app.kairabot.com",
+        chatflowConfig: {
+          /* Chatflow Config */
         },
-        tooltip: {
-          showTooltip: true,
-          tooltipMessage: 'Buradayım tatlım! 👋',
-          tooltipBackgroundColor: '#FF10F0',
-          tooltipTextColor: 'white',
-          tooltipFontSize: 16
-        },
-        customCSS: `
-                @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-                
-                .canvas-chatbot-tooltip { 
-                    font-family: 'Poppins', sans-serif !important;
-                    font-weight: 600;
-                    letter-spacing: 0.5px;
-                }
-
-                .canvas-chatbot-messenger {
-                    font-family: 'Poppins', sans-serif !important;
-                }
-                
-                .canvas-chatbot-input {
-                    font-family: 'Poppins', sans-serif !important;
-                }
-            `,
-        chatWindow: {
-          showTitle: true,
-          title: 'Buse',
-          titleAvatarSrc: 'https://i.ibb.co/h1XYjK1y/giyendenlogofinal.png',
-          welcomeMessage: 'Hoş geldin hayatım! Sana nasıl yardımcı olabilirim?',
-          backgroundColor: '#000000',
-          fontSize: 16,
-          botMessage: {
-            backgroundColor: '#1A1A1A',
-            textColor: '#FFFFFF',
-            showAvatar: true,
-            avatarSrc: 'https://i.ibb.co/0RYHRwBj/Gemini-Generated-mage-uqjhgyuqjhgyuqjh.png'
-          },
-          userMessage: {
+        theme: {
+          button: {
             backgroundColor: '#FF10F0',
-            textColor: '#ffffff',
-            showAvatar: true,
-            avatarSrc: 'https://raw.githubusercontent.com/zahidkhawaja/langchild-chat-nextjs/main/public/usericon.png'
+            right: 20,
+            bottom: 20,
+            size: 48,
+            dragAndDrop: true,
+            iconColor: 'white',
+            customIconSrc: 'https://i.ibb.co/h1XYjK1y/giyendenlogofinal.png',
+            autoWindowOpen: {
+              autoOpen: false,
+              openDelay: 2,
+              autoOpenOnMobile: false
+            }
           },
-          textInput: {
-            placeholder: 'Bana bir şeyler sor canım...',
-            backgroundColor: '#121212',
-            textColor: '#FFFFFF',
-            sendButtonColor: '#FF10F0',
+          tooltip: {
+            showTooltip: true,
+            tooltipMessage: 'Buradayım tatlım! 👋',
+            tooltipBackgroundColor: '#FF10F0',
+            tooltipTextColor: 'white',
+            tooltipFontSize: 16
           },
-          feedback: {
-            color: '#FF10F0'
-          },
-          footer: {
-            textColor: '#444444',
-            text: 'Bu botu kullanarak şartlarımızı kabul etmiş sayılırsınız. ',
-            company: 'kairabot.com',
-            companyLink: 'https://kairabot.com'
+          customCSS: `
+                  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+                  
+                  .canvas-chatbot-tooltip { 
+                      font-family: 'Poppins', sans-serif !important;
+                      font-weight: 600;
+                      letter-spacing: 0.5px;
+                  }
+  
+                  .canvas-chatbot-messenger {
+                      font-family: 'Poppins', sans-serif !important;
+                  }
+                  
+                  .canvas-chatbot-input {
+                      font-family: 'Poppins', sans-serif !important;
+                  }
+              `,
+          chatWindow: {
+            showTitle: true,
+            title: 'Buse',
+            titleAvatarSrc: 'https://i.ibb.co/h1XYjK1y/giyendenlogofinal.png',
+            welcomeMessage: 'Hoş geldin hayatım! Sana nasıl yardımcı olabilirim?',
+            backgroundColor: '#000000',
+            fontSize: 16,
+            botMessage: {
+              backgroundColor: '#1A1A1A',
+              textColor: '#FFFFFF',
+              showAvatar: true,
+              avatarSrc: 'https://i.ibb.co/0RYHRwBj/Gemini-Generated-mage-uqjhgyuqjhgyuqjh.png'
+            },
+            userMessage: {
+              backgroundColor: '#FF10F0',
+              textColor: '#ffffff',
+              showAvatar: true,
+              avatarSrc: 'https://raw.githubusercontent.com/zahidkhawaja/langchild-chat-nextjs/main/public/usericon.png'
+            },
+            textInput: {
+              placeholder: 'Bana bir şeyler sor canım...',
+              backgroundColor: '#121212',
+              textColor: '#FFFFFF',
+              sendButtonColor: '#FF10F0',
+            },
+            feedback: {
+              color: '#FF10F0'
+            },
+            footer: {
+              textColor: '#444444',
+              text: 'Bu botu kullanarak şartlarımızı kabul etmiş sayılırsınız. ',
+              company: 'kairabot.com',
+              companyLink: 'https://kairabot.com'
+            }
           }
         }
-      }
-    })
+      })
+    } catch (e) {
+      console.warn("Chatbot failed to initialize, likely due to restricted environment:", e);
+    }
   </script>
 </body>
 
