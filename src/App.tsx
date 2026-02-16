@@ -31,6 +31,7 @@ import Privacy from "@/pages/Privacy";
 import Kvkk from "@/pages/Kvkk";
 import Notifications from "@/pages/Notifications";
 import { SEOCanonical } from "@/components/SEOCanonical";
+import { CookieConsent } from "@/components/CookieConsent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +55,7 @@ const App = () => {
                 <AgeGate>
                   <HashRouter>
                     <SEOCanonical />
+                    <CookieConsent />
                     <Routes>
                       <Route path={ROUTE_PATHS.HOME} element={<Home />} />
                       <Route path={ROUTE_PATHS.PRODUCTS} element={<Products />} />
