@@ -228,6 +228,9 @@ export default defineConfig(({ mode }) => {
         "react-router-dom-original": "react-router-dom",
       },
     },
+    build: {
+      target: 'esnext', // Support top-level await
+    },
     define: {
       // Define environment variables for build-time configuration
       // In production, this will be false by default unless explicitly set to 'true'

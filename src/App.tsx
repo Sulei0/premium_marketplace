@@ -31,6 +31,7 @@ import Privacy from "@/pages/Privacy";
 import Kvkk from "@/pages/Kvkk";
 import Notifications from "@/pages/Notifications";
 import { SEOCanonical } from "@/components/SEOCanonical";
+import { Analytics } from "@vercel/analytics/react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -86,6 +87,7 @@ const App = () => {
                       {/* 404 */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
+                    <Analytics />
                   </HashRouter>
                 </AgeGate>
               </FavoritesProvider>
