@@ -233,6 +233,39 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
         setLoading(true);
         setError(null);
 
+        // ── Limit Daily Listings Check ──
+        if (!isEditMode) {
+            try {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const todayISO = today.toISOString();
+
+                const { count, error: countError } = await supabase
+                    .from("products")
+                    .select("*", { count: "exact", head: true })
+                    .eq("user_id", user.id)
+                    .gte("created_at", todayISO);
+
+                if (countError) {
+                    console.error("Error checking daily limit:", countError);
+                    // Fail safe: allow if check fails, or block? usually better to allow or warn. 
+                    // But for this strict req, let's block or at least show error.
+                    // deciding to throw to stop flow.
+                    throw new Error("İlan limiti kontrol edilirken hata oluştu.");
+                }
+
+                if (count !== null && count >= 5) {
+                    setError("Günlük ilan limiti (5 adet) dolmuştur. Yarın tekrar deneyiniz.");
+                    setLoading(false);
+                    return;
+                }
+            } catch (err: any) {
+                setError(err.message || "Limit kontrolünde hata.");
+                setLoading(false);
+                return;
+            }
+        }
+
         try {
             // Upload new image files
             const uploadedUrls: string[] = [...existingUrls];
@@ -392,6 +425,14 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                     className="hidden"
                                     onChange={handleImagesChange}
                                 />
+                            </div>
+
+                            {/* Nudity Warning */}
+                            <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                                <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                                <p className="text-xs text-red-200">
+                                    <span className="font-bold text-red-400">UYARI:</span> Çıplak fotoğraf paylaşımı kesinlikle yasaktır. Paylaşıldığı takdirde tüm IP ve kullanıcı bilgileri ile yasal işlem başlatılır.
+                                </p>
                             </div>
 
                             {/* Title + Category Row */}

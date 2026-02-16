@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { Link } from 'react-router-dom';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -17,11 +18,20 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  const [agreedPrivacy, setAgreedPrivacy] = useState(false);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!agreedTerms || !agreedPrivacy) {
+      setError("Lütfen Kullanıcı Sözleşmesi ve Gizlilik Politikasını kabul edin.");
+      return;
+    }
+
     setLoading(true);
+    // ... rest of the submit logic
     setError(null);
 
     try {
@@ -87,9 +97,39 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
               placeholder="******"
             />
           </div>
+
+          {/* Legal Consent Checkboxes */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-start gap-3">
+              <input
+                id="terms-check"
+                type="checkbox"
+                checked={agreedTerms}
+                onChange={(e) => setAgreedTerms(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-gray-600 bg-black/20 text-pink-500 focus:ring-pink-500/50 transition-colors cursor-pointer"
+              />
+              <label htmlFor="terms-check" className="text-xs text-gray-400 leading-snug cursor-pointer select-none">
+                <Link to="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-pink-400 hover:text-pink-300 hover:underline">Kullanıcı Sözleşmesi</Link>'ni okudum ve kabul ediyorum.
+              </label>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <input
+                id="privacy-check"
+                type="checkbox"
+                checked={agreedPrivacy}
+                onChange={(e) => setAgreedPrivacy(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-gray-600 bg-black/20 text-pink-500 focus:ring-pink-500/50 transition-colors cursor-pointer"
+              />
+              <label htmlFor="privacy-check" className="text-xs text-gray-400 leading-snug cursor-pointer select-none">
+                <Link to="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-pink-400 hover:text-pink-300 hover:underline">Gizlilik Politikası / KVKK Aydınlatma Metni</Link>'ni okudum ve kabul ediyorum.
+              </label>
+            </div>
+          </div>
+
           <button
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold py-3.5 rounded-lg transition-all transform active:scale-95 mt-2"
+            disabled={loading || !agreedTerms || !agreedPrivacy}
+            className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold py-3.5 rounded-lg transition-all transform active:scale-95 mt-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
           >
             {loading ? 'İşleniyor...' : 'Kayıt Ol'}
           </button>

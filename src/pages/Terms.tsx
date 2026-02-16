@@ -12,58 +12,80 @@ export default function Terms() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="bg-card border border-border rounded-2xl p-8 md:p-12 shadow-sm" // Removed extra shadow
+                    className="bg-[#121212] border border-white/10 rounded-2xl p-8 md:p-12 shadow-2xl"
                 >
-                    <h1 className="text-3xl md:text-4xl font-bold mb-8 text-primary">Kullanıcı Sözleşmesi</h1>
+                    <h1 className="text-3xl md:text-4xl font-bold mb-2 text-white bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+                        GİYENDEN.COM KULLANICI SÖZLEŞMESİ
+                    </h1>
+                    <p className="text-gray-400 mb-8 italic">Son Güncelleme: 16 Şubat 2026</p>
 
-                    <div className="space-y-8 text-muted-foreground">
+                    <div className="space-y-8 text-gray-300">
                         <section>
-                            <h2 className="text-xl font-semibold text-foreground mb-4">1. Taraflar</h2>
+                            <h2 className="text-xl font-bold text-white mb-4">1. TARAFLAR VE KABUL</h2>
+                            <p className="mb-2">
+                                İşbu Kullanıcı Sözleşmesi ("Sözleşme"), Giyenden.com ("Platform") ile Platform’a üye olan veya Platform’u ziyaret eden kullanıcı ("Kullanıcı") arasında akdedilmiştir.
+                            </p>
                             <p>
-                                İşbu sözleşme, "Giyenden" (bundan böyle "Platform" olarak anılacaktır) ile Platform'a üye olan kullanıcı ("Kullanıcı") arasında akdedilmiştir.
+                                Platform'a giriş yapan veya üye olan her Kullanıcı, bu sözleşme hükümlerini hiçbir sınırlama olmaksızın kabul etmiş sayılır.
                             </p>
                         </section>
 
                         <section>
-                            <h2 className="text-xl font-semibold text-foreground mb-4">2. Konu</h2>
+                            <h2 className="text-xl font-bold text-white mb-4">2. YASAL STATÜ VE YER SAĞLAYICI BİLDİRİMİ</h2>
+                            <p className="mb-2">
+                                Giyenden.com, 5651 Sayılı Kanun kapsamında "Yer Sağlayıcı" sıfatına sahiptir.
+                            </p>
+                            <p className="mb-2">
+                                Platform, Kullanıcılar tarafından oluşturulan içerikleri kontrol etmek veya hukuka aykırı bir faaliyetin söz konusu olup olmadığını araştırmakla yükümlü değildir.
+                            </p>
                             <p>
-                                İşbu sözleşmenin konusu, Kullanıcı'nın Platform üzerinden sunduğu ürünleri listelemesi, satması veya satın alması ile ilgili şartların belirlenmesidir.
+                                Platform üzerinde paylaşılan tüm görsel, metin ve ilan içeriklerinin hukuki sorumluluğu tamamen içeriği oluşturan Kullanıcı’ya aittir.
                             </p>
                         </section>
 
                         <section>
-                            <h2 className="text-xl font-semibold text-foreground mb-4">3. Platformun Statüsü (Yer Sağlayıcı)</h2>
+                            <h2 className="text-xl font-bold text-white mb-4">3. ÜYELİK ŞARTLARI VE YAŞ SINIRI</h2>
+                            <p className="mb-2">
+                                Giyenden.com’u kullanabilmek için 18 yaşını doldurmuş olmak zorunludur.
+                            </p>
+                            <p className="mb-2">
+                                Kullanıcı, üyelik formunda verdiği bilgilerin doğruluğunu ve anonimlik haklarını saklı tutarken platform kurallarına uyacağını beyan eder.
+                            </p>
                             <p>
-                                Giyenden, 5651 sayılı kanun kapsamında "Yer Sağlayıcı" statüsündedir. Platform, satıcılar ve alıcılar arasında sadece bir aracılık faaliyeti yürütmekte olup, satılan ürünlerin sahibi, satıcısı veya sağlayıcısı değildir. Platform üzerinden gerçekleşen alışverişlerdeki ayıplı mal, teslimat sorunları veya hijyen problemlerinden Giyenden sorumlu tutulamaz.
+                                Admin ekibi, topluluk kurallarına aykırı hareket eden profilleri önceden bildirim yapmaksızın askıya alma veya kalıcı olarak yasaklama (ban) hakkını saklı tutar.
                             </p>
                         </section>
 
                         <section>
-                            <h2 className="text-xl font-semibold text-foreground mb-4">4. Kullanıcının Yükümlülükleri</h2>
-                            <ul className="list-disc pl-6 space-y-2">
-                                <li>
-                                    Kullanıcı, Türkiye Cumhuriyeti yasalarına aykırı, suç teşkil eden, tehditkar veya ahlaka aykırı içerik ve ürün paylaşamaz.
-                                </li>
-                                <li>
-                                    Satıcı, sattığı ürünün niteliği, hijyeni ve temizliği konusunda alıcıya karşı bizzat sorumludur. İkinci el iç giyim ürünlerinin satışı konusundaki tüm hijyenik sorumluluk satıcıya ve alıcının takdirine aittir.
-                                </li>
-                                <li>
-                                    Platform dışı ödeme yöntemlerinde (IBAN, Kripto vb.) yaşanacak dolandırıcılık veya anlaşmazlıklarda Giyenden taraf değildir.
-                                </li>
-                            </ul>
-                        </section>
-
-                        <section>
-                            <h2 className="text-xl font-semibold text-foreground mb-4">5. Fikri Mülkiyet</h2>
+                            <h2 className="text-xl font-bold text-white mb-4">4. İÇERİK POLİTİKASI VE "UYAR-KALDIR"</h2>
+                            <p className="mb-2">
+                                Platform’da sadece "yaşanmışlık" temalı koleksiyon ürünleri ve ikinci el aksesuarlar sergilenebilir.
+                            </p>
+                            <p className="mb-2">
+                                Yasaklı İçerikler: Çocuk istismarı, rıza dışı görsel paylaşımı, yasadışı madde tanıtımı veya şiddet içeren unsurların paylaşılması kesinlikle yasaktır.
+                            </p>
                             <p>
-                                Platformda yer alan tasarım, logo ve yazılım kodları Giyenden'e aittir. İzinsiz kopyalanamaz.
+                                "Uyar-Kaldır" prensibi uyarınca, telif hakkı veya kişilik hakkı ihlali bildirimleri en geç 48 saat içinde değerlendirilerek ihlale konu içerik yayından kaldırılır.
                             </p>
                         </section>
 
                         <section>
-                            <h2 className="text-xl font-semibold text-foreground mb-4">6. Sözleşme Değişiklikleri</h2>
+                            <h2 className="text-xl font-bold text-white mb-4">5. ÖDEME VE TİCARİ İŞLEMLER (P2P MODELİ)</h2>
+                            <p className="mb-2">
+                                Giyenden.com, alıcı ve satıcı arasındaki ödeme işlemlerine aracılık etmez ve hiçbir komisyon almaz.
+                            </p>
                             <p>
-                                Platform, işbu sözleşmeyi dilediği zaman güncelleme hakkını saklı tutar.
+                                Tüm ödemeler kullanıcılar arasında doğrudan (Peer-to-Peer) gerçekleştirilir. Platform, ödeme süreçlerinden kaynaklanabilecek dolandırıcılık veya uyuşmazlıklardan sorumlu tutulamaz.
+                            </p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-xl font-bold text-white mb-4">6. GİZLİLİK VE VERİ KORUMA</h2>
+                            <p className="mb-2">
+                                Kullanıcı verileri, KVKK ve Gizlilik Politikası kapsamında işlenmektedir.
+                            </p>
+                            <p>
+                                Kullanıcıların birbirlerine mesaj yoluyla gönderdiği kişisel bilgiler veya ödeme detayları kendi sorumluluklarındadır.
                             </p>
                         </section>
                     </div>
