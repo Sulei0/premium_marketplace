@@ -40,18 +40,38 @@ export default function AdminProducts() {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            // Need to join with profiles to get seller username
-            // Supabase join syntax: select(*, profiles(username))
-            const { data, error } = await supabase
+            // Step 1: fetch all products (no join — no FK between products and profiles)
+            const { data: productData, error: productError } = await supabase
                 .from("products")
-                .select("*, seller:profiles(username)")
+                .select("*")
                 .order("created_at", { ascending: false });
 
-            // Note: TypeScript might complain about the joined data structure if not properly typed.
-            // We cast it for now or handle it.
+            if (productError) throw productError;
 
-            if (error) throw error;
-            setProducts(data as any || []);
+            // Step 2: fetch profiles for all unique user_ids
+            const userIds = [...new Set((productData || []).map((p: any) => p.user_id))];
+            let usernameMap: Record<string, string> = {};
+
+            if (userIds.length > 0) {
+                const { data: profileData } = await supabase
+                    .from("profiles")
+                    .select("id, username")
+                    .in("id", userIds);
+
+                if (profileData) {
+                    profileData.forEach((p: any) => {
+                        usernameMap[p.id] = p.username;
+                    });
+                }
+            }
+
+            // Step 3: merge seller username into each product
+            const merged = (productData || []).map((p: any) => ({
+                ...p,
+                seller: { username: usernameMap[p.user_id] || null },
+            }));
+
+            setProducts(merged as any);
         } catch (error: any) {
             toast.error("İlanlar yüklenirken hata oluştu: " + error.message);
         } finally {

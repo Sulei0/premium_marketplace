@@ -52,22 +52,62 @@ export default function AdminReports() {
 
     const fetchReports = async () => {
         setLoading(true);
-        const { data, error } = await supabase!
-            .from("reports")
-            .select(`
-                *,
-                product:products(title, user_id),
-                reporter:profiles!reports_reporter_id_fkey(username)
-            `)
-            .order("created_at", { ascending: false });
 
-        if (error) {
-            console.error("Error fetching reports:", error);
-            toast.error("Raporlar yüklenirken hata oluştu.");
-        } else {
-            setReports(data as Report[]);
+        try {
+            // Step 1: fetch reports only (no joins to avoid FK cache errors)
+            const { data: reportData, error: reportError } = await supabase!
+                .from("reports")
+                .select("*")
+                .order("created_at", { ascending: false });
+
+            if (reportError) throw reportError;
+
+            const reports = reportData || [];
+
+            // Step 2: fetch related products by product_ids
+            const productIds = [...new Set(reports.map((r: any) => r.product_id).filter(Boolean))];
+            let productMap: Record<string, { title: string; user_id: string }> = {};
+            if (productIds.length > 0) {
+                const { data: productData } = await supabase!
+                    .from("products")
+                    .select("id, title, user_id")
+                    .in("id", productIds);
+                if (productData) {
+                    productData.forEach((p: any) => {
+                        productMap[p.id] = { title: p.title, user_id: p.user_id };
+                    });
+                }
+            }
+
+            // Step 3: fetch reporter usernames by reporter_ids
+            const reporterIds = [...new Set(reports.map((r: any) => r.reporter_id).filter(Boolean))];
+            let reporterMap: Record<string, string | null> = {};
+            if (reporterIds.length > 0) {
+                const { data: profileData } = await supabase!
+                    .from("profiles")
+                    .select("id, username")
+                    .in("id", reporterIds);
+                if (profileData) {
+                    profileData.forEach((p: any) => {
+                        reporterMap[p.id] = p.username;
+                    });
+                }
+            }
+
+            // Step 4: merge everything together
+            const merged = reports.map((r: any) => ({
+                ...r,
+                product: productMap[r.product_id] ?? null,
+                reporter: { username: reporterMap[r.reporter_id] ?? null },
+            }));
+
+            setReports(merged as Report[]);
+        } catch (err: any) {
+            console.error("Error fetching reports:", err);
+            toast.error("Raporlar yüklenirken hata oluştu: " + err.message);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     useEffect(() => {
