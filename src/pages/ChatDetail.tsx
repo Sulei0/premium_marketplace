@@ -138,6 +138,17 @@ export default function ChatDetail() {
                 return;
             }
 
+            // SECURITY: Verify current user is a participant of this chat
+            if (chatData.buyer_id !== user!.id && chatData.seller_id !== user!.id) {
+                toast({
+                    title: "Yetkisiz Erişim",
+                    description: "Bu sohbete erişim yetkiniz yok.",
+                    variant: "destructive",
+                });
+                navigate(ROUTE_PATHS.CHATS);
+                return;
+            }
+
             // 2. Fetch product
             const { data: productData } = await supabase!
                 .from("products")

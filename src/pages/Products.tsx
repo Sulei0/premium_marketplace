@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, SlidersHorizontal, Sparkles, X, Loader2, Heart } from "lucide-react";
+import { Search, SlidersHorizontal, Sparkles, X, Loader2, Heart, ArrowUpDown, ChevronDown } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/index";
@@ -24,6 +24,22 @@ interface DbProduct {
 
 const CATEGORIES = ["Tümü", "Çorap", "İç Giyim", "Aksesuar", "Özel Parçalar"] as const;
 
+const SORT_OPTIONS = [
+  { label: "En Yeni", value: "newest" },
+  { label: "En Eski", value: "oldest" },
+  { label: "Fiyat: Düşükten Yükseğe", value: "price_asc" },
+  { label: "Fiyat: Yüksekten Düşüğe", value: "price_desc" },
+] as const;
+
+const PRICE_RANGES = [
+  { label: "Tümü", min: 0, max: Infinity },
+  { label: "₺0 – ₺100", min: 0, max: 100 },
+  { label: "₺100 – ₺250", min: 100, max: 250 },
+  { label: "₺250 – ₺500", min: 250, max: 500 },
+  { label: "₺500 – ₺1.000", min: 500, max: 1000 },
+  { label: "₺1.000+", min: 1000, max: Infinity },
+] as const;
+
 export default function Products() {
   const [products, setProducts] = useState<DbProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +48,10 @@ export default function Products() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [sortBy, setSortBy] = useState<typeof SORT_OPTIONS[number]["value"]>("newest");
+  const [priceRange, setPriceRange] = useState<typeof PRICE_RANGES[number]>(PRICE_RANGES[0]);
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const ITEMS_PER_PAGE = 50;
 
   usePageMeta("Koleksiyon", "Giyenden'de en yeni ürünleri keşfet. Güvenli ve gizli alışveriş.");
@@ -50,6 +70,7 @@ export default function Products() {
         .from("products")
         .select("id, title, description, price, category, image_url, created_at, user_id, is_active, is_sold")
         .eq("is_active", true)
+        .eq("is_approved", true)
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -79,8 +100,12 @@ export default function Products() {
     fetchProducts(nextPage);
   };
 
+  // Determine effective min/max for filtering
+  const effectiveMin = minPrice !== "" ? Number(minPrice) : priceRange.min;
+  const effectiveMax = maxPrice !== "" ? Number(maxPrice) : priceRange.max;
+
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    let result = products.filter((product) => {
       const matchesSearch =
         product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -88,9 +113,45 @@ export default function Products() {
       const matchesCategory =
         selectedCategory === "Tümü" || product.category === selectedCategory;
 
-      return matchesSearch && matchesCategory;
+      const matchesPrice =
+        product.price >= effectiveMin && product.price <= effectiveMax;
+
+      return matchesSearch && matchesCategory && matchesPrice;
     });
-  }, [products, searchTerm, selectedCategory]);
+
+    // Sort
+    switch (sortBy) {
+      case "newest":
+        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+      case "oldest":
+        result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        break;
+      case "price_asc":
+        result.sort((a, b) => a.price - b.price);
+        break;
+      case "price_desc":
+        result.sort((a, b) => b.price - a.price);
+        break;
+    }
+
+    return result;
+  }, [products, searchTerm, selectedCategory, effectiveMin, effectiveMax, sortBy]);
+
+  const activeFilterCount = [
+    selectedCategory !== "Tümü",
+    priceRange !== PRICE_RANGES[0] || minPrice !== "" || maxPrice !== "",
+    sortBy !== "newest",
+  ].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("Tümü");
+    setPriceRange(PRICE_RANGES[0]);
+    setMinPrice("");
+    setMaxPrice("");
+    setSortBy("newest");
+  };
 
   return (
     <Layout>
@@ -146,13 +207,19 @@ export default function Products() {
             </div>
 
             {/* Filters Navigation */}
-            <div className="flex flex-wrap items-center gap-3 mb-8">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
               <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-medium hover:border-primary/50 transition-all"
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${isFilterOpen || activeFilterCount > 0
+                    ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(236,72,153,0.3)]"
+                    : "bg-card border border-border hover:border-primary/50"
+                  }`}
               >
                 <SlidersHorizontal className="w-4 h-4" />
                 Filtrele
+                {activeFilterCount > 0 && (
+                  <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">{activeFilterCount}</span>
+                )}
               </button>
 
               <div className="h-6 w-px bg-border mx-2 hidden sm:block" />
@@ -172,6 +239,110 @@ export default function Products() {
                 ))}
               </div>
             </div>
+
+            {/* Expanded Filter Panel */}
+            <AnimatePresence>
+              {isFilterOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl p-6 mb-6 space-y-6">
+                    {/* Sort */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <ArrowUpDown className="w-4 h-4 text-primary" />
+                        Sıralama
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {SORT_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => setSortBy(option.value)}
+                            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${sortBy === option.value
+                                ? "bg-primary/20 text-primary border border-primary/30"
+                                : "bg-secondary/50 text-muted-foreground border border-transparent hover:border-border"
+                              }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Price Range */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground mb-3">💰 Fiyat Aralığı</h4>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {PRICE_RANGES.map((range, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setPriceRange(range);
+                              setMinPrice("");
+                              setMaxPrice("");
+                            }}
+                            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${priceRange === range && minPrice === "" && maxPrice === ""
+                                ? "bg-primary/20 text-primary border border-primary/30"
+                                : "bg-secondary/50 text-muted-foreground border border-transparent hover:border-border"
+                              }`}
+                          >
+                            {range.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Custom price inputs */}
+                      <div className="flex items-center gap-3">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₺</span>
+                          <input
+                            type="number"
+                            placeholder="Min"
+                            value={minPrice}
+                            onChange={(e) => {
+                              setMinPrice(e.target.value);
+                              setPriceRange(PRICE_RANGES[0]); // Reset preset
+                            }}
+                            className="w-full bg-secondary/30 border border-border/50 rounded-xl py-2.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
+                          />
+                        </div>
+                        <span className="text-muted-foreground text-sm">—</span>
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₺</span>
+                          <input
+                            type="number"
+                            placeholder="Max"
+                            value={maxPrice}
+                            onChange={(e) => {
+                              setMaxPrice(e.target.value);
+                              setPriceRange(PRICE_RANGES[0]); // Reset preset
+                            }}
+                            className="w-full bg-secondary/30 border border-border/50 rounded-xl py-2.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Filter Actions */}
+                    <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                      <p className="text-xs text-muted-foreground">
+                        {filteredProducts.length} ürün bulundu
+                      </p>
+                      <button
+                        onClick={clearAllFilters}
+                        className="text-xs text-primary hover:underline font-medium"
+                      >
+                        Tüm filtreleri temizle
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </section>
 
@@ -185,22 +356,36 @@ export default function Products() {
           ) : (
             <AnimatePresence mode="popLayout">
               {filteredProducts.length > 0 ? (
-                <motion.div
-                  layout
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
-                >
-                  {filteredProducts.map((product, index) => (
-                    <motion.div
-                      key={product.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <DbProductCard product={product} />
-                    </motion.div>
-                  ))}
-                </motion.div>
+                <>
+                  <motion.div
+                    layout
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
+                  >
+                    {filteredProducts.map((product, index) => (
+                      <motion.div
+                        key={product.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ delay: index * 0.05 }}
+                      >
+                        <DbProductCard product={product} />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  {/* Load More */}
+                  {hasMore && (
+                    <div className="flex justify-center mt-12">
+                      <button
+                        onClick={handleLoadMore}
+                        className="px-8 py-3 bg-card border border-border rounded-full text-sm font-medium hover:border-primary/50 hover:bg-primary/5 transition-all"
+                      >
+                        Daha Fazla Yükle
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -232,10 +417,7 @@ export default function Products() {
                         Aradığınız kriterlere uygun bir parça bulunamadı. Lütfen aramayı genişletmeyi deneyin.
                       </p>
                       <button
-                        onClick={() => {
-                          setSearchTerm("");
-                          setSelectedCategory("Tümü");
-                        }}
+                        onClick={clearAllFilters}
                         className="mt-6 text-primary hover:underline font-medium text-sm"
                       >
                         Tüm filtreleri temizle
@@ -273,6 +455,3 @@ export default function Products() {
     </Layout>
   );
 }
-
-// ... (DbProductCard removed) ...
-

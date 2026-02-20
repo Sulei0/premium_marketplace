@@ -89,8 +89,8 @@ export default function Home() {
         const { data, error } = await supabase
           .from("products")
           .select("id, title, description, price, category, image_url, created_at, user_id, is_active, is_sold")
-          .select("id, title, description, price, category, image_url, created_at, user_id, is_active")
           .eq("is_active", true)
+          .eq("is_approved", true)
           .order("created_at", { ascending: false })
           .limit(20);
 

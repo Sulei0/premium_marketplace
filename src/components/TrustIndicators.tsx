@@ -56,13 +56,8 @@ const WhisperIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// --- Animated Pattern Icons (Hearts) ---
 
-const HeartIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-  </svg>
-);
+
 
 
 const indicators = [
@@ -132,30 +127,33 @@ export function TrustIndicators({ className }: TrustIndicatorProps) {
           ))}
         </div>
 
-        {/* Animated Marquee Pattern */}
-        <div className="mt-16 relative w-full overflow-hidden mask-linear-fade">
+        {/* Animated Marquee — Brand Text */}
+        <div className="mt-16 relative w-full overflow-hidden">
           <motion.div
-            className="flex space-x-12 w-max"
-            animate={{ x: [0, -1000] }} // Arbitrary large number for loop, better to duplicate array
+            className="flex items-center w-max"
+            animate={{ x: ["0%", "-50%"] }}
             transition={{
               repeat: Infinity,
               ease: "linear",
-              duration: 20,
+              duration: 25,
             }}
           >
-            {/* Duplicated array for seamless loop */}
-            {[...Array(20)].map((_, i) => (
-              <div key={i} className="flex items-center space-x-8 opacity-40 hover:opacity-80 transition-opacity duration-500">
-                <HeartIcon className="w-8 h-8 text-[#ff0080]" />
-                <HeartIcon className="w-8 h-8 text-[#ff0080]" />
-                <HeartIcon className="w-8 h-8 text-[#ff0080]" />
-              </div>
+            {[...Array(16)].map((_, i) => (
+              <span key={i} className="flex items-center shrink-0">
+                <span
+                  className="text-3xl md:text-4xl font-black italic text-[#ff0080]/30 hover:text-[#ff0080]/70 transition-colors duration-500 select-none px-6 whitespace-nowrap"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  Giyenden
+                </span>
+                <span className="text-[#ff0080]/20 text-lg mx-2">✦</span>
+              </span>
             ))}
           </motion.div>
 
           {/* Gradient Overlay for Fade Out Effect */}
-          <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-background to-transparent pointer-events-none" />
-          <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
         </div>
       </div>
     </div>

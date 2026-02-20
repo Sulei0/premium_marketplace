@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { formatCurrency } from "@/lib/index";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { Heart } from "lucide-react";
 
 export interface DbProduct {
@@ -31,11 +31,13 @@ export function DbProductCard({ product }: DbProductCardProps) {
             <Link to={`/product/${product.id}`} className="block">
                 {/* Image */}
                 <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
-                    <ImageWithSkeleton
+                    <OptimizedImage
                         src={product.image_url || defaultImage}
                         alt={product.title}
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                         fallbackSrc={defaultImage}
+                        thumbnailWidth={400}
+                        thumbnailHeight={500}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-black/20 opacity-60" />
 

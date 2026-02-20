@@ -91,6 +91,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const setRole = useCallback(async (newRole: UserRole) => {
     if (!user || !supabase) return;
 
+    // Frontend guard: users cannot promote themselves to admin
+    if (newRole === 'admin') {
+      console.error("Admin role cannot be set from the client.");
+      throw new Error("Bu işlem yetkiniz dışında.");
+    }
+
     try {
       const { error } = await supabase
         .from("profiles")
