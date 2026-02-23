@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, SlidersHorizontal, Sparkles, X, Loader2, Heart, ArrowUpDown, ChevronDown } from "lucide-react";
@@ -17,6 +17,7 @@ interface DbProduct {
   description: string;
   price: number;
   category: string;
+  size?: string;
   image_url: string | null;
   is_active: boolean;
   created_at: string;
@@ -40,6 +41,8 @@ const PRICE_RANGES = [
   { label: "₺1.000+", min: 1000, max: Infinity },
 ] as const;
 
+const SIZES = ["Tümü", "XS", "S", "M", "L", "XL", "XXL", "36", "38", "40", "42", "44", "46", "Tek Beden"] as const;
+
 export default function Products() {
   const [products, setProducts] = useState<DbProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +55,10 @@ export default function Products() {
   const [priceRange, setPriceRange] = useState<typeof PRICE_RANGES[number]>(PRICE_RANGES[0]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [selectedSize, setSelectedSize] = useState<typeof SIZES[number]>("Tümü");
   const ITEMS_PER_PAGE = 50;
+
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   usePageMeta("Koleksiyon", "Giyenden'de en yeni ürünleri keşfet. Güvenli ve gizli alışveriş.");
 
@@ -100,6 +106,24 @@ export default function Products() {
     fetchProducts(nextPage);
   };
 
+  // Infinite Scroll Effect
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loading, page]);
+
   // Determine effective min/max for filtering
   const effectiveMin = minPrice !== "" ? Number(minPrice) : priceRange.min;
   const effectiveMax = maxPrice !== "" ? Number(maxPrice) : priceRange.max;
@@ -116,7 +140,10 @@ export default function Products() {
       const matchesPrice =
         product.price >= effectiveMin && product.price <= effectiveMax;
 
-      return matchesSearch && matchesCategory && matchesPrice;
+      const matchesSize =
+        selectedSize === "Tümü" || product.size === selectedSize;
+
+      return matchesSearch && matchesCategory && matchesPrice && matchesSize;
     });
 
     // Sort
@@ -136,12 +163,13 @@ export default function Products() {
     }
 
     return result;
-  }, [products, searchTerm, selectedCategory, effectiveMin, effectiveMax, sortBy]);
+  }, [products, searchTerm, selectedCategory, effectiveMin, effectiveMax, sortBy, selectedSize]);
 
   const activeFilterCount = [
     selectedCategory !== "Tümü",
     priceRange !== PRICE_RANGES[0] || minPrice !== "" || maxPrice !== "",
     sortBy !== "newest",
+    selectedSize !== "Tümü",
   ].filter(Boolean).length;
 
   const clearAllFilters = () => {
@@ -151,6 +179,7 @@ export default function Products() {
     setMinPrice("");
     setMaxPrice("");
     setSortBy("newest");
+    setSelectedSize("Tümü");
   };
 
   return (
@@ -327,6 +356,25 @@ export default function Products() {
                       </div>
                     </div>
 
+                    {/* Size Filter */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground mb-3">👗 Beden</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {SIZES.map((size) => (
+                          <button
+                            key={size}
+                            onClick={() => setSelectedSize(size)}
+                            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${selectedSize === size
+                              ? "bg-primary/20 text-primary border border-primary/30"
+                              : "bg-secondary/50 text-muted-foreground border border-transparent hover:border-border"
+                              }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* Filter Actions */}
                     <div className="flex items-center justify-between pt-2 border-t border-border/30">
                       <p className="text-xs text-muted-foreground">
@@ -374,17 +422,12 @@ export default function Products() {
                     ))}
                   </motion.div>
 
-                  {/* Load More */}
-                  {hasMore && (
-                    <div className="flex justify-center mt-12">
-                      <button
-                        onClick={handleLoadMore}
-                        className="px-8 py-3 bg-card border border-border rounded-full text-sm font-medium hover:border-primary/50 hover:bg-primary/5 transition-all"
-                      >
-                        Daha Fazla Yükle
-                      </button>
-                    </div>
-                  )}
+                  {/* Infinite Scroll Trigger */}
+                  <div ref={observerTarget} className="h-10 w-full flex items-center justify-center mt-12">
+                    {hasMore && loading && (
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    )}
+                  </div>
                 </>
               ) : (
                 <motion.div

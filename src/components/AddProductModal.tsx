@@ -28,6 +28,7 @@ export interface DbProductForEdit {
     description: string;
     price: number;
     category: string;
+    size?: string;
     image_url: string | null;
     image_urls?: string[];
     base_duration: number;
@@ -44,6 +45,8 @@ interface ExtraItem {
 }
 
 const CATEGORIES = ["İç Giyim", "Çorap", "Aksesuar", "Özel Parçalar", "Diğer"];
+
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "36", "38", "40", "42", "44", "46", "Tek Beden"];
 
 const DEFAULT_EXTRAS: ExtraItem[] = [
     { id: "detail_photo", label: "Detaylı Ürün Fotoğrafı", price: 30, enabled: false },
@@ -66,6 +69,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
     const [description, setDescription] = useState(editProduct?.description ?? "");
     const [basePrice, setBasePrice] = useState(editProduct?.price?.toString() ?? "");
     const [category, setCategory] = useState(editProduct?.category ?? CATEGORIES[0]);
+    const [size, setSize] = useState(editProduct?.size ?? "");
     const [baseDuration, setBaseDuration] = useState(editProduct?.base_duration ?? 1);
     const [maxDuration, setMaxDuration] = useState(editProduct?.max_duration ?? 7);
     const [extras, setExtras] = useState<ExtraItem[]>(
@@ -191,6 +195,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
             setDescription("");
             setBasePrice("");
             setCategory(CATEGORIES[0]);
+            setSize("");
             setBaseDuration(1);
             setMaxDuration(7);
             setExtras(DEFAULT_EXTRAS.map(e => ({ ...e })));
@@ -289,6 +294,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                 description: cleanDescription,
                 price: basePriceNum,
                 category,
+                size: size || null,
                 image_url: uploadedUrls[0] || null, // backward compat
                 image_urls: uploadedUrls,
                 base_duration: baseDuration,
@@ -463,6 +469,21 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                         ))}
                                     </select>
                                 </div>
+                            </div>
+
+                            {/* Size (Beden) */}
+                            <div className="space-y-1">
+                                <label className="text-xs text-gray-400 ml-1">Beden</label>
+                                <select
+                                    value={size}
+                                    onChange={(e) => setSize(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors appearance-none cursor-pointer"
+                                >
+                                    <option value="" className="bg-[#1a1a1a]">Beden Seçiniz (Opsiyonel)</option>
+                                    {SIZES.map((s) => (
+                                        <option key={s} value={s} className="bg-[#1a1a1a]">{s}</option>
+                                    ))}
+                                </select>
                             </div>
 
                             {/* Base Price */}

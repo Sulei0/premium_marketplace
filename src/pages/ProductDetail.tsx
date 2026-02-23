@@ -62,6 +62,7 @@ interface DbProduct {
   description: string;
   price: number;
   category: string;
+  size?: string;
   image_url: string | null;
   image_urls?: string[];
   is_active: boolean;
@@ -361,6 +362,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
     description: product.description,
     price: product.price,
     category: product.category,
+    size: product.size,
     image_url: product.image_url,
     image_urls: product.image_urls,
     base_duration: baseDuration,
@@ -442,11 +444,16 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                 </>
               )}
 
-              {/* Category Badge */}
-              <div className="absolute top-4 right-4">
+              {/* Category & Size Badges */}
+              <div className="absolute top-4 right-4 flex gap-2">
                 <Badge variant="secondary" className="bg-black/40 backdrop-blur-md border-white/10 text-white">
                   {product.category}
                 </Badge>
+                {product.size && (
+                  <Badge variant="secondary" className="bg-pink-500/30 backdrop-blur-md border-pink-500/20 text-white font-semibold">
+                    {product.size}
+                  </Badge>
+                )}
               </div>
 
               {/* Fav Button */}

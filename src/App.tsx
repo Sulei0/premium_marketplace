@@ -2,11 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HashRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ROUTE_PATHS } from "@/lib/index";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
+import { FollowProvider } from "@/contexts/FollowContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { AgeGate } from "@/components/AgeGate";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -51,46 +52,48 @@ const App = () => {
         <ThemeProvider>
           <AuthProvider>
             <NotificationsProvider>
-              <FavoritesProvider>
-                <AgeGate>
-                  <HashRouter>
-                    <SEOCanonical />
-                    <CookieConsent />
-                    <Routes>
-                      <Route path={ROUTE_PATHS.HOME} element={<Home />} />
-                      <Route path={ROUTE_PATHS.PRODUCTS} element={<Products />} />
-                      <Route path={ROUTE_PATHS.PRODUCT_DETAIL} element={<ProductDetail />} />
-                      <Route path={ROUTE_PATHS.PROFILE} element={<Profile />} />
+              <FollowProvider>
+                <FavoritesProvider>
+                  <AgeGate>
+                    <BrowserRouter>
+                      <SEOCanonical />
+                      <CookieConsent />
+                      <Routes>
+                        <Route path={ROUTE_PATHS.HOME} element={<Home />} />
+                        <Route path={ROUTE_PATHS.PRODUCTS} element={<Products />} />
+                        <Route path={ROUTE_PATHS.PRODUCT_DETAIL} element={<ProductDetail />} />
+                        <Route path={ROUTE_PATHS.PROFILE} element={<Profile />} />
 
-                      {/* Korumalı rotalar */}
-                      <Route path={ROUTE_PATHS.CHATS} element={<ProtectedRoute><ChatList /></ProtectedRoute>} />
-                      <Route path={ROUTE_PATHS.CHAT_DETAIL} element={<ProtectedRoute><ChatDetail /></ProtectedRoute>} />
-                      <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-                      <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+                        {/* Korumalı rotalar */}
+                        <Route path={ROUTE_PATHS.CHATS} element={<ProtectedRoute><ChatList /></ProtectedRoute>} />
+                        <Route path={ROUTE_PATHS.CHAT_DETAIL} element={<ProtectedRoute><ChatDetail /></ProtectedRoute>} />
+                        <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+                        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
-                      {/* Yasal sayfalar */}
+                        {/* Yasal sayfalar */}
 
-                      <Route path="/terms" element={<Terms />} />
-                      <Route path="/privacy" element={<Privacy />} />
-                      <Route path="/kvkk" element={<Kvkk />} />
-                      {/* Satıcı rotaları */}
-                      <Route path="/dashboard/products" element={<SellerRoute><MyProducts /></SellerRoute>} />
+                        <Route path="/terms" element={<Terms />} />
+                        <Route path="/privacy" element={<Privacy />} />
+                        <Route path="/kvkk" element={<Kvkk />} />
+                        {/* Satıcı rotaları */}
+                        <Route path="/dashboard/products" element={<SellerRoute><MyProducts /></SellerRoute>} />
 
-                      {/* Admin paneli */}
-                      {/* Admin paneli */}
-                      <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-                        <Route index element={<AdminDashboard />} />
-                        <Route path="users" element={<AdminUsers />} />
-                        <Route path="products" element={<AdminProducts />} />
-                        <Route path="reports" element={<AdminReports />} />
-                      </Route>
+                        {/* Admin paneli */}
+                        {/* Admin paneli */}
+                        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                          <Route index element={<AdminDashboard />} />
+                          <Route path="users" element={<AdminUsers />} />
+                          <Route path="products" element={<AdminProducts />} />
+                          <Route path="reports" element={<AdminReports />} />
+                        </Route>
 
-                      {/* 404 */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </HashRouter>
-                </AgeGate>
-              </FavoritesProvider>
+                        {/* 404 */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </BrowserRouter>
+                  </AgeGate>
+                </FavoritesProvider>
+              </FollowProvider>
             </NotificationsProvider>
           </AuthProvider>
         </ThemeProvider>

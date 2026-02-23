@@ -11,6 +11,7 @@ interface AuthContextType {
   signUp: (email: string, pass: string, username: string, role: string) => Promise<void>;
   signIn: (email: string, pass: string) => Promise<void>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   loading: boolean;
 }
 
@@ -133,6 +134,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) throw error;
   };
 
+  const resetPassword = async (email: string) => {
+    if (!supabase)
+      throw new Error("Supabase yapılandırılmamış. Lütfen .env dosyanızı kontrol edin.");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${import.meta.env.VITE_SITE_URL || window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+  };
+
   const signOut = useCallback(async () => {
     console.log("AuthContext: Identifying signOut call");
     if (!supabase) {
@@ -154,7 +164,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, role, setRole, signUp, signIn, signOut, loading }}>
+    <AuthContext.Provider value={{ user, role, setRole, signUp, signIn, signOut, resetPassword, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

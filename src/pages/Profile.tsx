@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import {
   MapPin,
   Calendar,
-  MessageCircle,
   Star,
   CheckCircle2,
   ShieldCheck,
@@ -17,7 +16,10 @@ import {
   Loader2,
   ShieldAlert,
   Save,
-  X
+  X,
+  UserPlus,
+  UserCheck,
+  Users
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ROUTE_PATHS, cn, formatCurrency } from "@/lib/index";
@@ -29,6 +31,7 @@ import { ReviewForm, ReviewList } from "@/components/Reviews";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { AdminBadgeManager } from "@/components/AdminBadgeManager";
 import { AdminBanButton } from "@/components/admin/AdminBanButton";
+import { useFollow } from "@/contexts/FollowContext";
 
 interface DbProduct {
   id: string;
@@ -82,11 +85,12 @@ export default function Profile() {
 
 function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: boolean }) {
   const { user, role } = useAuth();
+  const { isFollowing, toggleFollow, getFollowerCount, getFollowingCount } = useFollow();
 
   // Data State
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [products, setProducts] = useState<DbProduct[]>([]);
-  const [stats, setStats] = useState({ averageRating: 0, whisperCount: 0, loading: true });
+  const [stats, setStats] = useState({ averageRating: 0, loading: true });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -135,11 +139,9 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
         const { data: productsData } = await query;
         if (productsData) setProducts(productsData as DbProduct[]);
 
-        // 3. Fetch Stats (Reviews & Whispers)
-        // Parallel fetch for potential performance win
-        const [reviewsRes, chatsRes] = await Promise.all([
-          supabase.from("reviews").select("rating").eq("seller_id", userId),
-          supabase.from("chats").select("buyer_id").eq("seller_id", userId)
+        // 3. Fetch Stats (Reviews)
+        const [reviewsRes] = await Promise.all([
+          supabase.from("reviews").select("rating").eq("seller_id", userId)
         ]);
 
         // Calculate Average Rating
@@ -149,12 +151,8 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
           avgRating = sum / reviewsRes.data.length;
         }
 
-        // Calculate Unique Whispers
-        const uniqueBuyers = new Set(chatsRes.data?.map(c => c.buyer_id) || []).size;
-
         setStats({
           averageRating: avgRating,
-          whisperCount: uniqueBuyers,
           loading: false
         });
 
@@ -399,10 +397,29 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
                   <span>{products.length} ürün</span>
                 </div>
               </div>
+
+              {/* Follow Button (only on other profiles) */}
+              {!isOwnProfile && user && (
+                <button
+                  onClick={() => toggleFollow(userId)}
+                  className={cn(
+                    "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 mt-4",
+                    isFollowing(userId)
+                      ? "bg-card border border-primary/30 text-primary hover:bg-primary/10"
+                      : "bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:from-pink-500 hover:to-purple-500 shadow-lg shadow-primary/25"
+                  )}
+                >
+                  {isFollowing(userId) ? (
+                    <><UserCheck className="w-4 h-4" /> Takip Ediliyor</>
+                  ) : (
+                    <><UserPlus className="w-4 h-4" /> Takip Et</>
+                  )}
+                </button>
+              )}
             </div>
 
             {/* Stats Card (Always Visible now!) */}
-            <div className="bg-card/50 backdrop-blur-md border border-border/50 rounded-2xl p-6 grid grid-cols-2 gap-4">
+            <div className="bg-card/50 backdrop-blur-md border border-border/50 rounded-2xl p-6 grid grid-cols-3 gap-4">
               <div className="text-center space-y-1">
                 <div className="flex items-center justify-center gap-1 text-primary">
                   <Star size={18} fill="currentColor" />
@@ -413,13 +430,18 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">Puan</p>
               </div>
               <div className="text-center space-y-1">
-                <div className="flex items-center justify-center gap-1 text-primary">
-                  <MessageCircle size={18} fill="currentColor" />
-                  <span className="text-xl font-bold">
-                    {stats.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : stats.whisperCount}
-                  </span>
+                <div className="flex items-center justify-center gap-1 text-pink-500">
+                  <Users size={18} />
+                  <span className="text-xl font-bold">{getFollowerCount(userId)}</span>
                 </div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Fısıltı</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Takipçi</p>
+              </div>
+              <div className="text-center space-y-1">
+                <div className="flex items-center justify-center gap-1 text-purple-500">
+                  <UserPlus size={18} />
+                  <span className="text-xl font-bold">{getFollowingCount(userId)}</span>
+                </div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Takip</p>
               </div>
             </div>
 

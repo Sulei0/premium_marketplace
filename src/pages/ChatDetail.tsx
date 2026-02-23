@@ -5,12 +5,13 @@ import { supabase } from "@/lib/supabase";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { ROUTE_PATHS, formatCurrency, cn } from "@/lib/index";
-import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
+import { ArrowLeft, Send, Check, CheckCheck, Paperclip, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface OfferDetails {
     duration: number;
@@ -22,6 +23,7 @@ interface Message {
     id: string;
     sender_id: string;
     content: string;
+    image_url?: string | null;
     is_offer: boolean;
     offer_amount?: number;
     offer_status?: 'pending' | 'accepted' | 'rejected';
@@ -61,6 +63,11 @@ export default function ChatDetail() {
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const isInitialLoad = useRef(true);
 
     usePageMeta(
@@ -355,6 +362,70 @@ export default function ChatDetail() {
     };
 
     // ------ Accept Offer ------
+    // ------ Image Handling ------
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Limit: 5MB
+        if (file.size > 5 * 1024 * 1024) {
+            toast({
+                title: "Dosya Çok Büyük",
+                description: "Maksimum 5MB boyutunda bir görsel seçebilirsiniz.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Type filter
+        if (!file.type.startsWith("image/")) {
+            toast({
+                title: "Hatalı Dosya Tipi",
+                description: "Yalnızca görsel dosyaları gönderebilirsiniz.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        setSelectedImage(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setImagePreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleCancelImage = () => {
+        setSelectedImage(null);
+        setImagePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
+    const uploadImage = async (file: File): Promise<string | null> => {
+        if (!supabase || !id) return null;
+
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+            const filePath = `${id}/${fileName}`;
+
+            const { data, error } = await supabase.storage
+                .from('chat_images')
+                .upload(filePath, file);
+
+            if (error) throw error;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('chat_images')
+                .getPublicUrl(filePath);
+
+            return publicUrl;
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            return null;
+        }
+    };
+
     const handleAcceptOffer = async (messageId: string, offerAmount: number) => {
         if (!chat || !user) return;
 
@@ -435,11 +506,28 @@ export default function ChatDetail() {
         broadcastTyping(false);
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
+        let finalImageUrl = null;
+        if (selectedImage) {
+            setUploading(true);
+            finalImageUrl = await uploadImage(selectedImage);
+            if (!finalImageUrl) {
+                toast({
+                    title: "Hata",
+                    description: "Görsel yüklenemedi. Lütfen tekrar deneyin.",
+                    variant: "destructive",
+                });
+                setUploading(false);
+                return;
+            }
+            handleCancelImage();
+        }
+
         // Optimistic message
         const optimisticMessage: Message = {
             id: `temp-${Date.now()}`,
             sender_id: user.id,
             content: messageContent,
+            image_url: finalImageUrl,
             is_offer: false,
             offer_details: null,
             created_at: new Date().toISOString(),
@@ -454,6 +542,7 @@ export default function ChatDetail() {
                 chat_id: id,
                 sender_id: user.id,
                 content: messageContent,
+                image_url: finalImageUrl
             })
             .select()
             .single();
@@ -493,6 +582,7 @@ export default function ChatDetail() {
         }
 
         setSending(false);
+        setUploading(false);
         inputRef.current?.focus();
     };
 
@@ -670,13 +760,32 @@ export default function ChatDetail() {
                                     >
                                         <div
                                             className={cn(
-                                                "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                                                "max-w-[80%] rounded-2xl p-1 text-sm leading-relaxed overflow-hidden",
                                                 isMe
                                                     ? "bg-primary text-primary-foreground rounded-br-sm"
                                                     : "bg-muted rounded-bl-sm"
                                             )}
                                         >
-                                            {msg.content}
+                                            {msg.image_url && (
+                                                <div
+                                                    className="relative mb-1 rounded-xl overflow-hidden cursor-pointer group"
+                                                    onClick={() => setLightboxImage(msg.image_url!)}
+                                                >
+                                                    <OptimizedImage
+                                                        src={msg.image_url!}
+                                                        alt="Sohbet görseli"
+                                                        className="w-full h-auto max-h-[300px] object-cover transition-transform group-hover:scale-105"
+                                                        thumbnailWidth={600}
+                                                        thumbnailHeight={600}
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                                        <ImageIcon className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div className={cn("px-3 py-1.5", !msg.image_url && "py-1")}>
+                                                {msg.content}
+                                            </div>
                                         </div>
                                         {isMe && (
                                             <div className="flex items-end mb-1 shrink-0">
@@ -708,28 +817,92 @@ export default function ChatDetail() {
                 </div>
 
                 {/* Input Area */}
-                <form
-                    onSubmit={handleSendMessage}
-                    className="p-4 border-t bg-background flex gap-2"
-                >
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        value={newMessage}
-                        onChange={handleInputChange}
-                        placeholder="Bir şeyler fısılda..."
-                        className="flex-1 bg-muted/50 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-shadow"
-                        autoComplete="off"
-                    />
-                    <Button
-                        type="submit"
-                        size="icon"
-                        className="shrink-0 rounded-full"
-                        disabled={!newMessage.trim() || sending}
+                <div className="relative border-t bg-background">
+                    {/* Image Upload Preview */}
+                    {imagePreview && (
+                        <div className="absolute bottom-full left-0 right-0 p-3 bg-background/95 backdrop-blur-sm border-t animate-in slide-in-from-bottom-2 duration-200">
+                            <div className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-primary shadow-lg group">
+                                <img src={imagePreview} className="w-full h-full object-cover" alt="Önizleme" />
+                                <button
+                                    onClick={handleCancelImage}
+                                    className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 shadow-md hover:scale-110 transition-transform"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                                {uploading && (
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    <form
+                        onSubmit={handleSendMessage}
+                        className="p-4 flex gap-2 items-center"
                     >
-                        <Send className="w-4 h-4" />
-                    </Button>
-                </form>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileSelect}
+                            accept="image/*"
+                            className="hidden"
+                        />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="shrink-0 rounded-full text-primary hover:text-primary/80 hover:bg-primary/10"
+                            disabled={sending || uploading}
+                        >
+                            <Paperclip className="w-5 h-5" />
+                        </Button>
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={newMessage}
+                            onChange={handleInputChange}
+                            placeholder={imagePreview ? "Görsel için açıklama yaz..." : "Bir şeyler fısılda..."}
+                            className="flex-1 bg-muted/50 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-shadow"
+                            autoComplete="off"
+                        />
+                        <Button
+                            type="submit"
+                            size="icon"
+                            className="shrink-0 rounded-full bg-primary hover:bg-primary/90"
+                            disabled={(!newMessage.trim() && !selectedImage) || sending || uploading}
+                        >
+                            {uploading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Send className="w-4 h-4" />
+                            )}
+                        </Button>
+                    </form>
+                </div>
+
+                {/* Lightbox Overlay */}
+                {lightboxImage && (
+                    <div
+                        className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300"
+                        onClick={() => setLightboxImage(null)}
+                    >
+                        <button
+                            className="absolute top-4 right-4 text-white hover:bg-white/10 rounded-full p-2"
+                            onClick={() => setLightboxImage(null)}
+                        >
+                            <X className="w-8 h-8" />
+                        </button>
+                        <img
+                            src={lightboxImage}
+                            alt="Büyük boy görsel"
+                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </div>
+                )}
             </div>
         </Layout>
     );

@@ -16,7 +16,8 @@ import {
   Plus,
   LogOut,
   Sun,
-  Moon
+  Moon,
+  Home
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ROUTE_PATHS, cn } from "@/lib/index";
@@ -474,7 +475,7 @@ export function Layout({ children }: LayoutProps) {
       </main>
 
       {/* --- FOOTER --- */}
-      <footer className="bg-card border-t border-border mt-20">
+      <footer className="bg-card border-t border-border mt-20 pb-24 md:pb-0">
         <TrustIndicators />
 
         {/* Footer Links & Info */}
@@ -527,6 +528,77 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </div>
       </footer>
+      <AddProductModal isOpen={isAddProductOpen} onClose={() => setIsAddProductOpen(false)} />
+      <NotificationsPanel />
+
+      {/* --- MOBILE BOTTOM NAV --- */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background/80 backdrop-blur-lg border-t border-border pb-safe-area">
+        <div className="flex justify-around items-center h-16">
+          <NavLink
+            to={ROUTE_PATHS.HOME}
+            className={({ isActive }) => cn(
+              "flex flex-col items-center gap-1 w-full py-2 transition-colors",
+              isActive ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            <Home size={20} />
+            <span className="text-[10px] font-medium">Ana Sayfa</span>
+          </NavLink>
+
+          <NavLink
+            to={ROUTE_PATHS.PRODUCTS}
+            className={({ isActive }) => cn(
+              "flex flex-col items-center gap-1 w-full py-2 transition-colors",
+              isActive ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            <Search size={20} />
+            <span className="text-[10px] font-medium">Keşfet</span>
+          </NavLink>
+
+          <div className="w-full flex justify-center -mt-8">
+            <button
+              onClick={() => setIsAddProductOpen(true)}
+              className="w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/40 flex items-center justify-center border-4 border-background"
+            >
+              <Plus size={24} />
+            </button>
+          </div>
+
+          <NavLink
+            to="/messages"
+            className={({ isActive }) => cn(
+              "flex flex-col items-center gap-1 w-full py-2 transition-colors relative",
+              isActive ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            <MessageSquare size={20} />
+            <span className="text-[10px] font-medium">Mesajlar</span>
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1/2 translate-x-3 w-4 h-4 bg-primary text-[10px] font-bold text-white rounded-full flex items-center justify-center border-2 border-background">
+                {unreadCount}
+              </span>
+            )}
+          </NavLink>
+
+          <Link
+            to={user ? `/profile/me` : "#"}
+            onClick={(e) => {
+              if (!user) {
+                e.preventDefault();
+                openLogin();
+              }
+            }}
+            className={cn(
+              "flex flex-col items-center gap-1 w-full py-2 transition-colors",
+              location.pathname.startsWith('/profile') ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            <User size={20} />
+            <span className="text-[10px] font-medium">Hesabım</span>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

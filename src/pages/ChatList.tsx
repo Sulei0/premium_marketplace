@@ -6,7 +6,7 @@ import { Layout } from "@/components/Layout";
 import { ROUTE_PATHS, cn } from "@/lib/index";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
-import { MessageSquare, Clock, ArrowRight } from "lucide-react";
+import { MessageSquare, Clock, ArrowRight, Image as ImageIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
@@ -22,6 +22,7 @@ interface ChatPreview {
   };
   last_message: {
     content: string;
+    image_url?: string | null;
     created_at: string;
     is_offer: boolean;
   } | null;
@@ -206,9 +207,15 @@ export default function ChatList() {
                         "text-sm truncate pr-4",
                         chat.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"
                       )}>
-                        {chat.last_message?.is_offer
-                          ? "✨ Yeni bir teklif!"
-                          : chat.last_message?.content || "Sohbet başlatıldı..."}
+                        {chat.last_message?.is_offer ? (
+                          "✨ Yeni bir teklif!"
+                        ) : chat.last_message?.image_url ? (
+                          <span className="flex items-center gap-1">
+                            <ImageIcon className="w-3 h-3" /> Fotoğraf
+                          </span>
+                        ) : (
+                          chat.last_message?.content || "Sohbet başlatıldı..."
+                        )}
                       </p>
 
                       {chat.unread_count > 0 && (
