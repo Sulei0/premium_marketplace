@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { formatCurrency } from "@/lib/index";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -23,9 +24,14 @@ interface DbProductCardProps {
 
 export function DbProductCard({ product }: DbProductCardProps) {
     const defaultImage = "/images/placeholder.webp";
-    const { isFavorite, toggleFavorite, getFavoriteCount } = useFavorites();
+    const { isFavorite, toggleFavorite, getFavoriteCount, fetchFavoriteCount } = useFavorites();
     const fav = isFavorite(product.id);
     const count = getFavoriteCount(product.id);
+
+    // Fetch the count on mount
+    useEffect(() => {
+        fetchFavoriteCount(product.id);
+    }, [product.id, fetchFavoriteCount]);
 
     return (
         <div className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md transition-all hover:border-primary/30 cursor-pointer">

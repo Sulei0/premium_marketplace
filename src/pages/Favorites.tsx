@@ -22,7 +22,7 @@ interface DbProduct {
 
 export default function Favorites() {
     const { user } = useAuth();
-    const { favorites, toggleFavorite, getFavoriteCount } = useFavorites();
+    const { favorites, toggleFavorite, getFavoriteCount, fetchMultipleFavoriteCounts } = useFavorites();
     const [products, setProducts] = useState<DbProduct[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -42,7 +42,14 @@ export default function Favorites() {
                     .eq("is_active", true)
                     .order("created_at", { ascending: false });
 
-                if (data) setProducts(data);
+                if (data) {
+                    setProducts(data);
+                    // Fetch all counts for these products in one RPC call
+                    const ids = data.map(p => p.id);
+                    if (ids.length > 0) {
+                        fetchMultipleFavoriteCounts(ids);
+                    }
+                }
             } catch (error) {
                 console.error("Favoriler yüklenirken hata:", error);
                 toast.error("Favoriler yüklenirken bir sorun oluştu.");

@@ -59,6 +59,7 @@ export default function Products() {
   const ITEMS_PER_PAGE = 50;
 
   const observerTarget = useRef<HTMLDivElement>(null);
+  const { fetchMultipleFavoriteCounts } = useFavorites();
 
   usePageMeta("Koleksiyon", "Giyenden'de en yeni ürünleri keşfet. Güvenli ve gizli alışveriş.");
 
@@ -88,6 +89,12 @@ export default function Products() {
         }
 
         setProducts(prev => pageNumber === 0 ? newProducts : [...prev, ...newProducts]);
+
+        // Fetch favorite counts for exactly these loaded products
+        const ids = newProducts.map(p => p.id);
+        if (ids.length > 0) {
+          fetchMultipleFavoriteCounts(ids);
+        }
       }
     } catch {
       // silently fail

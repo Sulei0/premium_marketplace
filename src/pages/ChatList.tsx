@@ -171,7 +171,7 @@ export default function ChatList() {
             chats.map((chat) => (
               <Link
                 key={chat.id}
-                to={`/messages/${chat.id}`}
+                to={ROUTE_PATHS.CHAT_DETAIL.replace(':id', chat.id)}
                 className="block bg-card hover:bg-accent/5 transition-colors border rounded-xl p-4 group"
               >
                 <div className="flex items-start gap-4">

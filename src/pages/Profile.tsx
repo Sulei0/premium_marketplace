@@ -85,7 +85,7 @@ export default function Profile() {
 
 function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: boolean }) {
   const { user, role } = useAuth();
-  const { isFollowing, toggleFollow, getFollowerCount, getFollowingCount } = useFollow();
+  const { isFollowing, toggleFollow, getFollowerCount, getFollowingCount, fetchFollowerCount, fetchFollowingCount } = useFollow();
 
   // Data State
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -93,6 +93,14 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
   const [stats, setStats] = useState({ averageRating: 0, loading: true });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // Fetch Follow Counts
+  useEffect(() => {
+    if (userId) {
+      fetchFollowerCount(userId);
+      fetchFollowingCount(userId);
+    }
+  }, [userId, fetchFollowerCount, fetchFollowingCount]);
 
   // Edit State
   const [editing, setEditing] = useState(false);

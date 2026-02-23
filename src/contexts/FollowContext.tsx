@@ -10,6 +10,8 @@ interface FollowContextType {
     isFollowing: (userId: string) => boolean;
     getFollowerCount: (userId: string) => number;
     getFollowingCount: (userId: string) => number;
+    fetchFollowerCount: (userId: string) => Promise<number>;
+    fetchFollowingCount: (userId: string) => Promise<number>;
     loading: boolean;
 }
 
@@ -50,35 +52,39 @@ export function FollowProvider({ children }: { children: React.ReactNode }) {
         fetchFollowing();
     }, [user]);
 
-    // Fetch follower & following counts
-    useEffect(() => {
-        if (!supabase) return;
-
-        async function fetchCounts() {
-            try {
-                const { data } = await supabase!
-                    .from("follows")
-                    .select("follower_id, following_id");
-
-                if (data) {
-                    const fCounts = new Map<string, number>();
-                    const gCounts = new Map<string, number>();
-                    for (const row of data) {
-                        // follower count: how many follow this user
-                        fCounts.set(row.following_id, (fCounts.get(row.following_id) || 0) + 1);
-                        // following count: how many this user follows
-                        gCounts.set(row.follower_id, (gCounts.get(row.follower_id) || 0) + 1);
-                    }
-                    setFollowerCounts(fCounts);
-                    setFollowingCounts(gCounts);
-                }
-            } catch {
-                // silent
-            }
+    const fetchFollowerCount = useCallback(async (userId: string) => {
+        if (!supabase) return 0;
+        try {
+            const { data, error } = await supabase.rpc('get_user_follower_count', { p_user_id: userId });
+            if (error) throw error;
+            const count = Number(data) || 0;
+            setFollowerCounts(prev => {
+                const next = new Map(prev);
+                next.set(userId, count);
+                return next;
+            });
+            return count;
+        } catch {
+            return followerCounts.get(userId) || 0;
         }
+    }, [followerCounts]);
 
-        fetchCounts();
-    }, [following]);
+    const fetchFollowingCount = useCallback(async (userId: string) => {
+        if (!supabase) return 0;
+        try {
+            const { data, error } = await supabase.rpc('get_user_following_count', { p_user_id: userId });
+            if (error) throw error;
+            const count = Number(data) || 0;
+            setFollowingCounts(prev => {
+                const next = new Map(prev);
+                next.set(userId, count);
+                return next;
+            });
+            return count;
+        } catch {
+            return followingCounts.get(userId) || 0;
+        }
+    }, [followingCounts]);
 
     const toggleFollow = useCallback(async (userId: string) => {
         if (!user || !supabase) return;
@@ -155,7 +161,7 @@ export function FollowProvider({ children }: { children: React.ReactNode }) {
     }, [followingCounts]);
 
     return (
-        <FollowContext.Provider value={{ following, followerCounts, followingCounts, toggleFollow, isFollowing, getFollowerCount, getFollowingCount, loading }}>
+        <FollowContext.Provider value={{ following, followerCounts, followingCounts, toggleFollow, isFollowing, getFollowerCount, getFollowingCount, fetchFollowerCount, fetchFollowingCount, loading }}>
             {children}
         </FollowContext.Provider>
     );

@@ -8,6 +8,8 @@ interface FavoritesContextType {
     toggleFavorite: (productId: string, sellerId?: string) => Promise<void>;
     isFavorite: (productId: string) => boolean;
     getFavoriteCount: (productId: string) => number;
+    fetchFavoriteCount: (productId: string) => Promise<number>;
+    fetchMultipleFavoriteCounts: (productIds: string[]) => Promise<void>;
     loading: boolean;
 }
 
@@ -47,31 +49,45 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         fetchFavorites();
     }, [user]);
 
-    // Fetch favorite counts for all products
-    useEffect(() => {
-        if (!supabase) return;
+    // Removed fetchCounts useEffect to prevent massive data load. Components should now fetch dynamically.
+    const fetchFavoriteCount = useCallback(async (productId: string) => {
+        if (!supabase) return 0;
+        try {
+            const { data, error } = await supabase.rpc('get_product_favorite_count', { p_product_id: productId });
+            if (error) throw error;
 
-        async function fetchCounts() {
-            try {
-                // Use a raw count grouped by product_id
-                const { data } = await supabase!
-                    .from("favorites")
-                    .select("product_id");
-
-                if (data) {
-                    const counts = new Map<string, number>();
-                    for (const row of data) {
-                        counts.set(row.product_id, (counts.get(row.product_id) || 0) + 1);
-                    }
-                    setFavoriteCounts(counts);
-                }
-            } catch {
-                // silent
-            }
+            const count = Number(data) || 0;
+            setFavoriteCounts(prev => {
+                const next = new Map(prev);
+                next.set(productId, count);
+                return next;
+            });
+            return count;
+        } catch {
+            return favoriteCounts.get(productId) || 0;
         }
+    }, [favoriteCounts]);
 
-        fetchCounts();
-    }, [favorites]); // Re-fetch when favorites change
+    const fetchMultipleFavoriteCounts = useCallback(async (productIds: string[]) => {
+        if (!supabase || productIds.length === 0) return;
+        try {
+            const { data, error } = await supabase.rpc('get_multiple_favorite_counts', { p_product_ids: productIds });
+            if (error) throw error;
+
+            setFavoriteCounts(prev => {
+                const next = new Map(prev);
+                // The RPC returns a JSON object like {"id1": 5, "id2": 10}
+                if (data && typeof data === 'object') {
+                    Object.entries(data).forEach(([key, val]) => {
+                        next.set(key, Number(val));
+                    });
+                }
+                return next;
+            });
+        } catch {
+            // silent fail
+        }
+    }, []);
 
     const toggleFavorite = useCallback(async (productId: string, sellerId?: string) => {
         if (!user || !supabase) return;
@@ -150,7 +166,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     }, [favoriteCounts]);
 
     return (
-        <FavoritesContext.Provider value={{ favorites, favoriteCounts, toggleFavorite, isFavorite, getFavoriteCount, loading }}>
+        <FavoritesContext.Provider value={{ favorites, favoriteCounts, toggleFavorite, isFavorite, getFavoriteCount, fetchFavoriteCount, fetchMultipleFavoriteCounts, loading }}>
             {children}
         </FavoritesContext.Provider>
     );

@@ -568,7 +568,7 @@ export function Layout({ children }: LayoutProps) {
           </div>
 
           <NavLink
-            to="/messages"
+            to={ROUTE_PATHS.CHATS}
             className={({ isActive }) => cn(
               "flex flex-col items-center gap-1 w-full py-2 transition-colors relative",
               isActive ? "text-primary" : "text-muted-foreground"
@@ -576,11 +576,6 @@ export function Layout({ children }: LayoutProps) {
           >
             <MessageSquare size={20} />
             <span className="text-[10px] font-medium">Mesajlar</span>
-            {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1/2 translate-x-3 w-4 h-4 bg-primary text-[10px] font-bold text-white rounded-full flex items-center justify-center border-2 border-background">
-                {unreadCount}
-              </span>
-            )}
           </NavLink>
 
           <Link

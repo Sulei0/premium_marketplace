@@ -215,7 +215,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
 }) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isFavorite, toggleFavorite, getFavoriteCount } = useFavorites();
+  const { isFavorite, toggleFavorite, getFavoriteCount, fetchFavoriteCount } = useFavorites();
   const baseDuration = product.base_duration || 1;
   const maxDuration = product.max_duration || 7;
   const extras = product.extras || [];
@@ -226,6 +226,11 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
   const currentImage = allImages[activeImageIndex] || "/images/placeholder.webp";
   const fav = isFavorite(product.id);
   const favCount = getFavoriteCount(product.id);
+
+  // Fetch count when product changes
+  useEffect(() => {
+    fetchFavoriteCount(product.id);
+  }, [product.id, fetchFavoriteCount]);
 
   const [duration, setDuration] = useState(baseDuration);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
