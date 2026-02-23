@@ -43,8 +43,14 @@ export function OptimizedImage({
         if (!isSupabaseUrl) return src;
 
         // Add transform parameters for Supabase Image Transformation
-        const separator = src.includes("?") ? "&" : "?";
-        return `${src}${separator}width=${thumbnailWidth}&height=${thumbnailHeight}&resize=cover&format=webp`;
+        // Supabase requires /render/image/ instead of /object/ to actually apply transforms!
+        let transformUrl = src;
+        if (src.includes("/object/public/")) {
+            transformUrl = src.replace("/object/public/", "/render/image/public/");
+        }
+
+        const separator = transformUrl.includes("?") ? "&" : "?";
+        return `${transformUrl}${separator}width=${thumbnailWidth}&height=${thumbnailHeight}&resize=cover&format=webp`;
     }, [src, thumbnailWidth, thumbnailHeight, useOptimization, error, fallbackSrc]);
 
     return (

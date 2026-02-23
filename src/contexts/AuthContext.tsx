@@ -58,7 +58,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(currentUser);
 
       if (currentUser) {
-        // Don't set loading false yet, wait for fetchRole
+        // Eagerly unblock the UI since we know the user exists
+        setLoading(false);
+        // Fallback role from metadata if available to prevent flash
+        if (currentUser.user_metadata?.role) {
+          setRoleState(currentUser.user_metadata.role);
+        }
+        // Fetch source-of-truth role async without blocking
         fetchRole(currentUser.id);
       } else {
         setLoading(false);
@@ -73,8 +79,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(currentUser);
 
       if (currentUser) {
-        // Reset loading to true when user changes, wait for role
-        setLoading(true);
+        // Eagerly unblock the UI
+        setLoading(false);
+        if (currentUser.user_metadata?.role) {
+          setRoleState(currentUser.user_metadata.role);
+        }
+        // Fetch async without blocking
         fetchRole(currentUser.id);
       } else {
         setRoleState("buyer");
