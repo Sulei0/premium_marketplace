@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 const DEFAULT_TITLE = "Giyenden";
 const DEFAULT_DESC =
-    "Türkiye'nin ilk premium ve gizli odaklı C2C pazar yeri. Kişisel eşyalarınızı güvenle alıp satın.";
+    "Kadınlar için güvenli ve butik bir 2. el moda deneyimi. Gardırobundaki hazineleri paylaş, yeni stiller keşfet.";
 
 /**
  * Dinamik sayfa başlığı ve meta description ayarlar.

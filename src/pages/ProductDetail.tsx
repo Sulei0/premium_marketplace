@@ -195,7 +195,7 @@ export default function ProductDetail() {
     <Layout>
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
         <h2 className="text-2xl font-bold mb-4">Ürün Bulunamadı</h2>
-        <p className="text-muted-foreground mb-8">Aradığınız özel parça boudoir koleksiyonumuzda yer almıyor olabilir.</p>
+        <p className="text-muted-foreground mb-8">Aradığınız ürün koleksiyonumuzda yer almıyor olabilir.</p>
         <Button onClick={() => navigate(ROUTE_PATHS.HOME)} variant="outline">
           Ana Sayfaya Dön
         </Button>
@@ -544,12 +544,12 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
 
             <Separator className="bg-border/30" />
 
-            {/* Tenin Sıcaklığı Slider */}
+            {/* Kargo Hazırlık Süresi Slider */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-pink-400">
-                  <Wind className="w-5 h-5 animate-steam text-pink-400" />
-                  Tenin Sıcaklığı (Gün)
+                  <Wind className="w-5 h-5 animate-float text-pink-400" />
+                  Kargo Hazırlık Süresi (Gün)
                 </h3>
                 <span className="text-lg font-mono text-pink-400 font-bold">{duration} Gün</span>
               </div>
@@ -582,9 +582,9 @@ input[type="range"]::-moz-range-thumb {
 }
 `}</style>
                 <div className="flex justify-between mt-1.5 text-[10px] text-muted-foreground font-mono uppercase">
-                  <span>Taze</span>
-                  <span>Yoğun</span>
-                  <span>Mühürlenmiş</span>
+                  <span>1 Gün</span>
+                  <span>Orta</span>
+                  <span>Maksimum</span>
                 </div>
               </div>
               {durationExtra > 0 && (
@@ -594,11 +594,11 @@ input[type="range"]::-moz-range-thumb {
               )}
             </div>
 
-            {/* Ekstra Haz Menüsü */}
+            {/* Ekstra Hizmetler */}
             {extras.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-purple-400">
-                  ✨ Ekstra Haz Seçenekleri
+                  ✨ Ekstra Hizmetler
                 </h3>
                 <div className="space-y-2">
                   {extras.map((extra) => {

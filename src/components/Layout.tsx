@@ -485,8 +485,8 @@ export function Layout({ children }: LayoutProps) {
                 GIYEN<span className="text-primary">DEN</span>
               </Link>
               <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-                Türkiye'nin ilk premium ve gizli odaklı C2C pazar yeri.
-                Kişisel eşyalarınızın hikayesini, en güvenli şekilde paylaşın.
+                Türkiye'nin sadece kadınlara özel, ilk premium 2. el moda topluluğu.
+                Gardırobunuzun en seçkin parçalarını sadece kadınların olduğu bu güvenli alanda paylaşın.
               </p>
               <div className="flex space-x-4 mt-6">
                 <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer">
@@ -522,7 +522,7 @@ export function Layout({ children }: LayoutProps) {
             <div className="flex space-x-6">
 
               <span>KVKK Uyumlu</span>
-              <span>18+ Adult Content Only</span>
+              <span>Sadece Kadınlara Özel</span>
             </div>
           </div>
         </div>

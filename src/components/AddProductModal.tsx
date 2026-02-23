@@ -46,12 +46,11 @@ interface ExtraItem {
 const CATEGORIES = ["İç Giyim", "Çorap", "Aksesuar", "Özel Parçalar", "Diğer"];
 
 const DEFAULT_EXTRAS: ExtraItem[] = [
-    { id: "photo_proof", label: "Giyerken Fotoğraf Kanıtı", price: 50, enabled: false },
-    { id: "perfume", label: "Özel Parfüm İsteği", price: 50, enabled: false },
-    { id: "sport_wear", label: "Spor Yaparken Giyilsin", price: 100, enabled: false },
-    { id: "video_proof", label: "Video Kanıtı", price: 200, enabled: false },
+    { id: "detail_photo", label: "Detaylı Ürün Fotoğrafı", price: 30, enabled: false },
+    { id: "gift_wrap", label: "Hediye Paketi", price: 50, enabled: false },
     { id: "handwritten", label: "El Yazılı Not Ekle", price: 30, enabled: false },
     { id: "rush_delivery", label: "Hızlı Kargo (1 Gün)", price: 75, enabled: false },
+    { id: "combo_tip", label: "Kombin Önerisi", price: 20, enabled: false },
 ];
 
 const PRICE_PER_DAY = 15; // ₺15/gün süre ek ücreti
@@ -448,7 +447,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
-                                        placeholder="Örn: Gece Yarısı Danteli"
+                                        placeholder="Örn: Vintage Denim Ceket"
                                     />
                                     <span className="text-[10px] text-gray-600 ml-1">{title.length}/{MAX_TITLE_LENGTH}</span>
                                 </div>
@@ -516,8 +515,8 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                             <div className="space-y-4 pt-2">
                                 <div className="flex justify-between items-center">
                                     <label className="flex items-center gap-2 text-sm font-medium text-pink-500">
-                                        <Wind className="w-4 h-4 animate-steam" />
-                                        Tenin Sıcaklığı (Maksimum Gün)
+                                        <Wind className="w-4 h-4 animate-float" />
+                                        Kargo Hazırlık Süresi (Maksimum Gün)
                                     </label>
                                     <span className="text-xs font-mono bg-pink-500/10 text-pink-400 px-2 py-1 rounded">
                                         {previewDuration} Gün Seçilirse: +{formatCurrency(durationExtra)}
@@ -562,9 +561,9 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                     }
                   `}</style>
                                 <div className="flex justify-between mt-1.5 text-[10px] text-gray-500 font-mono uppercase">
-                                    <span>Taze</span>
-                                    <span>Yoğun</span>
-                                    <span>Mühürlenmiş</span>
+                                    <span>1 Gün</span>
+                                    <span>Orta</span>
+                                    <span>Maksimum</span>
                                 </div>
                             </div>
 
@@ -602,12 +601,12 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                             </div>
 
 
-                            {/* Ekstra Haz Menüsü */}
+                            {/* Ekstra Hizmetler */}
                             <div className="space-y-4 bg-white/[0.02] border border-white/5 rounded-xl p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h4 className="text-sm font-bold uppercase tracking-wider text-purple-400">
-                                            ✨ Ekstra Haz Menüsü
+                                            ✨ Ekstra Hizmetler
                                         </h4>
                                         <p className="text-[11px] text-gray-500">
                                             Alıcıların seçebileceği ek hizmetler.
@@ -655,7 +654,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                                         const newLabel = e.target.value;
                                                         setExtras(prev => prev.map(item => item.id === extra.id ? { ...item, label: newLabel } : item));
                                                     }}
-                                                    placeholder="Seçenek Adı (Örn: Parfüm)"
+                                                    placeholder="Seçenek Adı (Örn: Hediye Paketi)"
                                                     className="flex-1 bg-transparent border-none text-sm text-white focus:ring-0 placeholder:text-gray-600 p-0"
                                                 />
                                             </div>

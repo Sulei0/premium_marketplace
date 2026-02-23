@@ -211,8 +211,8 @@ export default function Products() {
               <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${isFilterOpen || activeFilterCount > 0
-                    ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(236,72,153,0.3)]"
-                    : "bg-card border border-border hover:border-primary/50"
+                  ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(236,72,153,0.3)]"
+                  : "bg-card border border-border hover:border-primary/50"
                   }`}
               >
                 <SlidersHorizontal className="w-4 h-4" />
@@ -263,8 +263,8 @@ export default function Products() {
                             key={option.value}
                             onClick={() => setSortBy(option.value)}
                             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${sortBy === option.value
-                                ? "bg-primary/20 text-primary border border-primary/30"
-                                : "bg-secondary/50 text-muted-foreground border border-transparent hover:border-border"
+                              ? "bg-primary/20 text-primary border border-primary/30"
+                              : "bg-secondary/50 text-muted-foreground border border-transparent hover:border-border"
                               }`}
                           >
                             {option.label}
@@ -286,8 +286,8 @@ export default function Products() {
                               setMaxPrice("");
                             }}
                             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${priceRange === range && minPrice === "" && maxPrice === ""
-                                ? "bg-primary/20 text-primary border border-primary/30"
-                                : "bg-secondary/50 text-muted-foreground border border-transparent hover:border-border"
+                              ? "bg-primary/20 text-primary border border-primary/30"
+                              : "bg-secondary/50 text-muted-foreground border border-transparent hover:border-border"
                               }`}
                           >
                             {range.label}
@@ -436,7 +436,7 @@ export default function Products() {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Aradığını Bulamadın mı?</h2>
             <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Favori satıcına özel isteklerini iletebilir veya kendi boudoir koleksiyonunu oluşturmaya başlayabilirsin.
+              Favori satıcına özel isteklerini iletebilir veya kendi moda koleksiyonunu oluşturmaya başlayabilirsin.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button

@@ -13,8 +13,8 @@ interface CartStore {
 }
 
 /**
- * useCart hook handles the "Digital Boudoir" shopping experience logic.
- * It manages items added to the whisper list (cart) with persistent storage.
+ * useCart hook handles the Giyenden shopping experience logic.
+ * It manages items added to the cart with persistent storage.
  */
 export const useCart = create<CartStore>()(
   persist(
@@ -70,7 +70,7 @@ export const useCart = create<CartStore>()(
       },
     }),
     {
-      name: 'giyenden-boudoir-cart',
+      name: 'giyenden-cart',
     }
   )
 );

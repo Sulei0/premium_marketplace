@@ -35,7 +35,7 @@ export default function Home() {
   const [roleModal, setRoleModal] = useState<{ open: boolean; targetRole: UserRole }>({ open: false, targetRole: "buyer" });
   const [roleUpdating, setRoleUpdating] = useState(false);
 
-  usePageMeta(undefined, "Türkiye'nin ilk premium C2C pazar yeri. Güvenli, gizli ve özel alışveriş deneyimi.");
+  usePageMeta(undefined, "Kadınlara özel güvenli ve butik 2. el moda platformu. Gardırobundaki hazineleri paylaş, yeni stiller keşfet.");
 
   const handleRoleClick = (targetRole: UserRole) => {
     if (!user) {
@@ -176,7 +176,7 @@ export default function Home() {
         {/* Hero Section */}
         <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 z-0">
-            <img src={IMAGES.HERO_BG_7} alt="Boudoir Background" className="w-full h-full object-cover opacity-40 scale-105" />
+            <img src={IMAGES.HERO_BG_7} alt="Moda Background" className="w-full h-full object-cover opacity-40 scale-105" />
             <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/60 to-background" />
             <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `url(${IMAGES.TEXTURE_BG_2})`, backgroundSize: 'cover', mixBlendMode: 'overlay' }} />
           </div>
@@ -184,11 +184,11 @@ export default function Home() {
           <div className="container relative z-10 px-4 text-center">
 
             <motion.h1 className="hero-shimmer-text text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-6 leading-tight" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.2 }}>
-              Kirli sepetleri karıştırmaya ne dersin?
+              Kadın kadına, gardıroptan gardıroba.
             </motion.h1>
 
             <motion.p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.4 }}>
-              Sıradan kıyafetlerin ötesinde; kokunun, sıcaklığın ve anıların dijital mabedine hoş geldiniz.
+              Gardırobundaki hazineleri paylaş, yeni stiller keşfet. Kadınlar için güvenli, butik bir 2. el moda deneyimi.
             </motion.p>
 
             <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.6 }}>

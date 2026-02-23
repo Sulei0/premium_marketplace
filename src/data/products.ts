@@ -3,25 +3,25 @@ import { IMAGES } from "@/assets/images";
 
 /**
  * Giyenden Pazaryeri için örnek ürün verileri.
- * Dijital Boudoir atmosferine uygun, hikaye odaklı ve premium içerikler.
+ * Kadınlara özel 2. el moda platformu.
  */
 export const SAMPLE_PRODUCTS: Product[] = [
   {
     id: "giy-001",
-    name: "Gece Yarısı Danteli",
+    name: "Vintage Denim Ceket",
     seller: {
       id: "seller-1",
-      username: "Gece_Perisi",
+      username: "Stil_Avcisi",
       avatar: IMAGES.ACCENT_GLOW_1,
       isVerified: true,
       rating: 4.9,
       whisperCount: 156,
       location: "İstanbul, Nişantaşı",
       joinedDate: "2025-05-12",
-      bio: "Zarafet ve gizemin buluştuğu noktada, tenine değen her dokunuşun bir hikayesi var."
+      bio: "Gardırobumu yenilerken, en sevdiklerimi sizinle paylaşıyorum."
     },
-    price: 1850,
-    story: "Bu siyah dantel takım, yağmurlu bir İstanbul gecesinde mum ışığında bana eşlik etti. Tenimdeki sıcaklığı ve o gecenin huzurunu üzerinde taşıyor. Kumaşın yumuşaklığı, ipek çarşaflar arasındaki o sessiz anları hatırlatıyor. Sadece bir kıyafet değil, yaşanmış bir anın yansıması.",
+    price: 450,
+    story: "Bu vintage denim ceket, Kadıköy'deki bir butikten yıllar önce aldığım en sevdiğim parçaydı. Her mevsim kombinlerimin vazgeçilmeziydi. Artık yeni bir gardıroba taşınma vakti geldi. Kalitesi ve dokusu hâlâ ilk günkü gibi.",
     images: [IMAGES.PRODUCT_BG_1, IMAGES.TEXTURE_BG_1, IMAGES.TEXTURE_BG_5],
     category: "İç Giyim",
     isVerified: true,
@@ -30,18 +30,18 @@ export const SAMPLE_PRODUCTS: Product[] = [
     availableExtras: [
       {
         id: "ex-1",
-        label: "Hazırlık Videosu (4K)",
-        price: 750
+        label: "Detaylı Ürün Fotoğrafı (4K)",
+        price: 50
       },
       {
         id: "ex-2",
-        label: "Özel Parfüm İmzası",
-        price: 200
+        label: "Hediye Paketi",
+        price: 100
       },
       {
         id: "ex-3",
         label: "El Yazısı Not",
-        price: 100
+        price: 30
       }
     ],
     stats: {
@@ -51,20 +51,20 @@ export const SAMPLE_PRODUCTS: Product[] = [
   },
   {
     id: "giy-002",
-    name: "İpek Dokunuşlu Dizüstü",
+    name: "İpek Bluz - Pastel Tonlar",
     seller: {
       id: "seller-2",
-      username: "Siyah_Kugu",
+      username: "Moda_Dolabi",
       avatar: IMAGES.ACCENT_GLOW_2,
       isVerified: true,
       rating: 4.7,
       whisperCount: 89,
       location: "Ankara, Çankaya",
       joinedDate: "2025-08-20",
-      bio: "Klasik tarzın kışkırtıcı detaylarla birleşimi."
+      bio: "Minimalist ve zamansız parçalar koleksiyonum."
     },
-    price: 950,
-    story: "İncecik dokusuyla bacaklarımı saran bu çoraplar, yoğun bir iş gününün ardından akşam yemeğinde bana eşlik etti. Topuklu ayakkabıların içindeki o baskıyı ve tenimin ipekle olan dansını hissettim. Şimdi bu yoğun enerjiyi seninle paylaşıyorum.",
+    price: 350,
+    story: "Pastel tonlardaki bu ipek bluz, ofis kombinlerimde şıklığımı tamamlayan parçaydı. Harika bir dokuya sahip ve neredeyse hiç giyilmedi. İş hayatından casual şıklığa kadar her yerde kullanabilirsiniz.",
     images: [IMAGES.PRODUCT_BG_2, IMAGES.TEXTURE_BG_2],
     category: "Çorap",
     isVerified: true,
@@ -73,13 +73,13 @@ export const SAMPLE_PRODUCTS: Product[] = [
     availableExtras: [
       {
         id: "ex-4",
-        label: "Giyim Anı Fotoğrafı (3 Adet)",
-        price: 300
+        label: "Kombin Önerisi Fotoğrafları",
+        price: 50
       },
       {
         id: "ex-5",
-        label: "Lüks Kutu Paketi",
-        price: 150
+        label: "Özel Kutu Paketi",
+        price: 75
       }
     ],
     stats: {
@@ -89,20 +89,20 @@ export const SAMPLE_PRODUCTS: Product[] = [
   },
   {
     id: "giy-003",
-    name: "Kızıl Saten Gecelik",
+    name: "Bohem Tarz Maksi Etek",
     seller: {
       id: "seller-3",
-      username: "Velvet_Muse",
+      username: "Vintage_Ruh",
       avatar: IMAGES.ACCENT_GLOW_3,
       isVerified: false,
       rating: 4.5,
       whisperCount: 42,
       location: "İzmir, Karşıyaka",
       joinedDate: "2026-01-05",
-      bio: "Tutkunun rengini teninde hisset."
+      bio: "Doğal kumaşları ve vintage parçaları seviyorum."
     },
-    price: 2200,
-    story: "Bu kızıl saten, en cesur anlarımda yanımdaydı. Parlaklığı loş ışıkta adeta bir ateş gibi parlıyor. Vücudumun hatlarını nazikçe takip eden bu parça, her hareketimde tenime fısıldayan bir rüzgar gibiydi. Senin için yeniden o enerjiyi yükleyeceğim.",
+    price: 280,
+    story: "Bu maksi etek, yaz akşamları sahilde yürüyüşlerime eşlik etti. Hafif kumaşı ve bohem desenleri her zaman iltifat aldı. Gardırobumu sadeleştirirken seninle paylaşmak istedim.",
     images: [IMAGES.PRODUCT_BG_3, IMAGES.TEXTURE_BG_3, IMAGES.TEXTURE_BG_7],
     category: "İç Giyim",
     isVerified: true,
@@ -111,13 +111,13 @@ export const SAMPLE_PRODUCTS: Product[] = [
     availableExtras: [
       {
         id: "ex-6",
-        label: "Polaroid Fotoğraf (Islak İmzalı)",
-        price: 500
+        label: "Detaylı Durum Fotoğrafı",
+        price: 30
       },
       {
         id: "ex-7",
-        label: "Özel Ses Kaydı",
-        price: 400
+        label: "Hızlı Kargo (1 Gün)",
+        price: 75
       }
     ],
     stats: {
@@ -127,20 +127,20 @@ export const SAMPLE_PRODUCTS: Product[] = [
   },
   {
     id: "giy-004",
-    name: "Deri Detaylı Boyunluk",
+    name: "Deri Omuz Çantası",
     seller: {
       id: "seller-4",
-      username: "Aura_Mist",
+      username: "Chic_Corner",
       avatar: IMAGES.ACCENT_GLOW_4,
       isVerified: true,
       rating: 5.0,
       whisperCount: 210,
       location: "Antalya",
       joinedDate: "2024-11-30",
-      bio: "Sınırları zorlamayı sevenler için özel koleksiyon."
+      bio: "Kaliteli ve zamansız aksesuarlar koleksiyonum."
     },
-    price: 1400,
-    story: "Yumuşak derinin soğuk metal ile buluşması... Bu aksesuar, otorite ve teslimiyetin ince çizgisinde yürüdüğüm bir geceden kalma. Boynumdaki o hafif baskı ve derinin kendine has kokusu hala üzerinde. Koleksiyonun en çarpıcı parçalarından biri.",
+    price: 600,
+    story: "Bu hakiki deri omuz çantası, özel bir tasarımcı markasına ait. Geniş iç hacmi ve zarif dikişleriyle günlük kullanımdan iş toplantılarına kadar her yere uyum sağlar. Çok az kullanıldı, neredeyse sıfır durumunda.",
     images: [IMAGES.PRODUCT_BG_4, IMAGES.TEXTURE_BG_4],
     category: "Aksesuar",
     isVerified: true,
@@ -149,8 +149,8 @@ export const SAMPLE_PRODUCTS: Product[] = [
     availableExtras: [
       {
         id: "ex-8",
-        label: "Kullanım Kanıtı (Kısa Video)",
-        price: 600
+        label: "Orijinallik Belgesi Fotoğrafı",
+        price: 30
       }
     ],
     stats: {
@@ -160,20 +160,20 @@ export const SAMPLE_PRODUCTS: Product[] = [
   },
   {
     id: "giy-005",
-    name: "Tül ve Çiçekli Body",
+    name: "Triko Hırka - Oversize",
     seller: {
       id: "seller-5",
-      username: "Luna_Noir",
+      username: "Pastel_Gardrop",
       avatar: IMAGES.ACCENT_GLOW_5,
       isVerified: true,
       rating: 4.8,
       whisperCount: 134,
       location: "Muğla, Bodrum",
       joinedDate: "2025-03-15",
-      bio: "Doğallık ve kışkırtıcılığın transparan dengesi."
+      bio: "Rahat ve şık parçalarla gardırobunuzu yenileyin."
     },
-    price: 1650,
-    story: "Baharın tazeliğini ve vücudumun en saf halini temsil ediyor. Şeffaf dokusu hiçbir şeyi gizlemezken, çiçek nakışları hayal gücüne yer bırakıyor. Deniz kenarındaki evimde, rüzgarın içeri süzüldüğü o sakin öğleden sonra boyunca üzerimdeydi.",
+    price: 320,
+    story: "Yumuşacık dokusuyla kış aylarında en çok tercih ettiğim parçaydı. Oversize kalıbı sayesinde her beden için uygun. Kahve içerken, kitap okurken, yürüyüşe çıkarken hep yanımdaydı. Sıcacık bir arkadaş arıyorsa, doğru adres burası.",
     images: [IMAGES.PRODUCT_BG_5, IMAGES.TEXTURE_BG_8],
     category: "Özel Parçalar",
     isVerified: true,
@@ -182,13 +182,13 @@ export const SAMPLE_PRODUCTS: Product[] = [
     availableExtras: [
       {
         id: "ex-9",
-        label: "Canlı Yayın Giyimi",
-        price: 1500
+        label: "Hediye Paketi",
+        price: 50
       },
       {
         id: "ex-10",
-        label: "Kurutulmuş Çiçekli Paket",
-        price: 100
+        label: "El Yazısı Teşekkür Notu",
+        price: 20
       }
     ],
     stats: {
