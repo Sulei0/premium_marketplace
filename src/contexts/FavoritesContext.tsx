@@ -64,9 +64,9 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
             });
             return count;
         } catch {
-            return favoriteCounts.get(productId) || 0;
+            return 0;
         }
-    }, [favoriteCounts]);
+    }, []);
 
     const fetchMultipleFavoriteCounts = useCallback(async (productIds: string[]) => {
         if (!supabase || productIds.length === 0) return;
