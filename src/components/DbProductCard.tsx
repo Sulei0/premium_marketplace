@@ -31,7 +31,7 @@ export function DbProductCard({ product }: DbProductCardProps) {
         <div className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md transition-all hover:border-primary/30 cursor-pointer">
             <Link to={`/product/${product.id}`} className="block">
                 {/* Image */}
-                <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
+                <div className="relative aspect-square sm:aspect-[4/5] overflow-hidden bg-muted/20">
                     <OptimizedImage
                         src={product.image_url || defaultImage}
                         alt={product.title}
@@ -42,7 +42,7 @@ export function DbProductCard({ product }: DbProductCardProps) {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-black/20 opacity-60" />
 
-                    <div className="absolute top-3 right-3 flex gap-1.5">
+                    <div className="absolute top-3 right-3 flex gap-1.5 flex-wrap justify-end">
                         <span className="px-2 py-1 bg-black/40 backdrop-blur-md border border-white/10 text-[10px] uppercase tracking-wider text-white/90 rounded-full">
                             {product.category}
                         </span>

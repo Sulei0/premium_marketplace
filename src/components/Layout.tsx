@@ -490,8 +490,15 @@ export function Layout({ children }: LayoutProps) {
                 Gardırobunuzun en seçkin parçalarını sadece kadınların olduğu bu güvenli alanda paylaşın.
               </p>
               <div className="flex space-x-4 mt-6">
-                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer">
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer" title="Favoriler">
                   <Heart className="w-4 h-4 text-primary" />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors cursor-default" title="Kadın Dayanışması">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary drop-shadow-[0_0_5px_var(--primary)]">
+                    <circle cx="12" cy="10" r="6" />
+                    <line x1="12" y1="16" x2="12" y2="22" />
+                    <line x1="9" y1="19" x2="15" y2="19" />
+                  </svg>
                 </div>
               </div>
             </div>

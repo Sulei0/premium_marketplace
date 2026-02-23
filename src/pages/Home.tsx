@@ -35,7 +35,7 @@ export default function Home() {
   const [roleModal, setRoleModal] = useState<{ open: boolean; targetRole: UserRole }>({ open: false, targetRole: "buyer" });
   const [roleUpdating, setRoleUpdating] = useState(false);
 
-  usePageMeta(undefined, "Kadınlara özel güvenli ve butik 2. el moda platformu. Gardırobundaki hazineleri paylaş, yeni stiller keşfet.");
+  usePageMeta(undefined, "Kadınlara özel güvenli ve butik 2. el moda platformu. Gardırobundaki 2. el hazineleri Giyenden ile değerlendir, kadın dayanışmasının gücüne güç kat.");
 
   const handleRoleClick = (targetRole: UserRole) => {
     if (!user) {
@@ -188,7 +188,7 @@ export default function Home() {
             </motion.h1>
 
             <motion.p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.4 }}>
-              Gardırobundaki hazineleri paylaş, yeni stiller keşfet. Kadınlar için güvenli, butik bir 2. el moda deneyimi.
+              Gardırobundaki 2. el hazineleri Giyenden ile değerlendir, kadın dayanışmasının gücüne güç kat.
             </motion.p>
 
             <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.6 }}>
@@ -215,6 +215,35 @@ export default function Home() {
           </div>
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/20 blur-[120px] rounded-full z-0" />
         </section>
+
+        {/* Animated Marquee - Brand Text */}
+        <div className="relative w-full overflow-hidden bg-background py-8 border-y border-white/5">
+          <motion.div
+            className="flex items-center w-max"
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{
+              repeat: Infinity,
+              ease: "linear",
+              duration: 25,
+            }}
+          >
+            {[...Array(16)].map((_, i) => (
+              <span key={i} className="flex items-center shrink-0">
+                <span
+                  className="text-3xl md:text-4xl font-black italic text-[#ff0080]/30 hover:text-[#ff0080]/70 transition-colors duration-500 select-none px-6 whitespace-nowrap"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  Giyenden
+                </span>
+                <span className="text-[#ff0080]/20 text-lg mx-2">✦</span>
+              </span>
+            ))}
+          </motion.div>
+
+          {/* Gradient Overlay for Fade Out Effect */}
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+        </div>
 
         {/* DB Products Section */}
         <section id="products-section" className="py-24 bg-background relative">

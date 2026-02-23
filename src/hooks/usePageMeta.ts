@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 const DEFAULT_TITLE = "Giyenden";
 const DEFAULT_DESC =
-    "Kadınlar için güvenli ve butik bir 2. el moda deneyimi. Gardırobundaki hazineleri paylaş, yeni stiller keşfet.";
+    "Kadınlar için güvenli ve butik bir 2. el moda deneyimi. Gardırobundaki 2. el hazineleri Giyenden ile değerlendir, kadın dayanışmasının gücüne güç kat.";
 
 /**
  * Dinamik sayfa başlığı ve meta description ayarlar.

@@ -12,6 +12,7 @@ import { tr } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { validateImageFile } from "@/lib/sanitize";
 
 interface OfferDetails {
     duration: number;
@@ -48,6 +49,57 @@ interface ChatDetails {
         avatar_url: string | null;
     };
 }
+
+const ChatImage = ({ url, onClick }: { url: string, onClick: (url: string) => void }) => {
+    const [signedUrl, setSignedUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!url) return;
+        if (url.startsWith('blob:')) {
+            setSignedUrl(url);
+            return;
+        }
+
+        let path = url;
+        if (url.includes('/public/chat_images/')) {
+            path = url.split('/public/chat_images/')[1];
+        } else if (url.includes('/chat_images/')) {
+            path = url.split('/chat_images/')[1];
+        }
+
+        const fetchSignedUrl = async () => {
+            const { data } = await supabase!.storage.from('chat_images').createSignedUrl(path, 3600);
+            if (data?.signedUrl) {
+                setSignedUrl(data.signedUrl);
+            }
+        };
+        fetchSignedUrl();
+    }, [url]);
+
+    if (!signedUrl) {
+        return <div className="w-full h-48 bg-muted animate-pulse rounded-xl flex items-center justify-center mb-1">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>;
+    }
+
+    return (
+        <div
+            className="relative mb-1 rounded-xl overflow-hidden cursor-pointer group"
+            onClick={() => onClick(signedUrl)}
+        >
+            <OptimizedImage
+                src={signedUrl}
+                alt="Sohbet görseli"
+                className="w-full h-auto max-h-[300px] object-cover transition-transform group-hover:scale-105"
+                thumbnailWidth={600}
+                thumbnailHeight={600}
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                <ImageIcon className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+        </div>
+    );
+};
 
 export default function ChatDetail() {
     const { id } = useParams<{ id: string }>();
@@ -367,21 +419,11 @@ export default function ChatDetail() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Limit: 5MB
-        if (file.size > 5 * 1024 * 1024) {
+        const validation = validateImageFile(file);
+        if (!validation.valid) {
             toast({
-                title: "Dosya Çok Büyük",
-                description: "Maksimum 5MB boyutunda bir görsel seçebilirsiniz.",
-                variant: "destructive",
-            });
-            return;
-        }
-
-        // Type filter
-        if (!file.type.startsWith("image/")) {
-            toast({
-                title: "Hatalı Dosya Tipi",
-                description: "Yalnızca görsel dosyaları gönderebilirsiniz.",
+                title: "Geçersiz Dosya",
+                description: validation.error,
                 variant: "destructive",
             });
             return;
@@ -415,11 +457,7 @@ export default function ChatDetail() {
 
             if (error) throw error;
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('chat_images')
-                .getPublicUrl(filePath);
-
-            return publicUrl;
+            return filePath;
         } catch (error) {
             console.error('Error uploading image:', error);
             return null;
@@ -571,7 +609,7 @@ export default function ChatDetail() {
                         type: "new_message",
                         title: `@${user.user_metadata?.username || "kullanıcı"} size bir mesaj gönderdi`,
                         body: messageContent,
-                        link: `/messages/${id}`,
+                        link: `/chats/${id}`,
                         is_read: false,
                     });
 
@@ -767,21 +805,10 @@ export default function ChatDetail() {
                                             )}
                                         >
                                             {msg.image_url && (
-                                                <div
-                                                    className="relative mb-1 rounded-xl overflow-hidden cursor-pointer group"
-                                                    onClick={() => setLightboxImage(msg.image_url!)}
-                                                >
-                                                    <OptimizedImage
-                                                        src={msg.image_url!}
-                                                        alt="Sohbet görseli"
-                                                        className="w-full h-auto max-h-[300px] object-cover transition-transform group-hover:scale-105"
-                                                        thumbnailWidth={600}
-                                                        thumbnailHeight={600}
-                                                    />
-                                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                                                        <ImageIcon className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    </div>
-                                                </div>
+                                                <ChatImage
+                                                    url={msg.image_url}
+                                                    onClick={(url) => setLightboxImage(url)}
+                                                />
                                             )}
                                             <div className={cn("px-3 py-1.5", !msg.image_url && "py-1")}>
                                                 {msg.content}

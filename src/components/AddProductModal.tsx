@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { X, Upload, Plus, Trash2, Check, AlertCircle, Wind, ImagePlus, Loader2 } from "lucide-react";
+import { X, Upload, Plus, Trash2, Check, AlertCircle, Package, ImagePlus, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/index";
@@ -436,7 +436,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                             <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
                                 <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                                 <p className="text-xs text-red-200">
-                                    <span className="font-bold text-red-400">UYARI:</span> Çıplak fotoğraf paylaşımı kesinlikle yasaktır. Paylaşıldığı takdirde tüm IP ve kullanıcı bilgileri ile yasal işlem başlatılır.
+                                    <span className="font-bold text-red-400">Güvenlik Bilgisi:</span> Platform standartlarımıza uymayan, etik dışı veya uygunsuz içeriklerin paylaşımı kesinlikle yasaktır. Topluluk güvenliğini ihlal eden hesaplar hakkında, kullanıcı verileri ve erişim detayları ile birlikte yasal süreç başlatılacaktır.
                                 </p>
                             </div>
 
@@ -536,7 +536,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                             <div className="space-y-4 pt-2">
                                 <div className="flex justify-between items-center">
                                     <label className="flex items-center gap-2 text-sm font-medium text-pink-500">
-                                        <Wind className="w-4 h-4 animate-float" />
+                                        <Package className="w-4 h-4 animate-float" />
                                         Kargo Hazırlık Süresi (Maksimum Gün)
                                     </label>
                                     <span className="text-xs font-mono bg-pink-500/10 text-pink-400 px-2 py-1 rounded">

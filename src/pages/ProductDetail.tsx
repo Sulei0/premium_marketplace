@@ -340,7 +340,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
             type: "new_offer",
             title: "Yeni Teklif!",
             body: `@${user.user_metadata?.username || "kullanıcı"} ürünün için ${totalPrice} TL teklif verdi.`,
-            link: `/messages/${chatId}`,
+            link: `/chats/${chatId}`,
             is_read: false
           });
       }
@@ -387,12 +387,12 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
         productTitle={product.title}
       />
 
-      <div className="container mx-auto px-4 py-8 lg:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="container mx-auto px-4 py-8 lg:py-12 max-w-6xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
 
           {/* Sol Kolon: Görsel Carousel */}
-          <div className="lg:col-span-7 space-y-4">
-            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted group">
+          <div className="lg:col-span-5 space-y-4">
+            <div className="relative aspect-square md:aspect-[4/5] lg:max-h-[600px] rounded-2xl overflow-hidden bg-[#1a1a1a] border border-white/5 group">
               <AnimatePresence mode="wait">
                 <motion.img
                   key={activeImageIndex}
@@ -498,7 +498,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
           </div>
 
           {/* Sağ Kolon: Detaylar */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-7 space-y-6 lg:pl-4">
             <motion.div
               initial="hidden"
               animate="visible"
