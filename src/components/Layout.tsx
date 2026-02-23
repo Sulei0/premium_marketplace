@@ -459,11 +459,7 @@ export function Layout({ children }: LayoutProps) {
                 )}
               </div>
 
-              <div className="pt-8 flex flex-col space-y-4">
-                <p className="text-xs uppercase tracking-widest text-muted-foreground font-bold">Hızlı Erişim</p>
-                <Link to="/support" className="text-muted-foreground">Yardım Merkezi</Link>
-                <Link to="/safety" className="text-muted-foreground">Güvenlik İpuçları</Link>
-              </div>
+
             </nav>
           </motion.div>
         )}
@@ -536,7 +532,6 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </footer>
       <AddProductModal isOpen={isAddProductOpen} onClose={() => setIsAddProductOpen(false)} />
-      <NotificationsPanel />
 
       {/* --- MOBILE BOTTOM NAV --- */}
       <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background/80 backdrop-blur-lg border-t border-border pb-safe-area">

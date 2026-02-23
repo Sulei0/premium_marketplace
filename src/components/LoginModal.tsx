@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -28,12 +29,29 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
     setError(null);
 
     try {
-      await signIn(email, password);
+      let loginEmail = email.trim();
+
+      // If the input doesn't contain an '@', treat it as a username
+      if (!loginEmail.includes('@')) {
+        const { data, error: rpcError } = await supabase.rpc('get_email_by_username', {
+          p_username: loginEmail
+        });
+
+        if (rpcError) throw rpcError;
+
+        if (!data) {
+          throw new Error("Kullanıcı adı veya şifre hatalı."); // Generic message for security
+        }
+
+        loginEmail = data;
+      }
+
+      await signIn(loginEmail, password);
       onClose();
       navigate('/profile/me');
     } catch (err: any) {
-      if (err.message.includes("Invalid login")) {
-        setError("E-posta veya şifre hatalı.");
+      if (err.message.includes("Invalid login") || err.message.includes("Kullanıcı adı veya şifre hatalı")) {
+        setError("E-posta, kullanıcı adı veya şifre hatalı.");
       } else if (err.message.includes("Email not confirmed")) {
         setError("Lütfen önce e-postana gelen linki onayla! 📧");
       } else if (err.message.includes("Supabase")) {
@@ -53,10 +71,30 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
     setResetSuccess(false);
 
     try {
-      await resetPassword(email);
+      let resetEmail = email.trim();
+
+      if (!resetEmail.includes('@')) {
+        const { data, error: rpcError } = await supabase.rpc('get_email_by_username', {
+          p_username: resetEmail
+        });
+
+        if (rpcError) throw rpcError;
+
+        if (!data) {
+          throw new Error("Kullanıcı adı bulunamadı.");
+        }
+
+        resetEmail = data;
+      }
+
+      await resetPassword(resetEmail);
       setResetSuccess(true);
     } catch (err: any) {
-      setError("E-posta adresi bulunamadı veya bir hata oluştu.");
+      if (err.message.includes("Kullanıcı adı bulunamadı")) {
+        setError("Kullanıcı adı bulunamadı.");
+      } else {
+        setError("E-posta adresi bulunamadı veya bir hata oluştu.");
+      }
     } finally {
       setLoading(false);
     }
@@ -115,11 +153,11 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
         {forgotMode ? (
           <form onSubmit={handleResetPassword} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-xs text-gray-400 ml-1">E-posta</label>
+              <label className="text-xs text-gray-400 ml-1">E-posta / Kullanıcı Adı</label>
               <input
-                type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                type="text" required value={email} onChange={e => setEmail(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
-                placeholder="mail@ornek.com"
+                placeholder="mail@ornek.com veya kullanıcı adı"
               />
             </div>
             <button
@@ -141,11 +179,11 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
           /* ─── Login Form ─── */
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-xs text-gray-400 ml-1">E-posta</label>
+              <label className="text-xs text-gray-400 ml-1">E-posta / Kullanıcı Adı</label>
               <input
-                type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                type="text" required value={email} onChange={e => setEmail(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
-                placeholder="mail@ornek.com"
+                placeholder="mail@ornek.com veya kullanıcı adı"
               />
             </div>
             <div className="space-y-1">
