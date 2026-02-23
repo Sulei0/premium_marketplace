@@ -65,9 +65,9 @@ export function FollowProvider({ children }: { children: React.ReactNode }) {
             });
             return count;
         } catch {
-            return followerCounts.get(userId) || 0;
+            return 0;
         }
-    }, [followerCounts]);
+    }, []);
 
     const fetchFollowingCount = useCallback(async (userId: string) => {
         if (!supabase) return 0;
@@ -82,9 +82,9 @@ export function FollowProvider({ children }: { children: React.ReactNode }) {
             });
             return count;
         } catch {
-            return followingCounts.get(userId) || 0;
+            return 0;
         }
-    }, [followingCounts]);
+    }, []);
 
     const toggleFollow = useCallback(async (userId: string) => {
         if (!user || !supabase) return;
