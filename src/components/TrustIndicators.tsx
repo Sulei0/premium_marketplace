@@ -119,35 +119,35 @@ export function TrustIndicators({ className }: TrustIndicatorProps) {
             </motion.div>
           ))}
         </div>
+      </div>
 
-        {/* Animated Marquee — Brand Text */}
-        <div className="mt-16 relative w-full overflow-hidden">
-          <motion.div
-            className="flex items-center w-max"
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{
-              repeat: Infinity,
-              ease: "linear",
-              duration: 25,
-            }}
-          >
-            {[...Array(16)].map((_, i) => (
-              <span key={i} className="flex items-center shrink-0">
-                <span
-                  className="text-3xl md:text-4xl font-black italic text-[#ff0080]/30 hover:text-[#ff0080]/70 transition-colors duration-500 select-none px-6 whitespace-nowrap"
-                  style={{ fontFamily: "'Playfair Display', serif" }}
-                >
-                  Giyenden
-                </span>
-                <span className="text-[#ff0080]/20 text-lg mx-2">✦</span>
+      {/* Animated Marquee - Brand Text (Full Width) */}
+      <div className="mt-16 relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden">
+        <motion.div
+          className="flex items-center w-max"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{
+            repeat: Infinity,
+            ease: "linear",
+            duration: 25,
+          }}
+        >
+          {[...Array(16)].map((_, i) => (
+            <span key={i} className="flex items-center shrink-0">
+              <span
+                className="text-3xl md:text-4xl font-black italic text-[#ff0080]/30 hover:text-[#ff0080]/70 transition-colors duration-500 select-none px-6 whitespace-nowrap"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                Giyenden
               </span>
-            ))}
-          </motion.div>
+              <span className="text-[#ff0080]/20 text-lg mx-2">✦</span>
+            </span>
+          ))}
+        </motion.div>
 
-          {/* Gradient Overlay for Fade Out Effect */}
-          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent pointer-events-none" />
-          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
-        </div>
+        {/* Gradient Overlay for Fade Out Effect */}
+        <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
       </div>
     </div>
   );

@@ -217,7 +217,7 @@ export default function Home() {
         </section>
 
         {/* Animated Marquee - Brand Text */}
-        <div className="relative w-full overflow-hidden bg-background py-8 border-y border-white/5">
+        <div className="relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden bg-background py-8 border-y border-white/5">
           <motion.div
             className="flex items-center w-max"
             animate={{ x: ["0%", "-50%"] }}
