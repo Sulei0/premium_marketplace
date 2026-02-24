@@ -230,7 +230,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
   // Fetch count when product changes
   useEffect(() => {
     fetchFavoriteCount(product.id);
-  }, [product.id, fetchFavoriteCount]);
+  }, [product.id]);
 
   const [duration, setDuration] = useState(baseDuration);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);

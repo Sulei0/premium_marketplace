@@ -30,6 +30,7 @@ interface DbProduct {
 
 export default function Home() {
   const { user, role, setRole } = useAuth();
+  const { fetchMultipleFavoriteCounts } = useFavorites();
   const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
   const [loadingDb, setLoadingDb] = useState(true);
   const [roleModal, setRoleModal] = useState<{ open: boolean; targetRole: UserRole }>({ open: false, targetRole: "buyer" });
@@ -96,6 +97,11 @@ export default function Home() {
 
         if (!error && data) {
           setDbProducts(data as DbProduct[]);
+          // Fetch favorite counts for exactly these loaded products
+          const ids = (data as DbProduct[]).map(p => p.id);
+          if (ids.length > 0) {
+            fetchMultipleFavoriteCounts(ids);
+          }
         }
       } catch {
         // silently fail
