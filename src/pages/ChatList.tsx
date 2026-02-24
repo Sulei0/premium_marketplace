@@ -51,7 +51,7 @@ export default function ChatList() {
           seller_id,
           product_id,
           products(title, image_url),
-          messages(content, created_at, is_offer, read_at, sender_id)
+          messages(content, image_url, created_at, is_offer, read_at, sender_id)
         `)
         .or(`buyer_id.eq.${user!.id},seller_id.eq.${user!.id}`)
         .order('updated_at', { ascending: false });
@@ -126,16 +126,13 @@ export default function ChatList() {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
         fetchChats();
       })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, () => {
+        fetchChats();
+      })
       .subscribe();
-
-    // Poll for updates every 10 seconds
-    const interval = setInterval(() => {
-      fetchChats();
-    }, 10000);
 
     return () => {
       supabase!.removeChannel(channel);
-      clearInterval(interval);
     };
 
   }, [user]);

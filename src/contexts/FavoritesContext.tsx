@@ -154,6 +154,12 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
                 }
                 return next;
             });
+            setFavoriteCounts((prev) => {
+                const next = new Map(prev);
+                const current = next.get(productId) || 0;
+                next.set(productId, isFav ? current + 1 : Math.max(0, current - 1));
+                return next;
+            });
         }
     }, [user, favorites]);
 

@@ -26,6 +26,9 @@ export default function Favorites() {
     const [products, setProducts] = useState<DbProduct[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Stable string key for favorites to avoid re-fetching on Set reference changes
+    const favoritesKey = Array.from(favorites).sort().join(',');
+
     useEffect(() => {
         async function fetchFavoriteProducts() {
             if (!user || !supabase || favorites.size === 0) {
@@ -59,7 +62,7 @@ export default function Favorites() {
         }
 
         fetchFavoriteProducts();
-    }, [user, favorites]);
+    }, [user, favoritesKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
     if (!user) {
         return (

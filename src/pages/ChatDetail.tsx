@@ -121,6 +121,7 @@ export default function ChatDetail() {
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isInitialLoad = useRef(true);
+    const prevMessageCountRef = useRef(0);
 
     usePageMeta(
         chat ? `${chat.other_user.username} ile Sohbet` : "Sohbet",
@@ -137,11 +138,13 @@ export default function ChatDetail() {
     }, []);
 
     useEffect(() => {
-        if (messages.length > 0) {
+        const currentCount = messages.length;
+        if (currentCount > 0 && (isInitialLoad.current || currentCount > prevMessageCountRef.current)) {
             scrollToBottom(isInitialLoad.current);
             isInitialLoad.current = false;
         }
-    }, [messages, scrollToBottom]);
+        prevMessageCountRef.current = currentCount;
+    }, [messages.length, scrollToBottom]);
 
     // ------ Mark messages as read ------
     const markMessagesAsRead = useCallback(async () => {
@@ -341,12 +344,15 @@ export default function ChatDetail() {
     }, [id, user]);
 
     // ------ Polling Fallback ------
+    const sendingRef = useRef(sending);
+    sendingRef.current = sending;
+
     useEffect(() => {
         if (!id || !user || !supabase) return;
 
         const interval = setInterval(async () => {
             // Only poll if we're not already sending a message to avoid race conditions
-            if (sending) return;
+            if (sendingRef.current) return;
 
             const { data: latestMessages, error } = await supabase!
                 .from("messages")
@@ -356,38 +362,22 @@ export default function ChatDetail() {
 
             if (!error && latestMessages) {
                 setMessages((prev) => {
-                    // Simple merge: if length is different or last message ID diff, update
-                    // We can be smarter: create a map of existing IDs data
                     const existingIds = new Set(prev.map(m => m.id));
                     const newMsgs = latestMessages.filter(m => !existingIds.has(m.id));
 
                     if (newMsgs.length > 0) {
-                        // Combine and sort to be safe
                         const combined = [...prev, ...newMsgs].sort(
                             (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
                         );
                         return combined;
                     }
-                    // Also check for read status updates
-                    // (Optional optimization: only update if something changed)
                     return prev;
                 });
-
-                // Also update read status if needed
-                const unreadIds = latestMessages
-                    .filter((m) => m.sender_id !== user.id && !m.read_at)
-                    .map((m) => m.id);
-
-                if (unreadIds.length > 0) {
-                    // Trigger read update (it will be handled by the other effect or we can call it here)
-                    // markMessagesAsRead() is dependent on 'messages' state, so let's let the effect handle it
-                    // But we need to make sure 'setMessages' above eventually triggers it.
-                }
             }
-        }, 5000); // Poll every 5 seconds
+        }, 5000);
 
         return () => clearInterval(interval);
-    }, [id, user, sending]);
+    }, [id, user]);
 
     // ------ Typing broadcast ------
     const broadcastTyping = useCallback(

@@ -122,17 +122,21 @@ export function FollowProvider({ children }: { children: React.ReactNode }) {
                     .from("follows")
                     .insert({ follower_id: user.id, following_id: userId });
 
-                // Send notification to the followed user
-                await supabase
-                    .from("notifications")
-                    .insert({
-                        user_id: userId,
-                        type: "new_follower",
-                        title: "Yeni Takipçi!",
-                        body: `@${user.user_metadata?.username || "Bir kullanıcı"} seni takip etmeye başladı.`,
-                        link: `/profile/${user.id}`,
-                        is_read: false
-                    });
+                // Send notification — wrapped separately so failures don't revert follow
+                try {
+                    await supabase
+                        .from("notifications")
+                        .insert({
+                            user_id: userId,
+                            type: "new_follower",
+                            title: "Yeni Takipçi!",
+                            body: `@${user.user_metadata?.username || "Bir kullanıcı"} seni takip etmeye başladı.`,
+                            link: `/profile/${user.id}`,
+                            is_read: false
+                        });
+                } catch {
+                    console.warn("Takip bildirimi gönderilemedi");
+                }
             }
         } catch {
             // Revert on error
@@ -143,6 +147,12 @@ export function FollowProvider({ children }: { children: React.ReactNode }) {
                 } else {
                     next.delete(userId);
                 }
+                return next;
+            });
+            setFollowerCounts((prev) => {
+                const next = new Map(prev);
+                const current = next.get(userId) || 0;
+                next.set(userId, isFollowingUser ? current + 1 : Math.max(0, current - 1));
                 return next;
             });
         }

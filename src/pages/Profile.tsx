@@ -225,7 +225,7 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
       // Update Local State
       setProfile(prev => prev ? ({ ...prev, username: editUsername, username_changes: (prev.username_changes || 0) + 1 }) : null);
 
-      toast.success(`Kullanıcı adı güncellendi. Kalan hakkınız: ${2 - (profile.username_changes || 0)}`);
+      toast.success(`Kullanıcı adı güncellendi. Kalan hakkınız: ${3 - ((profile.username_changes || 0) + 1)}`);
       setEditing(false);
     } catch (error: any) {
       console.error(error);
