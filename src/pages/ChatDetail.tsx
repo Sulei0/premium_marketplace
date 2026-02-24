@@ -726,12 +726,7 @@ export default function ChatDetail() {
                                             ✨ Özel Teklif
                                         </p>
                                         <div className="space-y-2 text-sm">
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Süre:</span>
-                                                <span className="font-mono font-semibold">
-                                                    {msg.offer_details?.duration || "?"} Gün
-                                                </span>
-                                            </div>
+
                                             {msg.offer_details?.extras &&
                                                 msg.offer_details.extras.length > 0 && (
                                                     <div>

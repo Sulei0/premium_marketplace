@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatCurrency } from "@/lib/index";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -22,14 +22,62 @@ interface DbProductCardProps {
     product: DbProduct;
 }
 
+/* ── CSS for heart burst particles ── */
+const heartBurstStyles = `
+@keyframes heart-particle {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+.heart-burst-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ec4899;
+  pointer-events: none;
+  animation: heart-particle 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+@keyframes heart-ring {
+  0% { transform: scale(0.3); opacity: 0.8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.heart-burst-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid #ec4899;
+  pointer-events: none;
+  animation: heart-ring 0.5s ease-out forwards;
+}
+`;
+
+const PARTICLES = [
+    { tx: "-12px", ty: "-14px" },
+    { tx: "12px", ty: "-14px" },
+    { tx: "-16px", ty: "2px" },
+    { tx: "16px", ty: "2px" },
+    { tx: "-8px", ty: "12px" },
+    { tx: "8px", ty: "12px" },
+];
+
 export function DbProductCard({ product }: DbProductCardProps) {
     const defaultImage = "/images/placeholder.webp";
     const { isFavorite, toggleFavorite, getFavoriteCount } = useFavorites();
     const fav = isFavorite(product.id);
     const count = getFavoriteCount(product.id);
+    const [burst, setBurst] = useState(false);
+
+    const handleFavClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFavorite(product.id, product.user_id);
+        setBurst(true);
+        setTimeout(() => setBurst(false), 600);
+    };
 
     return (
         <div className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md transition-all hover:border-primary/30 cursor-pointer">
+            <style>{heartBurstStyles}</style>
             <Link to={`/product/${product.id}`} className="block">
                 {/* Image */}
                 <div className="relative aspect-square sm:aspect-[4/5] overflow-hidden bg-muted/20">
@@ -90,7 +138,7 @@ export function DbProductCard({ product }: DbProductCardProps) {
 
             {/* Fav Button */}
             <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(product.id, product.user_id); }}
+                onClick={handleFavClick}
                 className="absolute top-3 left-3 z-10 p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/60 transition-all group/fav"
             >
                 <Heart className={`w-4 h-4 transition-all duration-300 ${fav ? 'text-pink-500 fill-pink-500 scale-110' : 'text-white/70 hover:text-pink-400'}`} />
@@ -98,6 +146,19 @@ export function DbProductCard({ product }: DbProductCardProps) {
                     <span className="absolute -bottom-1 -right-1 bg-primary text-[9px] text-white font-bold rounded-full w-4 h-4 flex items-center justify-center">
                         {count}
                     </span>
+                )}
+                {/* Burst particles */}
+                {burst && (
+                    <>
+                        <span className="heart-burst-ring" />
+                        {PARTICLES.map((p, i) => (
+                            <span
+                                key={i}
+                                className="heart-burst-particle"
+                                style={{ "--tx": p.tx, "--ty": p.ty, left: "50%", top: "50%", marginLeft: "-3px", marginTop: "-3px" } as React.CSSProperties}
+                            />
+                        ))}
+                    </>
                 )}
             </button>
 

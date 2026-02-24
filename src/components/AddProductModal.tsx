@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { X, Upload, Plus, Trash2, Check, AlertCircle, Package, ImagePlus, Loader2 } from "lucide-react";
+import { X, Upload, Plus, Trash2, Check, AlertCircle, ImagePlus, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/index";
@@ -31,8 +31,6 @@ export interface DbProductForEdit {
     size?: string;
     image_url: string | null;
     image_urls?: string[];
-    base_duration: number;
-    max_duration: number;
     extras: ExtraItem[];
     is_sold?: boolean; // Added field
 }
@@ -56,7 +54,6 @@ const DEFAULT_EXTRAS: ExtraItem[] = [
     { id: "combo_tip", label: "Kombin Önerisi", price: 20, enabled: false },
 ];
 
-const PRICE_PER_DAY = 15; // ₺15/gün süre ek ücreti
 const MAX_IMAGES = 5;
 
 export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModalProps) {
@@ -70,8 +67,6 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
     const [basePrice, setBasePrice] = useState(editProduct?.price?.toString() ?? "");
     const [category, setCategory] = useState(editProduct?.category ?? CATEGORIES[0]);
     const [size, setSize] = useState(editProduct?.size ?? "");
-    const [baseDuration, setBaseDuration] = useState(editProduct?.base_duration ?? 1);
-    const [maxDuration, setMaxDuration] = useState(editProduct?.max_duration ?? 7);
     const [extras, setExtras] = useState<ExtraItem[]>(
         editProduct?.extras?.length ? editProduct.extras : DEFAULT_EXTRAS.map(e => ({ ...e }))
     );
@@ -92,14 +87,10 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
     const [success, setSuccess] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Duration slider preview value
-    const [previewDuration, setPreviewDuration] = useState(baseDuration);
-
     const enabledExtras = extras.filter(e => e.enabled);
     const extrasTotal = enabledExtras.reduce((s, e) => s + e.price, 0);
     const basePriceNum = parseFloat(basePrice) || 0;
-    const durationExtra = (previewDuration - 1) * PRICE_PER_DAY;
-    const totalPreview = basePriceNum + durationExtra + extrasTotal;
+    const totalPreview = basePriceNum + extrasTotal;
 
     if (!isOpen) return null;
 
@@ -196,13 +187,10 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
             setBasePrice("");
             setCategory(CATEGORIES[0]);
             setSize("");
-            setBaseDuration(1);
-            setMaxDuration(7);
             setExtras(DEFAULT_EXTRAS.map(e => ({ ...e })));
             setImageFiles([]);
             setImagePreviews([]);
             setExistingUrls([]);
-            setPreviewDuration(1);
         }
         setError(null);
         setSuccess(false);
@@ -297,8 +285,6 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                 size: size || null,
                 image_url: uploadedUrls[0] || null, // backward compat
                 image_urls: uploadedUrls,
-                base_duration: baseDuration,
-                max_duration: maxDuration,
                 extras: extras.filter(e => e.enabled).map(({ id, label, price }) => ({ id, label, price })),
             };
 
@@ -531,96 +517,6 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                 <span className="text-[10px] text-gray-600 ml-1">{description.length}/{MAX_DESCRIPTION_LENGTH}</span>
                             </div>
 
-                            {/* Duration Range Selector */}
-                            {/* Süre Slider */}
-                            <div className="space-y-4 pt-2">
-                                <div className="flex justify-between items-center">
-                                    <label className="flex items-center gap-2 text-sm font-medium text-pink-500">
-                                        <Package className="w-4 h-4 animate-float" />
-                                        Kargo Hazırlık Süresi (Maksimum Gün)
-                                    </label>
-                                    <span className="text-xs font-mono bg-pink-500/10 text-pink-400 px-2 py-1 rounded">
-                                        {previewDuration} Gün Seçilirse: +{formatCurrency(durationExtra)}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Neon Pink Slider */}
-                            <div className="relative px-1">
-                                <input
-                                    type="range"
-                                    min={1}
-                                    max={14}
-                                    step={1}
-                                    value={previewDuration}
-                                    onChange={(e) => setPreviewDuration(parseInt(e.target.value))}
-                                    className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                                    style={{
-                                        background: `linear-gradient(to right, #ec4899 0%, #ec4899 ${((previewDuration - 1) / 13) * 100}%, rgba(255,255,255,0.1) ${((previewDuration - 1) / 13) * 100}%, rgba(255,255,255,0.1) 100%)`,
-                                    }}
-                                />
-                                <style>{`
-                    input[type="range"]::-webkit-slider-thumb {
-                      -webkit-appearance: none;
-                      appearance: none;
-                      width: 22px;
-                      height: 22px;
-                      border-radius: 50%;
-                      background: #ec4899;
-                      cursor: pointer;
-                      box-shadow: 0 0 15px rgba(236,72,153,0.6), 0 0 30px rgba(236,72,153,0.3);
-                      border: 2px solid white;
-                    }
-                    input[type="range"]::-moz-range-thumb {
-                      width: 22px;
-                      height: 22px;
-                      border-radius: 50%;
-                      background: #ec4899;
-                      cursor: pointer;
-                      box-shadow: 0 0 15px rgba(236,72,153,0.6), 0 0 30px rgba(236,72,153,0.3);
-                      border: 2px solid white;
-                    }
-                  `}</style>
-                                <div className="flex justify-between mt-1.5 text-[10px] text-gray-500 font-mono uppercase">
-                                    <span>1 Gün</span>
-                                    <span>Orta</span>
-                                    <span>Maksimum</span>
-                                </div>
-                            </div>
-
-                            {/* Duration Price Info */}
-                            {previewDuration > 1 && (
-                                <div className="text-xs text-pink-300/70 text-right">
-                                    +{formatCurrency(durationExtra)} süre ek ücreti ({previewDuration - 1} × {formatCurrency(PRICE_PER_DAY)}/gün)
-                                </div>
-                            )}
-
-                            {/* Min/Max Duration for seller */}
-                            <div className="grid grid-cols-2 gap-3 mt-2">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] text-gray-500 ml-1">Min Süre (Gün)</label>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        max={maxDuration}
-                                        value={baseDuration}
-                                        onChange={(e) => { const v = parseInt(e.target.value) || 1; setBaseDuration(v); if (previewDuration < v) setPreviewDuration(v); }}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:border-pink-500 focus:outline-none"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] text-gray-500 ml-1">Max Süre (Gün)</label>
-                                    <input
-                                        type="number"
-                                        min={baseDuration}
-                                        max={30}
-                                        value={maxDuration}
-                                        onChange={(e) => { const v = parseInt(e.target.value) || 7; setMaxDuration(v); if (previewDuration > v) setPreviewDuration(v); }}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:border-pink-500 focus:outline-none"
-                                    />
-                                </div>
-                            </div>
-
 
                             {/* Ekstra Hizmetler */}
                             <div className="space-y-4 bg-white/[0.02] border border-white/5 rounded-xl p-4">
@@ -715,7 +611,6 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                         <p className="text-[10px] text-gray-400 uppercase tracking-widest">Tahmini Alıcı Bedeli</p>
                                         <p className="text-xs text-gray-500 mt-0.5">
                                             Taban {formatCurrency(basePriceNum)}
-                                            {durationExtra > 0 && ` + Süre ${formatCurrency(durationExtra)}`}
                                             {extrasTotal > 0 && ` + Ekstra ${formatCurrency(extrasTotal)}`}
                                         </p>
                                     </div>

@@ -27,8 +27,6 @@ interface MyProduct {
     image_urls: string[] | null;
     category: string;
     is_active: boolean;
-    base_duration: number;
-    max_duration: number;
     description: string;
     extras: any[]; // JSONB
     created_at: string;
@@ -77,8 +75,6 @@ export default function MyProducts() {
             category: product.category,
             image_url: product.image_url,
             image_urls: product.image_urls || (product.image_url ? [product.image_url] : []),
-            base_duration: product.base_duration,
-            max_duration: product.max_duration,
             extras: Array.isArray(product.extras) ? product.extras : [],
         };
         setEditingProduct(editData);

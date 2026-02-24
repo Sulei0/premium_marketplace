@@ -24,8 +24,7 @@ import {
   Lock,
   Loader2,
   Edit3,
-  Check,
-  Wind
+  Check
 } from 'lucide-react';
 import { Layout } from '@/components/Layout';
 
@@ -37,7 +36,7 @@ import {
   cn
 } from '@/lib/index';
 import { useCart } from '@/hooks/useCart';
-import { Slider } from '@/components/ui/slider';
+
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -52,8 +51,9 @@ import { BadgeDisplay } from '@/components/BadgeDisplay';
 import { AdminProductActions } from '@/components/admin/AdminProductActions';
 import { ReportModal } from '@/components/ReportModal';
 import { Flag } from 'lucide-react';
+import { DbProductCard } from '@/components/DbProductCard';
 
-const PRICE_PER_DAY = 15;
+
 
 interface DbProduct {
   id: string;
@@ -68,8 +68,6 @@ interface DbProduct {
   is_active: boolean;
   is_sold: boolean;
   created_at: string;
-  base_duration: number;
-  max_duration: number;
   extras: { id: string; label: string; price: number }[];
   seller?: {
     username: string;
@@ -205,7 +203,45 @@ export default function ProductDetail() {
   );
 }
 
-/** DB Product Detail View — with duration slider, extras, and edit button for owner */
+/** DB Product Detail View — with extras and edit button for owner */
+
+/* ── CSS for heart burst particles ── */
+const heartBurstStyles = `
+@keyframes heart-particle {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+.heart-burst-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ec4899;
+  pointer-events: none;
+  animation: heart-particle 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+@keyframes heart-ring {
+  0% { transform: scale(0.3); opacity: 0.8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.heart-burst-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid #ec4899;
+  pointer-events: none;
+  animation: heart-ring 0.5s ease-out forwards;
+}
+`;
+
+const PARTICLES = [
+  { tx: "-14px", ty: "-16px" },
+  { tx: "14px", ty: "-16px" },
+  { tx: "-18px", ty: "2px" },
+  { tx: "18px", ty: "2px" },
+  { tx: "-10px", ty: "14px" },
+  { tx: "10px", ty: "14px" },
+];
 function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }: {
   product: DbProduct;
   isOwner: boolean;
@@ -216,8 +252,6 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isFavorite, toggleFavorite, getFavoriteCount, fetchFavoriteCount } = useFavorites();
-  const baseDuration = product.base_duration || 1;
-  const maxDuration = product.max_duration || 7;
   const extras = product.extras || [];
 
   // Image carousel
@@ -232,11 +266,11 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
     fetchFavoriteCount(product.id);
   }, [product.id]);
 
-  const [duration, setDuration] = useState(baseDuration);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const [isWhispering, setIsWhispering] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [showPaymentDisclaimer, setShowPaymentDisclaimer] = useState(false);
+  const [favBurst, setFavBurst] = useState(false);
 
   // If sold, we might want to disable interactions
   const isSold = product.is_sold;
@@ -244,8 +278,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
   const extrasTotal = extras
     .filter(e => selectedExtras.includes(e.id))
     .reduce((s, e) => s + e.price, 0);
-  const durationExtra = (duration - 1) * PRICE_PER_DAY;
-  const totalPrice = product.price + durationExtra + extrasTotal;
+  const totalPrice = product.price + extrasTotal;
 
 
 
@@ -314,7 +347,6 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
       // 2. Send offer message
 
       const offerDetails = {
-        duration,
         extras: extras.filter(e => selectedExtras.includes(e.id)),
         totalPrice
       };
@@ -370,14 +402,13 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
     size: product.size,
     image_url: product.image_url,
     image_urls: product.image_urls,
-    base_duration: baseDuration,
-    max_duration: maxDuration,
     extras: extras.map(e => ({ ...e, enabled: true })),
     is_sold: product.is_sold,
   };
 
   return (
     <Layout>
+      <style>{heartBurstStyles}</style>
       {/* Edit Modal */}
       <AddProductModal
         isOpen={editModalOpen}
@@ -463,7 +494,11 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
 
               {/* Fav Button */}
               <button
-                onClick={() => toggleFavorite(product.id, product.user_id)}
+                onClick={() => {
+                  toggleFavorite(product.id, product.user_id);
+                  setFavBurst(true);
+                  setTimeout(() => setFavBurst(false), 600);
+                }}
                 className="absolute top-4 right-4 mt-10 p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/60 transition-all"
               >
                 <Heart className={`w - 5 h - 5 transition - all duration - 300 ${fav ? 'text-pink-500 fill-pink-500' : 'text-white/70 hover:text-pink-400'} `} />
@@ -471,6 +506,19 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                   <span className="absolute -bottom-1 -right-1 bg-primary text-[10px] text-white font-bold rounded-full w-5 h-5 flex items-center justify-center">
                     {favCount}
                   </span>
+                )}
+                {/* Burst particles */}
+                {favBurst && (
+                  <>
+                    <span className="heart-burst-ring" />
+                    {PARTICLES.map((p, i) => (
+                      <span
+                        key={i}
+                        className="heart-burst-particle"
+                        style={{ "--tx": p.tx, "--ty": p.ty, left: "50%", top: "50%", marginLeft: "-3px", marginTop: "-3px" } as React.CSSProperties}
+                      />
+                    ))}
+                  </>
                 )}
               </button>
 
@@ -556,56 +604,6 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
 
             <Separator className="bg-border/30" />
 
-            {/* Kargo Hazırlık Süresi Slider */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-pink-400">
-                  <Wind className="w-5 h-5 animate-float text-pink-400" />
-                  Kargo Hazırlık Süresi (Gün)
-                </h3>
-                <span className="text-lg font-mono text-pink-400 font-bold">{duration} Gün</span>
-              </div>
-              <div className="px-1">
-                <input
-                  type="range"
-                  min={baseDuration}
-                  max={maxDuration}
-                  step={1}
-                  value={duration}
-                  onChange={(e) => setDuration(parseInt(e.target.value))}
-                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #ec4899 0%, #ec4899 ${((duration - baseDuration) / Math.max(maxDuration - baseDuration, 1)) * 100}%, rgba(255, 255, 255, 0.1) ${((duration - baseDuration) / Math.max(maxDuration - baseDuration, 1)) * 100}%, rgba(255, 255, 255, 0.1) 100%)`,
-                  }}
-                />
-                <style>{`
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 22px; height: 22px; border-radius: 50%;
-  background: #ec4899; cursor: pointer;
-  box-shadow: 0 0 15px rgba(236, 72, 153, 0.6), 0 0 30px rgba(236, 72, 153, 0.3);
-  border: 2px solid white;
-}
-input[type="range"]::-moz-range-thumb {
-  width: 22px; height: 22px; border-radius: 50%;
-  background: #ec4899; cursor: pointer;
-  box-shadow: 0 0 15px rgba(236, 72, 153, 0.6), 0 0 30px rgba(236, 72, 153, 0.3);
-  border: 2px solid white;
-}
-`}</style>
-                <div className="flex justify-between mt-1.5 text-[10px] text-muted-foreground font-mono uppercase">
-                  <span>1 Gün</span>
-                  <span>Orta</span>
-                  <span>Maksimum</span>
-                </div>
-              </div>
-              {durationExtra > 0 && (
-                <p className="text-xs text-pink-300/70 text-right">
-                  +{formatCurrency(durationExtra)} süre ek ücreti
-                </p>
-              )}
-            </div>
-
             {/* Ekstra Hizmetler */}
             {extras.length > 0 && (
               <div className="space-y-3">
@@ -653,7 +651,6 @@ input[type="range"]::-moz-range-thumb {
                   <p className="text-4xl font-bold text-foreground">{formatCurrency(totalPrice)}</p>
                   <p className="text-[10px] text-muted-foreground">
                     Taban {formatCurrency(product.price)}
-                    {durationExtra > 0 && ` + Süre ${formatCurrency(durationExtra)} `}
                     {extrasTotal > 0 && ` + Ekstra ${formatCurrency(extrasTotal)} `}
                   </p>
                 </div>
@@ -753,8 +750,68 @@ input[type="range"]::-moz-range-thumb {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Similar Products */}
+      <SimilarProducts category={product.category} currentId={product.id} />
     </Layout>
   );
 }
 
+/** Similar products — same category, max 4 items */
+function SimilarProducts({ category, currentId }: { category: string; currentId: string }) {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { fetchMultipleFavoriteCounts } = useFavorites();
 
+  useEffect(() => {
+    if (!supabase || !category) {
+      setLoading(false);
+      return;
+    }
+    async function fetch() {
+      const { data, error } = await supabase!
+        .from('products')
+        .select('id, title, description, price, category, size, image_url, created_at, user_id, is_active, is_sold')
+        .eq('category', category)
+        .eq('is_active', true)
+        .eq('is_approved', true)
+        .neq('id', currentId)
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (!error && data && data.length > 0) {
+        setProducts(data);
+        fetchMultipleFavoriteCounts(data.map((p: any) => p.id));
+      }
+      setLoading(false);
+    }
+    fetch();
+  }, [category, currentId]);
+
+  // Don't render anything if no similar products or loading resulted in nothing
+  if (!loading && products.length === 0) return null;
+
+  return (
+    <div className="container mx-auto px-4 pb-16 max-w-6xl">
+      <Separator className="bg-border/30 mb-12" />
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold tracking-tight">Benzer Ürünler</h2>
+        <p className="text-muted-foreground text-sm mt-1">Aynı kategorideki diğer ürünler</p>
+      </div>
+
+      {loading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="aspect-[4/5] rounded-xl bg-card/40 border border-white/5 animate-pulse" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          {products.map((p) => (
+            <DbProductCard key={p.id} product={p} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
