@@ -122,6 +122,7 @@ export default function ChatDetail() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isInitialLoad = useRef(true);
     const prevMessageCountRef = useRef(0);
+    const userSentMessageRef = useRef(false);
 
     usePageMeta(
         chat ? `${chat.other_user.username} ile Sohbet` : "Sohbet",
@@ -130,21 +131,47 @@ export default function ChatDetail() {
 
     // ------ Scroll to bottom ------
     const scrollToBottom = useCallback((instant = false) => {
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({
-                behavior: instant ? "instant" as ScrollBehavior : "smooth",
+        const container = messagesContainerRef.current;
+        if (!container) return;
+        if (instant) {
+            container.scrollTop = container.scrollHeight;
+        } else {
+            container.scrollTo({
+                top: container.scrollHeight,
+                behavior: "smooth",
             });
         }
     }, []);
 
+    const isNearBottom = useCallback(() => {
+        const container = messagesContainerRef.current;
+        if (!container) return true;
+        const threshold = 150; // px
+        return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+    }, []);
+
     useEffect(() => {
         const currentCount = messages.length;
-        if (currentCount > 0 && (isInitialLoad.current || currentCount > prevMessageCountRef.current)) {
-            scrollToBottom(isInitialLoad.current);
-            isInitialLoad.current = false;
+        if (currentCount > 0) {
+            if (isInitialLoad.current) {
+                // İlk yükleme — her zaman alta in
+                scrollToBottom(true);
+                isInitialLoad.current = false;
+            } else if (currentCount > prevMessageCountRef.current) {
+                // Yeni mesaj geldi
+                if (userSentMessageRef.current) {
+                    // Kullanıcı kendisi gönderdi — her zaman alta in
+                    scrollToBottom(false);
+                    userSentMessageRef.current = false;
+                } else if (isNearBottom()) {
+                    // Karşı taraftan geldi ama kullanıcı zaten altta — alta in
+                    scrollToBottom(false);
+                }
+                // Kullanıcı yukarı kaydırmışsa → kaydırma
+            }
         }
         prevMessageCountRef.current = currentCount;
-    }, [messages.length, scrollToBottom]);
+    }, [messages.length, scrollToBottom, isNearBottom]);
 
     // ------ Mark messages as read ------
     const markMessagesAsRead = useCallback(async () => {
@@ -562,6 +589,7 @@ export default function ChatDetail() {
             read_at: null,
         };
 
+        userSentMessageRef.current = true;
         setMessages((prev) => [...prev, optimisticMessage]);
 
         const { data: inserted, error } = await supabase!
