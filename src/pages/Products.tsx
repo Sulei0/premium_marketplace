@@ -6,7 +6,7 @@ import { Layout } from "@/components/Layout";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/index";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { SEO } from "@/components/SEO";
 import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 import { DbProductCard } from "@/components/DbProductCard";
 
@@ -60,8 +60,6 @@ export default function Products() {
 
   const observerTarget = useRef<HTMLDivElement>(null);
   const { fetchMultipleFavoriteCounts } = useFavorites();
-
-  usePageMeta("Koleksiyon", "Giyenden'de en yeni ürünleri keşfet. Güvenli ve gizli alışveriş.");
 
   const fetchProducts = async (pageNumber: number) => {
     if (!supabase) {
@@ -191,6 +189,32 @@ export default function Products() {
 
   return (
     <Layout>
+      <SEO
+        title="Koleksiyon | Giyenden"
+        description="Giyenden'de en yeni ürünleri keşfet. Güvenli ve gizli alışveriş."
+        url="https://giyenden.com/products"
+      >
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Ana Sayfa",
+                "item": "https://giyenden.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Koleksiyon",
+                "item": "https://giyenden.com/products"
+              }
+            ]
+          })}
+        </script>
+      </SEO>
       <div className="min-h-screen pb-20">
         {/* Header & Search Section */}
         <section className="relative pt-32 pb-12 overflow-hidden">

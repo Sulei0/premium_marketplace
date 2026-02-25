@@ -2,13 +2,12 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home, Search, ArrowLeft } from "lucide-react";
 import { Layout } from "@/components/Layout";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { SEO } from "@/components/SEO";
 
 export default function NotFound() {
-  usePageMeta("Sayfa Bulunamadı", "Aradığınız sayfa bulunamadı.");
-
   return (
     <Layout>
+      <SEO title="Sayfa Bulunamadı | Giyenden" description="Aradığınız sayfa bulunamadı." />
       <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4 py-20">
         {/* Animated 404 */}
         <motion.div

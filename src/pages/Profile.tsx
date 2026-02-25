@@ -22,6 +22,7 @@ import {
   Users
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
+import { SEO } from "@/components/SEO";
 import { ROUTE_PATHS, cn, formatCurrency } from "@/lib/index";
 import { validateImageFile } from "@/lib/sanitize";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
@@ -305,6 +306,12 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
 
   return (
     <Layout>
+      <SEO
+        title={`${profile.username} | Giyenden Profil`}
+        description={`${profile.username} adlı kullanıcının profilini inceliyorsunuz. Gardırobundaki parçalara göz atın.`}
+        image={profile.avatar_url || "https://giyenden.com/og-image.png"}
+        url={`https://giyenden.com/profile/${profile.id}`}
+      />
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-16">
         {/* Back Button (Only if not own profile) */}
         {!isOwnProfile && (
@@ -337,7 +344,7 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
                 <label htmlFor="avatar-upload" className="cursor-pointer block relative">
                   <div className="w-48 h-48 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-transparent group-hover:border-primary/50 transition-all shadow-lg shadow-primary/20">
                     {profile.avatar_url ? (
-                      <img key={profile.avatar_url} src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                      <img key={profile.avatar_url} src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" loading="lazy" />
                     ) : (
                       <span className="text-6xl font-bold text-white">{firstLetter}</span>
                     )}
@@ -350,7 +357,7 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
               ) : (
                 <div className="w-48 h-48 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-primary/20 shadow-lg">
                   {profile.avatar_url ? (
-                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <span className="text-6xl font-bold text-white">{firstLetter}</span>
                   )}

@@ -1,12 +1,12 @@
 import React from "react";
 import { Layout } from "@/components/Layout";
 import { motion } from "framer-motion";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { SEO } from "@/components/SEO";
 
 export default function Privacy() {
-    usePageMeta("Gizlilik Politikası", "Giyenden gizlilik politikası ve veri güvenliği detayları.");
     return (
         <Layout>
+            <SEO title="Gizlilik Politikası | Giyenden" description="Giyenden gizlilik politikası ve veri güvenliği detayları." />
             <div className="container mx-auto px-4 py-12 max-w-4xl">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

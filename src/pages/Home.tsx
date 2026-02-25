@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/index";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { SEO } from "@/components/SEO";
 import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 import { useAuth, type UserRole } from "@/contexts/AuthContext";
 import { DbProductCard } from "@/components/DbProductCard";
@@ -35,8 +35,6 @@ export default function Home() {
   const [loadingDb, setLoadingDb] = useState(true);
   const [roleModal, setRoleModal] = useState<{ open: boolean; targetRole: UserRole }>({ open: false, targetRole: "buyer" });
   const [roleUpdating, setRoleUpdating] = useState(false);
-
-  usePageMeta(undefined, "Kadınlara özel güvenli ve butik 2. el moda platformu. Gardırobundaki 2. el hazineleri Giyenden ile değerlendir, kadın dayanışmasının gücüne güç kat.");
 
   const handleRoleClick = (targetRole: UserRole) => {
     if (!user) {
@@ -114,6 +112,29 @@ export default function Home() {
 
   return (
     <Layout>
+      <SEO
+        title="Giyenden | Ana Sayfa"
+        description="Kadınlara özel güvenli ve butik 2. el moda platformu. Gardırobundaki 2. el hazineleri Giyenden ile değerlendir, kadın dayanışmasının gücüne güç kat."
+        url="https://giyenden.com"
+      >
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Giyenden",
+            "url": "https://giyenden.com",
+            "description": "Kadınlara özel güvenli ve butik 2. el moda platformu.",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://giyenden.com/products?search={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          })}
+        </script>
+      </SEO>
       {/* Role Confirmation Modal */}
       <AnimatePresence>
         {roleModal.open && (

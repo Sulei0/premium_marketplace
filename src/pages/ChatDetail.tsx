@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { SEO } from "@/components/SEO";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { validateImageFile } from "@/lib/sanitize";
 
@@ -124,10 +124,7 @@ export default function ChatDetail() {
     const prevMessageCountRef = useRef(0);
     const userSentMessageRef = useRef(false);
 
-    usePageMeta(
-        chat ? `${chat.other_user.username} ile Sohbet` : "Sohbet",
-        "Giyenden mesajlaşma"
-    );
+    // SEO metadataları render metodu içindeki <SEO /> bileşeniyle sağlanmaktadır.
 
     // ------ Scroll to bottom ------
     const scrollToBottom = useCallback((instant = false) => {
@@ -654,7 +651,8 @@ export default function ChatDetail() {
 
     return (
         <Layout>
-            <div className="container mx-auto max-w-2xl h-[calc(100vh-80px)] flex flex-col">
+            <SEO title={chat?.other_user ? `${chat.other_user.username} ile Fısıldaş` : "Fısıltı | Giyenden"} description="Sohbet detayları" />
+            <div className="container mx-auto px-4 py-6 h-[calc(100vh-80px)] max-h-[900px]">
                 {/* Header */}
                 <div className="p-4 border-b flex items-center gap-4 bg-background z-10 sticky top-0">
                     <Button

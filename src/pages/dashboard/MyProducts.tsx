@@ -17,7 +17,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { SEO } from "@/components/SEO";
 
 interface MyProduct {
     id: string;
@@ -33,7 +33,6 @@ interface MyProduct {
 }
 
 export default function MyProducts() {
-    usePageMeta("Ürünlerim", "Satışa çıkardığınız ürünleri yönetin.");
     const { user } = useAuth();
     const [products, setProducts] = useState<MyProduct[]>([]);
     const [loading, setLoading] = useState(true);
@@ -106,6 +105,7 @@ export default function MyProducts() {
 
     return (
         <Layout>
+            <SEO title="Ürünlerim | Giyenden" description="Satışa çıkardığınız ürünleri yönetin." />
             <div className="container mx-auto px-4 py-12 min-h-screen">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                     <div>

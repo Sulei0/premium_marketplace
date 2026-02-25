@@ -1,15 +1,14 @@
 import { Layout } from "@/components/Layout";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { SEO } from "@/components/SEO";
 import { Shield } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminUsers } from "@/components/admin/AdminUsers";
 import { AdminProducts } from "@/components/admin/AdminProducts";
 
 export default function AdminPanel() {
-    usePageMeta("Admin Paneli");
-
     return (
         <Layout>
+            <SEO title="Admin Paneli | Giyenden" description="Site yönetim paneli" />
             <div className="container mx-auto px-4 py-12 min-h-screen">
                 <div className="flex items-center gap-3 mb-8">
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">

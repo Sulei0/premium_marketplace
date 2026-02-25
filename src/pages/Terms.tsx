@@ -1,12 +1,12 @@
 import React from "react";
 import { Layout } from "@/components/Layout";
 import { motion } from "framer-motion";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { SEO } from "@/components/SEO";
 
 export default function Terms() {
-    usePageMeta("Kullanıcı Sözleşmesi", "Giyenden kullanıcı sözleşmesi ve hizmet şartları.");
     return (
         <Layout>
+            <SEO title="Kullanıcı Sözleşmesi | Giyenden" description="Giyenden kullanıcı sözleşmesi ve hizmet şartları." />
             <div className="container mx-auto px-4 py-12 max-w-4xl">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

@@ -8,7 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import { MessageSquare, Clock, ArrowRight, Image as ImageIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { SEO } from "@/components/SEO";
 
 interface ChatPreview {
   id: string;
@@ -33,8 +33,6 @@ export default function ChatList() {
   const { user } = useAuth();
   const [chats, setChats] = useState<ChatPreview[]>([]);
   const [loading, setLoading] = useState(true);
-
-  usePageMeta("Fısıltılarım", "Sohbetleriniz ve teklifleriniz");
 
   useEffect(() => {
     if (!user) return;
@@ -149,6 +147,7 @@ export default function ChatList() {
 
   return (
     <Layout>
+      <SEO title="Fısıltılarım | Giyenden" description="Sohbetleriniz ve teklifleriniz" />
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
           <MessageSquare className="w-6 h-6 text-primary" />

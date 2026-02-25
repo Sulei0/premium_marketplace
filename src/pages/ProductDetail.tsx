@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { usePageMeta } from '@/hooks/usePageMeta';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SEO } from "@/components/SEO";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -86,11 +86,6 @@ export default function ProductDetail() {
   const [dbProduct, setDbProduct] = useState<DbProduct | null>(null);
   const [loadingDb, setLoadingDb] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
-
-  usePageMeta(
-    dbProduct ? dbProduct.title : undefined,
-    dbProduct ? dbProduct.description?.substring(0, 160) : undefined
-  );
 
   useEffect(() => {
     if (!supabase || !id) {
@@ -179,13 +174,44 @@ export default function ProductDetail() {
 
   if (dbProduct) {
     return (
-      <DbProductView
-        product={dbProduct}
-        isOwner={user?.id === dbProduct.user_id}
-        onEdit={() => setEditModalOpen(true)}
-        editModalOpen={editModalOpen}
-        onCloseEdit={() => setEditModalOpen(false)}
-      />
+      <>
+        <SEO
+          title={`${dbProduct.title} | Giyenden`}
+          description={dbProduct.description?.substring(0, 160) || "Giyenden üzerinden harika bir ürün."}
+          image={dbProduct.image_url || undefined}
+          url={`https://giyenden.com/product/${dbProduct.id}`}
+          type="product"
+        >
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Product",
+              "name": dbProduct.title,
+              "image": dbProduct.image_url ? [dbProduct.image_url] : [],
+              "description": dbProduct.description,
+              "offers": {
+                "@type": "Offer",
+                "url": `https://giyenden.com/product/${dbProduct.id}`,
+                "priceCurrency": "TRY",
+                "price": dbProduct.price,
+                "itemCondition": "https://schema.org/UsedCondition",
+                "availability": dbProduct.is_sold ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Person",
+                  "name": dbProduct.seller?.username || "Giyenden Satıcısı"
+                }
+              }
+            })}
+          </script>
+        </SEO>
+        <DbProductView
+          product={dbProduct}
+          isOwner={user?.id === dbProduct.user_id}
+          onEdit={() => setEditModalOpen(true)}
+          editModalOpen={editModalOpen}
+          onCloseEdit={() => setEditModalOpen(false)}
+        />
+      </>
     );
   }
 
@@ -435,6 +461,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                   src={currentImage}
                   alt={product.title}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -543,7 +570,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                     onClick={() => setActiveImageIndex(i)}
                     className={`relative w - 16 h - 20 rounded - lg overflow - hidden flex - shrink - 0 border - 2 transition - all ${i === activeImageIndex ? 'border-primary ring-2 ring-primary/30' : 'border-white/10 hover:border-white/30'} `}
                   >
-                    <img src={url} alt={`Görsel ${i + 1} `} className="w-full h-full object-cover" />
+                    <img src={url} alt={`Görsel ${i + 1} `} className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>
@@ -568,7 +595,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                   <div className="relative">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg border-2 border-white/10 overflow-hidden">
                       {product.seller.avatar_url ? (
-                        <img src={product.seller.avatar_url} alt={product.seller.username} className="w-full h-full object-cover" />
+                        <img src={product.seller.avatar_url} alt={product.seller.username} className="w-full h-full object-cover" loading="lazy" />
                       ) : (
                         product.seller.username.substring(0, 1).toUpperCase()
                       )}

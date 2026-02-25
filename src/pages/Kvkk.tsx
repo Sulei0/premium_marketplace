@@ -1,12 +1,12 @@
 import React from "react";
 import { Layout } from "@/components/Layout";
 import { motion } from "framer-motion";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { SEO } from "@/components/SEO";
 
 export default function Kvkk() {
-    usePageMeta("KVKK Aydınlatma Metni", "Kişisel verilerin korunması kanunu aydınlatma metni.");
     return (
         <Layout>
+            <SEO title="KVKK Aydınlatma Metni | Giyenden" description="Kişisel verilerin korunması kanunu aydınlatma metni." />
             <div className="container mx-auto px-4 py-12 max-w-4xl">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
