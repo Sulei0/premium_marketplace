@@ -367,8 +367,47 @@ export default function ChatDetail() {
         };
     }, [id, user]);
 
-    // Yedek (Polling) sistemi veri okuma (Supabase Okuma) limitlerini tükettiği için kaldırıldı.
-    // Artık tamamen Supabase Realtime (Canlı Bağlantı) özelliğine güvenilmektedir.
+    // ------ Akıllı Polling Fallback (Realtime backup) ------
+    // Supabase Realtime başarısız olursa yedek olarak çalışır.
+    // Sadece son mesajdan sonraki yeni mesajları çeker (hafif).
+    const lastMsgDateRef = useRef<string | null>(null);
+
+    // Son mesaj tarihini ref'te güncel tut
+    useEffect(() => {
+        if (messages.length > 0) {
+            lastMsgDateRef.current = messages[messages.length - 1].created_at;
+        }
+    }, [messages]);
+
+    useEffect(() => {
+        if (!id || !user || !supabase || loading) return;
+
+        const pollNewMessages = async () => {
+            const since = lastMsgDateRef.current || new Date(0).toISOString();
+
+            const { data: newMsgs } = await supabase
+                .from("messages")
+                .select("*")
+                .eq("chat_id", id)
+                .gt("created_at", since)
+                .order("created_at", { ascending: true });
+
+            if (newMsgs && newMsgs.length > 0) {
+                setMessages((prev) => {
+                    const existingIds = new Set(prev.map((m) => m.id));
+                    const trulyNew = newMsgs.filter(
+                        (m) => !existingIds.has(m.id) && !m.id.startsWith('temp-')
+                    );
+                    if (trulyNew.length === 0) return prev;
+                    return [...prev, ...trulyNew];
+                });
+            }
+        };
+
+        const interval = setInterval(pollNewMessages, 8000);
+        return () => clearInterval(interval);
+    }, [id, user, loading]);
+
 
 
     // ------ Typing broadcast ------
@@ -620,9 +659,9 @@ export default function ChatDetail() {
     return (
         <Layout>
             <SEO title={chat?.other_user ? `${chat.other_user.username} ile Fısıldaş` : "Fısıltı | Giyenden"} description="Sohbet detayları" />
-            <div className="container mx-auto px-4 py-6 h-[calc(100vh-80px)] max-h-[900px]">
+            <div className="container mx-auto px-0 sm:px-4 flex flex-col h-[calc(100vh-80px-64px)] md:h-[calc(100vh-80px)]">
                 {/* Header */}
-                <div className="p-4 border-b flex items-center gap-4 bg-background z-10 sticky top-0">
+                <div className="p-4 border-b flex items-center gap-4 bg-background z-10 shrink-0">
                     <Button
                         variant="ghost"
                         size="icon"
@@ -677,7 +716,7 @@ export default function ChatDetail() {
                 {/* Messages Area */}
                 <div
                     ref={messagesContainerRef}
-                    className="flex-1 overflow-y-auto p-4 space-y-4"
+                    className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0"
                 >
                     {messages.length === 0 && (
                         <div className="text-center py-12 text-muted-foreground text-sm">
@@ -823,7 +862,7 @@ export default function ChatDetail() {
                 </div>
 
                 {/* Input Area */}
-                <div className="relative border-t bg-background">
+                <div className="relative border-t bg-background shrink-0">
                     {/* Image Upload Preview */}
                     {imagePreview && (
                         <div className="absolute bottom-full left-0 right-0 p-3 bg-background/95 backdrop-blur-sm border-t animate-in slide-in-from-bottom-2 duration-200">
