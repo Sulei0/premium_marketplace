@@ -472,7 +472,7 @@ export function Layout({ children }: LayoutProps) {
 
       {/* --- FOOTER --- */}
       <footer className="bg-card border-t border-border mt-20 pb-24 md:pb-0">
-        <TrustIndicators />
+        {!location.pathname.startsWith('/chats') && <TrustIndicators />}
 
         {/* Footer Links & Info */}
         <div className="container mx-auto px-4 py-16">
