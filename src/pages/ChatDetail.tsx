@@ -367,41 +367,9 @@ export default function ChatDetail() {
         };
     }, [id, user]);
 
-    // ------ Polling Fallback ------
-    const sendingRef = useRef(sending);
-    sendingRef.current = sending;
+    // Yedek (Polling) sistemi veri okuma (Supabase Okuma) limitlerini tükettiği için kaldırıldı.
+    // Artık tamamen Supabase Realtime (Canlı Bağlantı) özelliğine güvenilmektedir.
 
-    useEffect(() => {
-        if (!id || !user || !supabase) return;
-
-        const interval = setInterval(async () => {
-            // Only poll if we're not already sending a message to avoid race conditions
-            if (sendingRef.current) return;
-
-            const { data: latestMessages, error } = await supabase!
-                .from("messages")
-                .select("*")
-                .eq("chat_id", id)
-                .order("created_at", { ascending: true });
-
-            if (!error && latestMessages) {
-                setMessages((prev) => {
-                    const existingIds = new Set(prev.map(m => m.id));
-                    const newMsgs = latestMessages.filter(m => !existingIds.has(m.id));
-
-                    if (newMsgs.length > 0) {
-                        const combined = [...prev, ...newMsgs].sort(
-                            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-                        );
-                        return combined;
-                    }
-                    return prev;
-                });
-            }
-        }, 5000);
-
-        return () => clearInterval(interval);
-    }, [id, user]);
 
     // ------ Typing broadcast ------
     const broadcastTyping = useCallback(

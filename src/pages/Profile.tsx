@@ -148,16 +148,28 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
         const { data: productsData } = await query;
         if (productsData) setProducts(productsData as DbProduct[]);
 
-        // 3. Fetch Stats (Reviews)
-        const [reviewsRes] = await Promise.all([
-          supabase.from("reviews").select("rating").eq("seller_id", userId)
-        ]);
+        // 3. Fetch Stats (Reviews, Optimizasyon: RPC veya Limitli Veri)
+        // Eğer veritabanında "get_average_rating" RPC varsa otomatik kullanır, yoksa belleği dondurmamak için en güncel 50 yoruma sınır koyarız.
+        const { data: rpcData, error: rpcError } = await supabase.rpc('get_average_rating', { p_seller_id: userId });
 
-        // Calculate Average Rating
         let avgRating = 0;
-        if (reviewsRes.data && reviewsRes.data.length > 0) {
-          const sum = reviewsRes.data.reduce((acc, curr) => acc + curr.rating, 0);
-          avgRating = sum / reviewsRes.data.length;
+
+        if (!rpcError && typeof rpcData === 'number') {
+          avgRating = rpcData;
+        } else {
+          // Fallback: Uygulamanın ve frontend'in çökmesini engellemek için limite başvurulur.
+          const [reviewsRes] = await Promise.all([
+            supabase.from("reviews")
+              .select("rating")
+              .eq("seller_id", userId)
+              .order("created_at", { ascending: false })
+              .limit(50)
+          ]);
+
+          if (reviewsRes.data && reviewsRes.data.length > 0) {
+            const sum = reviewsRes.data.reduce((acc, curr) => acc + curr.rating, 0);
+            avgRating = sum / reviewsRes.data.length;
+          }
         }
 
         setStats({

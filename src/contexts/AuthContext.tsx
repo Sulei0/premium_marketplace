@@ -98,10 +98,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const setRole = useCallback(async (newRole: UserRole) => {
     if (!user || !supabase) return;
 
-    // Frontend guard: users cannot promote themselves to admin
-    if (newRole === 'admin') {
-      console.error("Admin role cannot be set from the client.");
-      throw new Error("Bu işlem yetkiniz dışında.");
+    // Sadece alıcı veya satıcı rolü verilebilir
+    if (newRole !== 'buyer' && newRole !== 'seller') {
+      console.error("Yetkisiz rol ataması girişimi.");
+      throw new Error("Yalnızca alıcı ve satıcı rolleri seçilebilir.");
     }
 
     try {
@@ -120,9 +120,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user]);
 
   const signUp = async (email: string, password: string, username: string, signupRole: string) => {
-    if (!supabase)
-      throw new Error("Supabase yapılandırılmamış. Lütfen .env dosyanızı kontrol edin.");
-    const { error } = await supabase.auth.signUp({
+    const { error } = await supabase!.auth.signUp({
       email,
       password,
       options: {
@@ -134,29 +132,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    if (!supabase)
-      throw new Error("Supabase yapılandırılmamış. Lütfen .env dosyanızı kontrol edin.");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase!.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
 
   const resetPassword = async (email: string) => {
-    if (!supabase)
-      throw new Error("Supabase yapılandırılmamış. Lütfen .env dosyanızı kontrol edin.");
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase!.auth.resetPasswordForEmail(email, {
       redirectTo: `${import.meta.env.VITE_SITE_URL || window.location.origin}/reset-password`,
     });
     if (error) throw error;
   };
 
   const signOut = useCallback(async () => {
-    console.log("AuthContext: Identifying signOut call");
-    if (!supabase) {
-      console.error("AuthContext: Supabase client missing during signOut");
-      return;
-    }
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await supabase!.auth.signOut();
       if (error) {
         console.error("AuthContext: Supabase signOut error:", error);
       } else {

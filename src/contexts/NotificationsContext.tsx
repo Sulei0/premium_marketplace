@@ -35,6 +35,8 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
             return;
         }
 
+        let isMounted = true;
+
         async function fetchNotifications() {
             setLoading(true);
             try {
@@ -45,13 +47,15 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
                     .order("created_at", { ascending: false })
                     .limit(50);
 
-                if (data) {
+                if (data && isMounted) {
                     setNotifications(data as Notification[]);
                 }
             } catch {
                 // silent
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         }
 
@@ -76,6 +80,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
             .subscribe();
 
         return () => {
+            isMounted = false;
             supabase!.removeChannel(channel);
         };
     }, [user]);

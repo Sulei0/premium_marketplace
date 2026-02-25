@@ -116,37 +116,11 @@ export default function ProductDetail() {
         .maybeSingle();
 
       if (profileFetchError) {
-        // Profile fetch failed silently
+        console.error("Profil alınamadı:", profileFetchError);
       }
 
       if (profileResult) {
         sellerData = profileResult;
-      } else {
-        // Profile doesn't exist — try to auto-create it
-        // Profile not found — attempting auto-creation
-
-        const { error: upsertError } = await supabase!
-          .from("profiles")
-          .upsert({
-            id: productData.user_id,
-            username: "Kullanıcı",
-            role: "seller"
-          }, { onConflict: "id" });
-
-        if (upsertError) {
-          // Auto-create failed silently
-        } else {
-          // Re-fetch after creation
-          const { data: newProfile } = await supabase!
-            .from("profiles")
-            .select("username, role, avatar_url")
-            .eq("id", productData.user_id)
-            .maybeSingle();
-
-          if (newProfile) {
-            sellerData = newProfile;
-          }
-        }
       }
 
 
