@@ -33,6 +33,8 @@ import Kvkk from "@/pages/Kvkk";
 import Notifications from "@/pages/Notifications";
 import { SEOCanonical } from "@/components/SEOCanonical";
 import { CookieConsent } from "@/components/CookieConsent";
+import { UsernameSetupModal } from "@/components/UsernameSetupModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +45,20 @@ const queryClient = new QueryClient({
   },
 });
 
+// Wrapper to access AuthContext for the username setup modal
+const UsernameSetupGate = ({ children }: { children: React.ReactNode }) => {
+  const { needsUsername, setNeedsUsername } = useAuth();
+  return (
+    <>
+      <UsernameSetupModal
+        isOpen={needsUsername}
+        onComplete={() => setNeedsUsername(false)}
+      />
+      {children}
+    </>
+  );
+};
+
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -51,50 +67,52 @@ const App = () => {
         <Sonner position="top-right" expand={false} richColors />
         <ThemeProvider>
           <AuthProvider>
-            <NotificationsProvider>
-              <FollowProvider>
-                <FavoritesProvider>
-                  <AgeGate>
-                    <BrowserRouter>
-                      <SEOCanonical />
-                      <CookieConsent />
-                      <Routes>
-                        <Route path={ROUTE_PATHS.HOME} element={<Home />} />
-                        <Route path={ROUTE_PATHS.PRODUCTS} element={<Products />} />
-                        <Route path={ROUTE_PATHS.PRODUCT_DETAIL} element={<ProductDetail />} />
-                        <Route path={ROUTE_PATHS.PROFILE} element={<Profile />} />
+            <UsernameSetupGate>
+              <NotificationsProvider>
+                <FollowProvider>
+                  <FavoritesProvider>
+                    <AgeGate>
+                      <BrowserRouter>
+                        <SEOCanonical />
+                        <CookieConsent />
+                        <Routes>
+                          <Route path={ROUTE_PATHS.HOME} element={<Home />} />
+                          <Route path={ROUTE_PATHS.PRODUCTS} element={<Products />} />
+                          <Route path={ROUTE_PATHS.PRODUCT_DETAIL} element={<ProductDetail />} />
+                          <Route path={ROUTE_PATHS.PROFILE} element={<Profile />} />
 
-                        {/* Korumalı rotalar */}
-                        <Route path={ROUTE_PATHS.CHATS} element={<ProtectedRoute><ChatList /></ProtectedRoute>} />
-                        <Route path={ROUTE_PATHS.CHAT_DETAIL} element={<ProtectedRoute><ChatDetail /></ProtectedRoute>} />
-                        <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-                        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+                          {/* Korumalı rotalar */}
+                          <Route path={ROUTE_PATHS.CHATS} element={<ProtectedRoute><ChatList /></ProtectedRoute>} />
+                          <Route path={ROUTE_PATHS.CHAT_DETAIL} element={<ProtectedRoute><ChatDetail /></ProtectedRoute>} />
+                          <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+                          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
-                        {/* Yasal sayfalar */}
+                          {/* Yasal sayfalar */}
 
-                        <Route path="/terms" element={<Terms />} />
-                        <Route path="/privacy" element={<Privacy />} />
-                        <Route path="/kvkk" element={<Kvkk />} />
-                        {/* Satıcı rotaları */}
-                        <Route path="/dashboard/products" element={<SellerRoute><MyProducts /></SellerRoute>} />
+                          <Route path="/terms" element={<Terms />} />
+                          <Route path="/privacy" element={<Privacy />} />
+                          <Route path="/kvkk" element={<Kvkk />} />
+                          {/* Satıcı rotaları */}
+                          <Route path="/dashboard/products" element={<SellerRoute><MyProducts /></SellerRoute>} />
 
-                        {/* Admin paneli */}
-                        {/* Admin paneli */}
-                        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-                          <Route index element={<AdminDashboard />} />
-                          <Route path="users" element={<AdminUsers />} />
-                          <Route path="products" element={<AdminProducts />} />
-                          <Route path="reports" element={<AdminReports />} />
-                        </Route>
+                          {/* Admin paneli */}
+                          {/* Admin paneli */}
+                          <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                            <Route index element={<AdminDashboard />} />
+                            <Route path="users" element={<AdminUsers />} />
+                            <Route path="products" element={<AdminProducts />} />
+                            <Route path="reports" element={<AdminReports />} />
+                          </Route>
 
-                        {/* 404 */}
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </BrowserRouter>
-                  </AgeGate>
-                </FavoritesProvider>
-              </FollowProvider>
-            </NotificationsProvider>
+                          {/* 404 */}
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </BrowserRouter>
+                    </AgeGate>
+                  </FavoritesProvider>
+                </FollowProvider>
+              </NotificationsProvider>
+            </UsernameSetupGate>
           </AuthProvider>
         </ThemeProvider>
       </TooltipProvider>

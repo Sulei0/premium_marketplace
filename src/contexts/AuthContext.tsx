@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import type { User } from "@supabase/supabase-js";
+import type { User, Provider } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 export type UserRole = "buyer" | "seller" | "admin";
@@ -10,8 +10,11 @@ interface AuthContextType {
   setRole: (role: UserRole) => Promise<void>;
   signUp: (email: string, pass: string, username: string, role: string) => Promise<void>;
   signIn: (email: string, pass: string) => Promise<void>;
+  signInWithOAuth: (provider: Provider) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  needsUsername: boolean;
+  setNeedsUsername: (val: boolean) => void;
   loading: boolean;
 }
 
@@ -20,30 +23,36 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRoleState] = useState<UserRole>("buyer");
+  const [needsUsername, setNeedsUsername] = useState(false);
   const [loading, setLoading] = useState(!!supabase);
 
-  // Fetch role from profiles table
+  // Fetch role and username_set from profiles table
   const fetchRole = useCallback(async (userId: string) => {
     if (!supabase) return;
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, username_set")
         .eq("id", userId)
         .single();
 
       if (error) {
         console.error("Error fetching role:", error);
-        // Fallback to buyer on error
         setRoleState("buyer");
-      } else if (data?.role) {
-        setRoleState(data.role as UserRole);
+      } else {
+        if (data?.role) {
+          setRoleState(data.role as UserRole);
+        }
+        // If username_set is false, show username setup modal
+        if (data?.username_set === false) {
+          setNeedsUsername(true);
+        }
       }
     } catch (e) {
       console.error("Exception fetching role:", e);
       setRoleState("buyer");
     } finally {
-      setLoading(false); // Role loaded, stop loading
+      setLoading(false);
     }
   }, []);
 
@@ -131,6 +140,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) throw error;
   };
 
+  const signInWithOAuth = async (provider: Provider) => {
+    if (!supabase) throw new Error("Supabase bağlantısı kurulamadı.");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${import.meta.env.VITE_SITE_URL || window.location.origin}`,
+      },
+    });
+    if (error) throw error;
+  };
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase!.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -159,7 +179,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, role, setRole, signUp, signIn, signOut, resetPassword, loading }}>
+    <AuthContext.Provider value={{ user, role, setRole, signUp, signIn, signInWithOAuth, signOut, resetPassword, needsUsername, setNeedsUsername, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );
