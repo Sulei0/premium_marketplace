@@ -287,6 +287,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                 image_url: uploadedUrls[0] || null, // backward compat
                 image_urls: uploadedUrls,
                 extras: extras.filter(e => e.enabled).map(({ id, label, price }) => ({ id, label, price })),
+                is_approved: false, // Requires admin approval
             };
 
             if (isEditMode && editProduct) {
@@ -341,12 +342,17 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                     {/* Success State */}
                     {success ? (
                         <div className="text-center py-10">
-                            <div className="text-5xl mb-4">🎉</div>
+                            <div className="text-5xl mb-4">⏳</div>
                             <h3 className="text-xl font-semibold text-white mb-2">
-                                {isEditMode ? "Ürün Güncellendi!" : "Ürün Başarıyla Eklendi!"}
+                                {isEditMode ? "İlan Güncellendi & Onaya Gönderildi" : "İlanınız Onaya Gönderildi!"}
                             </h3>
                             <p className="text-gray-400 text-sm">
-                                {isEditMode ? "Değişiklikleriniz kaydedildi." : "İlanınız artık yayında."}
+                                {isEditMode
+                                    ? "Değişiklikleriniz kaydedildi. İlanınız tekrar admin onayına alındı."
+                                    : "İlanınız en kısa sürede incelenip yayına alınacaktır."}
+                            </p>
+                            <p className="text-gray-500 text-xs mt-2">
+                                Onay durumu hakkında bildirim ile bilgilendirileceksiniz.
                             </p>
                         </div>
                     ) : (
@@ -635,7 +641,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                 ) : (
                                     <>
                                         <Upload className="w-5 h-5" />
-                                        {isEditMode ? "Değişiklikleri Kaydet" : "İlanı Yayınla"}
+                                        {isEditMode ? "Güncelle ve Onaya Gönder" : "Onaya Gönder"}
                                     </>
                                 )}
                             </button>

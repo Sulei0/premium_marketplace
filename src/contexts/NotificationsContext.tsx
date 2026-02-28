@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 export interface Notification {
     id: string;
     user_id: string;
-    type: "new_message" | "new_offer" | "new_review" | "new_favorite";
+    type: "new_message" | "new_offer" | "new_review" | "new_favorite" | "product_approved" | "product_rejected";
     title: string;
     body: string | null;
     link: string | null;

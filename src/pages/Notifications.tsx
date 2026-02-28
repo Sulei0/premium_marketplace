@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageSquare, Heart, Star, Gift, CheckCheck, Bell, ChevronLeft } from "lucide-react";
+import { MessageSquare, Heart, Star, Gift, CheckCheck, Bell, ChevronLeft, CheckCircle, XCircle } from "lucide-react";
 import { useNotifications, type Notification } from "@/contexts/NotificationsContext";
 import { SEO } from "@/components/SEO";
 
@@ -10,6 +10,8 @@ function getIcon(type: string) {
         case "new_offer": return <Gift className="w-5 h-5 text-purple-400" />;
         case "new_review": return <Star className="w-5 h-5 text-yellow-400" />;
         case "new_favorite": return <Heart className="w-5 h-5 text-pink-400" />;
+        case "product_approved": return <CheckCircle className="w-5 h-5 text-green-400" />;
+        case "product_rejected": return <XCircle className="w-5 h-5 text-red-400" />;
         default: return <Bell className="w-5 h-5 text-muted-foreground" />;
     }
 }

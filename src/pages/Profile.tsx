@@ -43,6 +43,7 @@ interface DbProduct {
   category: string;
   image_url: string | null;
   is_active: boolean;
+  is_approved: boolean;
   created_at: string;
 }
 
@@ -142,7 +143,7 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
           .order("created_at", { ascending: false });
 
         if (!isOwnProfile) {
-          query = query.eq("is_active", true);
+          query = query.eq("is_active", true).eq("is_approved", true);
         }
 
         const { data: productsData } = await query;
@@ -511,7 +512,7 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
               className="grid grid-cols-1 md:grid-cols-2 gap-6"
             >
               {products.length > 0 ? (
-                products.map((product) => <ProductCard key={product.id} product={product} />)
+                products.map((product) => <ProductCard key={product.id} product={product} isOwnProfile={isOwnProfile} />)
               ) : (
                 <div className="col-span-full py-20 text-center text-muted-foreground border-2 border-dashed border-border/30 rounded-3xl">
                   <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground/40" />
@@ -542,7 +543,7 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
   );
 }
 
-function ProductCard({ product }: { product: DbProduct }) {
+function ProductCard({ product, isOwnProfile }: { product: DbProduct; isOwnProfile?: boolean }) {
   return (
     <Link to={`/product/${product.id}`} className="block">
       <div className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md cursor-pointer hover:border-primary/30 transition-all">
@@ -554,11 +555,24 @@ function ProductCard({ product }: { product: DbProduct }) {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
 
-          {/* Active/Passive Badge (Useful for own profile) */}
-          <div className="absolute top-3 right-3">
-            <span className={cn("px-2 py-1 rounded-full text-[10px] uppercase font-medium", product.is_active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400")}>
-              {product.is_active ? "Aktif" : "Pasif"}
-            </span>
+          {/* Status Badges */}
+          <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
+            {isOwnProfile && (
+              <>
+                <span className={cn("px-2 py-1 rounded-full text-[10px] uppercase font-medium", product.is_active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400")}>
+                  {product.is_active ? "Aktif" : "Pasif"}
+                </span>
+                {product.is_approved ? (
+                  <span className="px-2 py-1 rounded-full text-[10px] uppercase font-medium bg-blue-500/20 text-blue-400">
+                    Onaylı
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 rounded-full text-[10px] uppercase font-medium bg-yellow-500/20 text-yellow-400 animate-pulse">
+                    Onay Bekliyor
+                  </span>
+                )}
+              </>
+            )}
           </div>
         </div>
         <div className="p-4 space-y-2">
