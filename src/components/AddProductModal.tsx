@@ -42,7 +42,8 @@ interface ExtraItem {
     enabled: boolean;
 }
 
-const CATEGORIES = ["İç Giyim", "Çorap", "Aksesuar", "Özel Parçalar", "Diğer"];
+import { CATEGORY_LABELS } from "@/lib/categories";
+const CATEGORIES = CATEGORY_LABELS;
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "36", "38", "40", "42", "44", "46", "Tek Beden"];
 

@@ -23,7 +23,8 @@ interface DbProduct {
   created_at: string;
 }
 
-const CATEGORIES = ["Tümü", "Çorap", "İç Giyim", "Aksesuar", "Özel Parçalar"] as const;
+import { CATEGORY_LABELS_WITH_ALL, normalizeCategoryLabel } from "@/lib/categories";
+const CATEGORIES = CATEGORY_LABELS_WITH_ALL;
 
 const SORT_OPTIONS = [
   { label: "En Yeni", value: "newest" },
@@ -140,7 +141,7 @@ export default function Products() {
         product.description.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesCategory =
-        selectedCategory === "Tümü" || product.category === selectedCategory;
+        selectedCategory === "Tümü" || normalizeCategoryLabel(product.category) === selectedCategory;
 
       const matchesPrice =
         product.price >= effectiveMin && product.price <= effectiveMax;
@@ -250,7 +251,7 @@ export default function Products() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <input
                   type="text"
-                  placeholder="Bir arzu nesnesi ara..."
+                  placeholder="Gardıropta ara..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"

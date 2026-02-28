@@ -9,7 +9,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { FollowProvider } from "@/contexts/FollowContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
-import { AgeGate } from "@/components/AgeGate";
+
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import { SellerRoute } from "@/components/SellerRoute";
@@ -71,7 +71,7 @@ const App = () => {
               <NotificationsProvider>
                 <FollowProvider>
                   <FavoritesProvider>
-                    <AgeGate>
+                    <>
                       <BrowserRouter>
                         <SEOCanonical />
                         <CookieConsent />
@@ -108,7 +108,7 @@ const App = () => {
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </BrowserRouter>
-                    </AgeGate>
+                    </>
                   </FavoritesProvider>
                 </FollowProvider>
               </NotificationsProvider>
