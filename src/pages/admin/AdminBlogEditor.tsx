@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Save, Eye, Upload, X, Plus } from "lucide-react";
+import { Loader2, ArrowLeft, Save, Eye, Upload, X, Plus, FileText, Code2 } from "lucide-react";
 import { toast } from "sonner";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
+import { marked } from "marked";
 
 function slugify(text: string): string {
     return text
@@ -59,6 +60,8 @@ export default function AdminBlogEditor() {
     const [tagInput, setTagInput] = useState("");
     const [isPublished, setIsPublished] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
+    const [markdownMode, setMarkdownMode] = useState(false);
+    const [markdownInput, setMarkdownInput] = useState("");
 
     // Auto-generate slug from title
     useEffect(() => {
@@ -179,11 +182,20 @@ export default function AdminBlogEditor() {
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setShowPreview(!showPreview)}
+                        onClick={() => { setMarkdownMode(!markdownMode); setShowPreview(false); }}
+                        className={`gap-1.5 ${markdownMode ? 'border-purple-500 text-purple-400' : ''}`}
+                    >
+                        <Code2 className="w-4 h-4" />
+                        {markdownMode ? "Editör" : "Markdown"}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setShowPreview(!showPreview); setMarkdownMode(false); }}
                         className="gap-1.5"
                     >
                         <Eye className="w-4 h-4" />
-                        {showPreview ? "Editör" : "Önizleme"}
+                        Önizleme
                     </Button>
                     <Button
                         variant="outline"
@@ -310,16 +322,58 @@ export default function AdminBlogEditor() {
                     {/* Content Editor */}
                     <div className="space-y-2">
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">İçerik</label>
-                        <div className="rounded-xl border border-border overflow-hidden bg-card [&_.ql-toolbar]:bg-secondary/50 [&_.ql-toolbar]:border-border [&_.ql-container]:border-none [&_.ql-editor]:min-h-[400px] [&_.ql-editor]:text-foreground [&_.ql-editor]:text-base [&_.ql-editor]:leading-relaxed [&_.ql-snow_.ql-stroke]:stroke-muted-foreground [&_.ql-snow_.ql-fill]:fill-muted-foreground [&_.ql-snow_.ql-picker-label]:text-muted-foreground [&_.ql-snow_.ql-picker-options]:bg-card [&_.ql-snow_.ql-picker-options]:border-border [&_.ql-editor.ql-blank::before]:text-muted-foreground/40">
-                            <ReactQuill
-                                theme="snow"
-                                value={content}
-                                onChange={setContent}
-                                modules={quillModules}
-                                formats={quillFormats}
-                                placeholder="Yazının içeriğini buraya yazın..."
-                            />
-                        </div>
+                        {markdownMode ? (
+                            <div className="space-y-3">
+                                <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Code2 className="w-4 h-4 text-purple-400" />
+                                        <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Markdown Modu</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mb-3">
+                                        Markdown içeriğinizi aşağıya yapıştırın. "Dönüştür" butonuna basarak HTML'e çevirin.
+                                    </p>
+                                    <Textarea
+                                        value={markdownInput}
+                                        onChange={(e) => setMarkdownInput(e.target.value)}
+                                        placeholder={`# Başlık\n\nParagraf metni...\n\n## Alt Başlık\n\n- Liste öğesi 1\n- Liste öğesi 2\n\n**Kalın metin** ve *italik metin*`}
+                                        rows={16}
+                                        className="font-mono text-sm bg-card"
+                                    />
+                                    <Button
+                                        onClick={() => {
+                                            if (!markdownInput.trim()) {
+                                                toast.error("Markdown içeriği boş.");
+                                                return;
+                                            }
+                                            const html = marked.parse(markdownInput, { async: false }) as string;
+                                            setContent(html);
+                                            setMarkdownMode(false);
+                                            toast.success("Markdown başarıyla HTML'e dönüştürüldü!");
+                                        }}
+                                        className="mt-3 gap-2 bg-purple-600 hover:bg-purple-500"
+                                    >
+                                        <FileText className="w-4 h-4" />
+                                        Dönüştür ve Editöre Aktar
+                                    </Button>
+                                </div>
+                                {content && (
+                                    <p className="text-xs text-muted-foreground">
+                                        ⚠️ Dönüştürme mevcut içeriğin üzerine yazacaktır.
+                                    </p>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="rounded-xl border border-border overflow-hidden bg-card [&_.ql-toolbar]:bg-secondary/50 [&_.ql-toolbar]:border-border [&_.ql-container]:border-none [&_.ql-editor]:min-h-[400px] [&_.ql-editor]:text-foreground [&_.ql-editor]:text-base [&_.ql-editor]:leading-relaxed [&_.ql-snow_.ql-stroke]:stroke-muted-foreground [&_.ql-snow_.ql-fill]:fill-muted-foreground [&_.ql-snow_.ql-picker-label]:text-muted-foreground [&_.ql-snow_.ql-picker-options]:bg-card [&_.ql-snow_.ql-picker-options]:border-border [&_.ql-editor.ql-blank::before]:text-muted-foreground/40">
+                                <ReactQuill
+                                    theme="snow"
+                                    value={content}
+                                    onChange={setContent}
+                                    modules={quillModules}
+                                    formats={quillFormats}
+                                    placeholder="Yazının içeriğini buraya yazın..."
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
