@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
-import { LayoutDashboard, Users, ShoppingBag, LogOut, ExternalLink, ShieldAlert, Flag } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingBag, LogOut, ExternalLink, ShieldAlert, Flag, PenSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/index";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,11 @@ export default function AdminLayout() {
             label: "Raporlar",
             icon: Flag,
             path: "/admin/reports",
+        },
+        {
+            label: "Köşe Yazıları",
+            icon: PenSquare,
+            path: "/admin/blog",
         }
     ];
 

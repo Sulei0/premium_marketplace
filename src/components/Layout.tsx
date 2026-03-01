@@ -144,6 +144,7 @@ export function Layout({ children }: LayoutProps) {
   const navLinks: { name: string; path: string | null; action?: () => void }[] = [
     { name: "Keşfet", path: ROUTE_PATHS.PRODUCTS },
     { name: "En Yeniler", path: null, action: scrollToProducts },
+    { name: "Köşe", path: "/kose" },
   ];
 
   return (
@@ -512,6 +513,7 @@ export function Layout({ children }: LayoutProps) {
             <div>
               <h4 className="font-bold mb-6 text-sm uppercase tracking-widest">Kurumsal</h4>
               <ul className="space-y-4 text-sm text-muted-foreground">
+                <li><Link to="/about" className="hover:text-primary">Hakkımızda</Link></li>
                 <li><Link to="/terms" className="hover:text-primary">Kullanıcı Sözleşmesi</Link></li>
                 <li><Link to="/privacy" className="hover:text-primary">Gizlilik Politikası</Link></li>
                 <li><Link to="/kvkk" className="hover:text-primary">KVKK Aydınlatma Metni</Link></li>

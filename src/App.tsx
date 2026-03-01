@@ -27,9 +27,14 @@ import AdminDashboard from "@/pages/admin/Index";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminProducts from "@/pages/admin/AdminProducts";
 import AdminReports from "@/pages/admin/AdminReports";
+import AdminBlog from "@/pages/admin/AdminBlog";
+import AdminBlogEditor from "@/pages/admin/AdminBlogEditor";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Kvkk from "@/pages/Kvkk";
+import About from "@/pages/About";
+import BlogList from "@/pages/BlogList";
+import BlogPost from "@/pages/BlogPost";
 import Notifications from "@/pages/Notifications";
 import { SEOCanonical } from "@/components/SEOCanonical";
 import { CookieConsent } from "@/components/CookieConsent";
@@ -92,6 +97,9 @@ const App = () => {
                           <Route path="/terms" element={<Terms />} />
                           <Route path="/privacy" element={<Privacy />} />
                           <Route path="/kvkk" element={<Kvkk />} />
+                          <Route path="/about" element={<About />} />
+                          <Route path="/kose" element={<BlogList />} />
+                          <Route path="/kose/:slug" element={<BlogPost />} />
                           {/* Satıcı rotaları */}
                           <Route path="/dashboard/products" element={<SellerRoute><MyProducts /></SellerRoute>} />
 
@@ -102,6 +110,9 @@ const App = () => {
                             <Route path="users" element={<AdminUsers />} />
                             <Route path="products" element={<AdminProducts />} />
                             <Route path="reports" element={<AdminReports />} />
+                            <Route path="blog" element={<AdminBlog />} />
+                            <Route path="blog/new" element={<AdminBlogEditor />} />
+                            <Route path="blog/edit/:id" element={<AdminBlogEditor />} />
                           </Route>
 
                           {/* 404 */}
