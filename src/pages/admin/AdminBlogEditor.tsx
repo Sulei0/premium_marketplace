@@ -32,13 +32,16 @@ const quillModules = {
         [{ list: "ordered" }, { list: "bullet" }],
         ["blockquote"],
         ["link", "image"],
+        [{ table: true }], // Enable table support
         ["clean"],
     ],
+    table: true, // Enable the table module
 };
 
 const quillFormats = [
     "header", "bold", "italic", "underline", "strike",
     "list", "bullet", "blockquote", "link", "image",
+    "table", "tableRow", "tableCell" // Add table formats
 ];
 
 export default function AdminBlogEditor() {
@@ -233,7 +236,7 @@ export default function AdminBlogEditor() {
                         ))}
                     </div>
                     <div
-                        className="prose prose-invert max-w-none prose-headings:font-bold prose-a:text-primary prose-img:rounded-xl"
+                        className="prose prose-invert max-w-none prose-headings:font-bold prose-a:text-primary prose-img:rounded-xl prose-table:border-collapse prose-table:w-full prose-th:border prose-th:border-border prose-th:bg-secondary/50 prose-th:px-4 prose-th:py-2 prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-2"
                         dangerouslySetInnerHTML={{ __html: content }}
                     />
                 </div>

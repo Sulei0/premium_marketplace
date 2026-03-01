@@ -181,7 +181,7 @@ export default function BlogPost() {
                     className="container mx-auto px-4 max-w-3xl"
                 >
                     <div
-                        className="prose prose-invert max-w-none prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-blockquote:border-l-primary/30 prose-blockquote:text-muted-foreground prose-strong:text-foreground"
+                        className="prose prose-invert max-w-none prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-blockquote:border-l-primary/30 prose-blockquote:text-muted-foreground prose-strong:text-foreground prose-table:w-full prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-secondary/30 prose-th:px-4 prose-th:py-3 prose-th:text-left prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-3"
                         dangerouslySetInnerHTML={{ __html: post.content }}
                     />
                 </motion.div>
