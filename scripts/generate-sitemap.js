@@ -89,6 +89,40 @@ async function generateSitemap() {
         });
     }
 
+    // Fetch published blog posts
+    console.log("Fetching blog posts...");
+    const { data: blogPosts, error: blogError } = await supabase
+        .from('blog_posts')
+        .select('slug, updated_at')
+        .eq('is_published', true)
+        .order('updated_at', { ascending: false });
+
+    if (blogError) {
+        console.error("Error fetching blog posts:", blogError.message);
+    } else if (blogPosts) {
+        // Add the main /kose listing page
+        urls.push({
+            loc: `${BASE_URL}/kose`,
+            priority: '0.8',
+            changefreq: 'weekly',
+            lastmod: blogPosts[0]
+                ? new Date(blogPosts[0].updated_at).toISOString().split('T')[0]
+                : new Date().toISOString().split('T')[0]
+        });
+
+        // Add each individual blog post
+        blogPosts.forEach(post => {
+            urls.push({
+                loc: `${BASE_URL}/kose/${post.slug}`,
+                priority: '0.85',
+                changefreq: 'weekly',
+                lastmod: new Date(post.updated_at).toISOString().split('T')[0]
+            });
+        });
+
+        console.log(`  → ${blogPosts.length} blog yazısı eklendi.`);
+    }
+
     const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(url => `  <url>

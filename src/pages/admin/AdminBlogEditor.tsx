@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Save, Eye, X, Plus, Code2, PenLine } from "lucide-react";
+import {
+    Loader2, ArrowLeft, Save, Eye, X, Plus, PenLine,
+    Bold, Italic, Heading2, Heading3, List, ListOrdered,
+    Quote, Link2, Image, Code2, FileText, Minus
+} from "lucide-react";
 import { toast } from "sonner";
 import { marked } from "marked";
 
@@ -42,6 +46,10 @@ export default function AdminBlogEditor() {
     const [tagInput, setTagInput] = useState("");
     const [isPublished, setIsPublished] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
+    const [showMarkdownImport, setShowMarkdownImport] = useState(false);
+    const [markdownImportText, setMarkdownImportText] = useState("");
+
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Convert markdown to HTML for preview
     const renderedHtml = useMemo(() => {
@@ -84,6 +92,76 @@ export default function AdminBlogEditor() {
         }
         load();
     }, [id, isEditMode]);
+
+    // ── Markdown toolbar helpers ──
+    const insertMarkdown = useCallback((before: string, after: string = "", placeholder: string = "") => {
+        const ta = textareaRef.current;
+        if (!ta) return;
+
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        const selectedText = content.substring(start, end);
+        const insertText = selectedText || placeholder;
+
+        const newContent =
+            content.substring(0, start) +
+            before + insertText + after +
+            content.substring(end);
+
+        setContent(newContent);
+
+        // Set cursor position after insert
+        setTimeout(() => {
+            ta.focus();
+            const cursorPos = start + before.length + insertText.length + after.length;
+            ta.setSelectionRange(
+                selectedText ? cursorPos : start + before.length,
+                selectedText ? cursorPos : start + before.length + insertText.length
+            );
+        }, 0);
+    }, [content]);
+
+    const insertLinePrefix = useCallback((prefix: string) => {
+        const ta = textareaRef.current;
+        if (!ta) return;
+
+        const start = ta.selectionStart;
+        const lineStart = content.lastIndexOf("\n", start - 1) + 1;
+        const newContent = content.substring(0, lineStart) + prefix + content.substring(lineStart);
+        setContent(newContent);
+
+        setTimeout(() => {
+            ta.focus();
+            ta.setSelectionRange(start + prefix.length, start + prefix.length);
+        }, 0);
+    }, [content]);
+
+    const toolbarActions = [
+        { icon: Bold, label: "Kalın", action: () => insertMarkdown("**", "**", "kalın metin") },
+        { icon: Italic, label: "İtalik", action: () => insertMarkdown("*", "*", "italik metin") },
+        { type: "divider" as const },
+        { icon: Heading2, label: "Başlık 2", action: () => insertLinePrefix("## ") },
+        { icon: Heading3, label: "Başlık 3", action: () => insertLinePrefix("### ") },
+        { type: "divider" as const },
+        { icon: List, label: "Liste", action: () => insertLinePrefix("- ") },
+        { icon: ListOrdered, label: "Sıralı Liste", action: () => insertLinePrefix("1. ") },
+        { icon: Quote, label: "Alıntı", action: () => insertLinePrefix("> ") },
+        { type: "divider" as const },
+        {
+            icon: Link2, label: "Link", action: () => {
+                const url = prompt("Link URL'si:");
+                if (url) insertMarkdown("[", `](${url})`, "link metni");
+            }
+        },
+        {
+            icon: Image, label: "Görsel", action: () => {
+                const url = prompt("Görsel URL'si:");
+                if (url) insertMarkdown(`![`, `](${url})`, "açıklama");
+            }
+        },
+        { type: "divider" as const },
+        { icon: Minus, label: "Ayırıcı", action: () => insertMarkdown("\n---\n", "") },
+    ];
 
     const addTag = () => {
         const t = tagInput.trim().toLowerCase();
@@ -168,6 +246,15 @@ export default function AdminBlogEditor() {
                     <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => setShowMarkdownImport(true)}
+                        className="gap-1.5"
+                    >
+                        <Code2 className="w-4 h-4" />
+                        Markdown İçe Aktar
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setShowPreview(!showPreview)}
                         className={`gap-1.5 ${showPreview ? 'border-purple-500 text-purple-400' : ''}`}
                     >
@@ -196,7 +283,67 @@ export default function AdminBlogEditor() {
                 </div>
             </div>
 
-            {/* Form Fields — always visible */}
+            {/* Markdown Import Modal */}
+            {showMarkdownImport && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <Code2 className="w-5 h-5 text-purple-400" />
+                                <h2 className="text-lg font-bold">Markdown İçe Aktar</h2>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => setShowMarkdownImport(false)}>
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-3">
+                            SEO aracından kopyaladığınız markdown metni aşağıya yapıştırın.
+                        </p>
+                        <Textarea
+                            value={markdownImportText}
+                            onChange={(e) => setMarkdownImportText(e.target.value)}
+                            placeholder={`# Başlık\n\nParagraf metni...\n\n## Alt Başlık\n\n- Liste öğesi\n\n| Kategori | Açıklama |\n|----------|----------|\n| Moda     | Detay    |`}
+                            rows={14}
+                            className="font-mono text-sm bg-secondary/30 flex-1 resize-none"
+                        />
+                        <div className="flex items-center justify-between mt-4">
+                            {content && (
+                                <p className="text-xs text-orange-400">
+                                    ⚠️ Mevcut içeriğin üzerine yazılacak.
+                                </p>
+                            )}
+                            <div className="flex gap-2 ml-auto">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => { setShowMarkdownImport(false); setMarkdownImportText(""); }}
+                                >
+                                    İptal
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    className="gap-1.5 bg-purple-600 hover:bg-purple-500"
+                                    onClick={() => {
+                                        if (!markdownImportText.trim()) {
+                                            toast.error("Markdown içeriği boş.");
+                                            return;
+                                        }
+                                        setContent(markdownImportText);
+                                        setShowMarkdownImport(false);
+                                        setMarkdownImportText("");
+                                        toast.success("Markdown başarıyla içe aktarıldı!");
+                                    }}
+                                >
+                                    <FileText className="w-4 h-4" />
+                                    İçe Aktar
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Form Fields */}
             <div className="space-y-6">
                 {/* Title */}
                 <div className="space-y-2">
@@ -274,20 +421,14 @@ export default function AdminBlogEditor() {
                     </div>
                 </div>
 
-                {/* Content — Markdown Editor or Preview */}
+                {/* Content — Editor or Preview */}
                 <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            İçerik {showPreview ? "(Önizleme)" : "(Markdown)"}
-                        </label>
-                        {!showPreview && (
-                            <span className="text-[10px] text-muted-foreground/60">
-                                Markdown formatında yazın: **kalın**, *italik*, # Başlık, - liste, | tablo |
-                            </span>
-                        )}
-                    </div>
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        İçerik
+                    </label>
 
                     {showPreview ? (
+                        /* ── Preview ── */
                         <div className="rounded-xl border border-border bg-card p-8">
                             {coverImage && (
                                 <img src={coverImage} alt="" className="w-full h-64 object-cover rounded-xl mb-6" />
@@ -305,13 +446,38 @@ export default function AdminBlogEditor() {
                             />
                         </div>
                     ) : (
-                        <Textarea
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            placeholder={`# Başlık\n\nParagraf metni...\n\n## Alt Başlık\n\n- Liste öğesi 1\n- Liste öğesi 2\n\n**Kalın metin** ve *italik metin*\n\n| Kategori | Açıklama |\n|----------|----------|\n| Moda     | Detay    |`}
-                            rows={24}
-                            className="font-mono text-sm leading-relaxed bg-card resize-y min-h-[400px]"
-                        />
+                        /* ── Editor with Toolbar ── */
+                        <div className="rounded-xl border border-border overflow-hidden bg-card">
+                            {/* Toolbar */}
+                            <div className="flex items-center gap-0.5 p-2 border-b border-border bg-secondary/30 flex-wrap">
+                                {toolbarActions.map((item, i) => {
+                                    if ('type' in item && item.type === 'divider') {
+                                        return <div key={i} className="w-px h-6 bg-border mx-1" />;
+                                    }
+                                    const Icon = (item as any).icon;
+                                    return (
+                                        <button
+                                            key={i}
+                                            type="button"
+                                            onClick={(item as any).action}
+                                            title={(item as any).label}
+                                            className="p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                        >
+                                            <Icon className="w-4 h-4" />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Textarea */}
+                            <textarea
+                                ref={textareaRef}
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                placeholder={`Yazının içeriğini buraya yazın veya "Markdown İçe Aktar" ile yapıştırın...`}
+                                className="w-full min-h-[450px] p-6 bg-transparent text-foreground text-base leading-relaxed resize-y focus:outline-none font-mono placeholder:text-muted-foreground/40"
+                            />
+                        </div>
                     )}
                 </div>
             </div>
