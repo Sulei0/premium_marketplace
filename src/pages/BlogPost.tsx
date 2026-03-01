@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, Calendar, ArrowLeft, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { marked } from "marked";
 
 interface BlogPostData {
     id: string;
@@ -37,6 +38,12 @@ export default function BlogPost() {
     const [post, setPost] = useState<BlogPostData | null>(null);
     const [related, setRelated] = useState<RelatedPost[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Convert stored markdown to HTML for display
+    const renderedHtml = useMemo(() => {
+        if (!post?.content) return "";
+        return marked.parse(post.content, { async: false }) as string;
+    }, [post?.content]);
 
     useEffect(() => {
         if (!slug) return;
@@ -182,7 +189,7 @@ export default function BlogPost() {
                 >
                     <div
                         className="prose prose-invert max-w-none prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-blockquote:border-l-primary/30 prose-blockquote:text-muted-foreground prose-strong:text-foreground prose-table:w-full prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-secondary/30 prose-th:px-4 prose-th:py-3 prose-th:text-left prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-3"
-                        dangerouslySetInnerHTML={{ __html: post.content }}
+                        dangerouslySetInnerHTML={{ __html: renderedHtml }}
                     />
                 </motion.div>
 
