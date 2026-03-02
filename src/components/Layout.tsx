@@ -169,7 +169,7 @@ export function Layout({ children }: LayoutProps) {
       {/* --- HEADER --- */}
       <header
         className={cn(
-          "fixed top-0 w-full z-50 transition-all duration-300 border-b",
+          "fixed top-0 w-full z-50 transition-all duration-300 border-b pt-safe-area",
           isScrolled
             ? "bg-background/90 backdrop-blur-md border-border h-16"
             : "bg-transparent border-transparent h-20"
@@ -179,7 +179,7 @@ export function Layout({ children }: LayoutProps) {
           {/* Logo */}
           <Link
             to={ROUTE_PATHS.HOME}
-            className="text-2xl font-bold tracking-tighter text-foreground group"
+            className="text-2xl font-bold tracking-tighter text-foreground group py-2"
           >
             GIYEN<span className="text-primary group-hover:drop-shadow-[0_0_8px_var(--primary)] transition-all">DEN</span>
           </Link>
@@ -460,6 +460,16 @@ export function Layout({ children }: LayoutProps) {
                 )}
               </div>
 
+              {/* Mobile Theme Toggle */}
+              <div className="pt-4 border-t border-border/30">
+                <button
+                  onClick={() => { toggleTheme(); }}
+                  className="flex items-center gap-3 py-3 text-lg text-muted-foreground hover:text-foreground transition-colors w-full"
+                >
+                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  {theme === 'dark' ? 'Aydınlık Mod' : 'Karanlık Mod'}
+                </button>
+              </div>
 
             </nav>
           </motion.div>
@@ -472,13 +482,13 @@ export function Layout({ children }: LayoutProps) {
       </main>
 
       {/* --- FOOTER --- */}
-      <footer className="bg-card border-t border-border mt-20 pb-24 md:pb-0">
+      <footer className="bg-card border-t border-border mt-12 sm:mt-20 pb-24 md:pb-0">
         {!location.pathname.startsWith('/chats') && <TrustIndicators />}
 
         {/* Footer Links & Info */}
-        <div className="container mx-auto px-4 py-16">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
-            <div className="col-span-2 md:col-span-1">
+        <div className="container mx-auto px-4 py-10 sm:py-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-12">
+            <div className="col-span-1 sm:col-span-2 md:col-span-1">
               <Link to={ROUTE_PATHS.HOME} className="text-2xl font-bold tracking-tighter">
                 GIYEN<span className="text-primary">DEN</span>
               </Link>
@@ -523,8 +533,8 @@ export function Layout({ children }: LayoutProps) {
 
           </div>
 
-          <div className="mt-16 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground space-y-4 md:space-y-0">
-            <p>© 2026 Giyenden.com. Her hakkı saklıdır. Platformumuz 5651 sayılı kanun uyarınca Yer Sağlayıcı olarak hizmet vermektedir. Kullanıcılar tarafından yüklenen içeriklerden Giyenden sorumlu tutulamaz.</p>
+          <div className="mt-10 sm:mt-16 pt-6 sm:pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground space-y-4 md:space-y-0">
+            <p className="text-center md:text-left leading-relaxed">© 2026 Giyenden.com. Her hakkı saklıdır. Platformumuz 5651 sayılı kanun uyarınca Yer Sağlayıcı olarak hizmet vermektedir.</p>
             <div className="flex space-x-6">
 
               <span>KVKK Uyumlu</span>
@@ -536,68 +546,82 @@ export function Layout({ children }: LayoutProps) {
       <AddProductModal isOpen={isAddProductOpen} onClose={() => setIsAddProductOpen(false)} />
 
       {/* --- MOBILE BOTTOM NAV --- */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background/80 backdrop-blur-lg border-t border-border pb-safe-area">
-        <div className="flex justify-around items-center h-16">
-          <NavLink
-            to={ROUTE_PATHS.HOME}
-            className={({ isActive }) => cn(
-              "flex flex-col items-center gap-1 w-full py-2 transition-colors",
-              isActive ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            <Home size={20} />
-            <span className="text-[10px] font-medium">Ana Sayfa</span>
-          </NavLink>
-
-          <NavLink
-            to={ROUTE_PATHS.PRODUCTS}
-            className={({ isActive }) => cn(
-              "flex flex-col items-center gap-1 w-full py-2 transition-colors",
-              isActive ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            <Search size={20} />
-            <span className="text-[10px] font-medium">Keşfet</span>
-          </NavLink>
-
-          <div className="w-full flex justify-center -mt-8">
-            <button
-              onClick={() => setIsAddProductOpen(true)}
-              className="w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/40 flex items-center justify-center border-4 border-background"
+      {!location.pathname.startsWith('/chats/') && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background/80 backdrop-blur-lg border-t border-border pb-safe-area">
+          <div className="flex justify-around items-center h-16">
+            <NavLink
+              to={ROUTE_PATHS.HOME}
+              className={({ isActive }) => cn(
+                "flex flex-col items-center gap-1 w-full py-2 transition-colors",
+                isActive ? "text-primary" : "text-muted-foreground"
+              )}
             >
-              <Plus size={24} />
-            </button>
+              <Home size={20} />
+              <span className="text-[10px] font-medium">Ana Sayfa</span>
+            </NavLink>
+
+            <NavLink
+              to={ROUTE_PATHS.PRODUCTS}
+              className={({ isActive }) => cn(
+                "flex flex-col items-center gap-1 w-full py-2 transition-colors",
+                isActive ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              <Search size={20} />
+              <span className="text-[10px] font-medium">Keşfet</span>
+            </NavLink>
+
+            <div className="w-full flex justify-center -mt-8">
+              <button
+                onClick={() => {
+                  if (!user) {
+                    window.dispatchEvent(new Event('open-login'));
+                    return;
+                  }
+                  if (role !== 'seller') {
+                    window.dispatchEvent(new CustomEvent('open-register', { detail: { role: 'seller' } }));
+                    return;
+                  }
+                  setIsAddProductOpen(true);
+                }}
+                className="w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/40 flex items-center justify-center border-4 border-background"
+              >
+                <Plus size={24} />
+              </button>
+            </div>
+
+            <NavLink
+              to={ROUTE_PATHS.CHATS}
+              className={({ isActive }) => cn(
+                "flex flex-col items-center gap-1 w-full py-2 transition-colors relative",
+                isActive ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              <div className="relative">
+                <MessageSquare size={20} />
+              </div>
+              <span className="text-[10px] font-medium">Mesajlar</span>
+            </NavLink>
+
+            <Link
+              to={user ? `/favorites` : "#"}
+              onClick={(e) => {
+                if (!user) {
+                  e.preventDefault();
+                  openLogin();
+                }
+              }}
+              className={cn(
+                "flex flex-col items-center gap-1 w-full py-2 transition-colors",
+                location.pathname === '/favorites' ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              <Heart size={20} />
+              <span className="text-[10px] font-medium">Favoriler</span>
+            </Link>
           </div>
-
-          <NavLink
-            to={ROUTE_PATHS.CHATS}
-            className={({ isActive }) => cn(
-              "flex flex-col items-center gap-1 w-full py-2 transition-colors relative",
-              isActive ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            <MessageSquare size={20} />
-            <span className="text-[10px] font-medium">Mesajlar</span>
-          </NavLink>
-
-          <Link
-            to={user ? `/profile/me` : "#"}
-            onClick={(e) => {
-              if (!user) {
-                e.preventDefault();
-                openLogin();
-              }
-            }}
-            className={cn(
-              "flex flex-col items-center gap-1 w-full py-2 transition-colors",
-              location.pathname.startsWith('/profile') ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            <User size={20} />
-            <span className="text-[10px] font-medium">Hesabım</span>
-          </Link>
         </div>
-      </div>
+      )}
     </div>
   );
 }

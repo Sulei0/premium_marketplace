@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Star, Send, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { getOptimizedAvatarUrl } from "@/lib/utils";
 
 interface Review {
     id: string;
@@ -262,7 +263,7 @@ export function ReviewList({ sellerId }: { sellerId: string }) {
                                     <Link to={`/profile/${review.reviewer_id}`} className="block shrink-0">
                                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden hover:opacity-80 transition-opacity">
                                             {review.reviewer?.avatar_url ? (
-                                                <img src={review.reviewer.avatar_url} alt={review.reviewer.username} className="w-full h-full object-cover" />
+                                                <img src={getOptimizedAvatarUrl(review.reviewer.avatar_url)} alt={review.reviewer.username} className="w-full h-full object-cover" loading="lazy" />
                                             ) : (
                                                 review.reviewer?.username?.substring(0, 1).toUpperCase() || "?"
                                             )}

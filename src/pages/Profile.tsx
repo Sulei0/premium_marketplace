@@ -24,7 +24,9 @@ import {
 import { Layout } from "@/components/Layout";
 import { SEO } from "@/components/SEO";
 import { ROUTE_PATHS, cn, formatCurrency } from "@/lib/index";
+import { getOptimizedAvatarUrl, getOptimizedThumbnailUrl } from "@/lib/utils";
 import { validateImageFile } from "@/lib/sanitize";
+import { compressAvatar } from "@/lib/compressImage";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -260,12 +262,14 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
     }
 
     try {
-      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const fileName = `${user.id}/avatar_${Date.now()}.${fileExt}`;
+      // Sıkıştır: avatar max 400px
+      const compressed = await compressAvatar(file);
+
+      const fileName = `${user.id}/avatar_${Date.now()}.webp`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { contentType: file.type, upsert: true });
+        .upload(fileName, compressed, { contentType: compressed.type, upsert: true });
 
       if (uploadError) throw uploadError;
 
@@ -352,14 +356,14 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
             className="lg:col-span-4 space-y-8"
           >
             {/* Avatar Section */}
-            <div className="relative group mx-auto lg:mx-0 w-48">
+            <div className="relative group mx-auto lg:mx-0 w-32 sm:w-48">
               {isOwnProfile ? (
                 <label htmlFor="avatar-upload" className="cursor-pointer block relative">
-                  <div className="w-48 h-48 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-transparent group-hover:border-primary/50 transition-all shadow-lg shadow-primary/20">
+                  <div className="w-32 h-32 sm:w-48 sm:h-48 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-transparent group-hover:border-primary/50 transition-all shadow-lg shadow-primary/20">
                     {profile.avatar_url ? (
-                      <img key={profile.avatar_url} src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" loading="lazy" />
+                      <img key={profile.avatar_url} src={getOptimizedAvatarUrl(profile.avatar_url)} alt="Avatar" className="w-full h-full object-cover" loading="lazy" />
                     ) : (
-                      <span className="text-6xl font-bold text-white">{firstLetter}</span>
+                      <span className="text-4xl sm:text-6xl font-bold text-white">{firstLetter}</span>
                     )}
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <Edit3 className="w-8 h-8 text-white" />
@@ -368,11 +372,11 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
                   <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
                 </label>
               ) : (
-                <div className="w-48 h-48 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-primary/20 shadow-lg">
+                <div className="w-32 h-32 sm:w-48 sm:h-48 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-primary/20 shadow-lg">
                   {profile.avatar_url ? (
-                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" loading="lazy" />
+                    <img src={getOptimizedAvatarUrl(profile.avatar_url)} alt="Avatar" className="w-full h-full object-cover" loading="lazy" />
                   ) : (
-                    <span className="text-6xl font-bold text-white">{firstLetter}</span>
+                    <span className="text-4xl sm:text-6xl font-bold text-white">{firstLetter}</span>
                   )}
                 </div>
               )}
@@ -399,7 +403,7 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
                     </button>
                   </div>
                 ) : (
-                  <h1 className="text-4xl font-bold tracking-tight flex items-center gap-2">
+                  <h1 className="text-2xl sm:text-4xl font-bold tracking-tight flex items-center gap-2">
                     {profile.username}
                     <BadgeDisplay badges={profile.badges} size="lg" />
                     {isOwnProfile && (
@@ -451,7 +455,7 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
               <div className="text-center space-y-1">
                 <div className="flex items-center justify-center gap-1 text-primary">
                   <Star size={18} fill="currentColor" />
-                  <span className="text-xl font-bold">
+                  <span className="text-lg sm:text-xl font-bold">
                     {stats.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (stats.averageRating > 0 ? stats.averageRating.toFixed(1) : "—")}
                   </span>
                 </div>
@@ -460,14 +464,14 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
               <div className="text-center space-y-1">
                 <div className="flex items-center justify-center gap-1 text-pink-500">
                   <Users size={18} />
-                  <span className="text-xl font-bold">{getFollowerCount(userId)}</span>
+                  <span className="text-lg sm:text-xl font-bold">{getFollowerCount(userId)}</span>
                 </div>
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">Takipçi</p>
               </div>
               <div className="text-center space-y-1">
                 <div className="flex items-center justify-center gap-1 text-purple-500">
                   <UserPlus size={18} />
-                  <span className="text-xl font-bold">{getFollowingCount(userId)}</span>
+                  <span className="text-lg sm:text-xl font-bold">{getFollowingCount(userId)}</span>
                 </div>
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">Takip</p>
               </div>
@@ -549,7 +553,7 @@ function ProductCard({ product, isOwnProfile }: { product: DbProduct; isOwnProfi
       <div className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md cursor-pointer hover:border-primary/30 transition-all">
         <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
           {product.image_url ? (
-            <img src={product.image_url} alt={product.title} className="h-full w-full object-cover" loading="lazy" />
+            <img src={getOptimizedThumbnailUrl(product.image_url)} alt={product.title} className="h-full w-full object-cover" loading="lazy" />
           ) : (
             <div className="h-full w-full flex items-center justify-center text-muted-foreground/30"><Package className="w-16 h-16" /></div>
           )}

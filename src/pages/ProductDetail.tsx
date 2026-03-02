@@ -41,6 +41,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { getOptimizedImageUrl, getOptimizedAvatarUrl, getOptimizedDetailUrl } from "@/lib/utils";
 import { springPresets, fadeInUp } from '@/lib/motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -447,7 +448,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
 
               {isSold && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-20 pointer-events-none">
-                  <div className="transform -rotate-12 border-4 border-red-500 text-red-500 font-black text-4xl md:text-5xl uppercase tracking-[0.2em] px-6 py-2 rounded-sm opacity-90 shadow-[0_0_30px_rgba(239,68,68,0.4)] backdrop-blur-sm">
+                  <div className="transform -rotate-12 border-2 sm:border-4 border-red-500 text-red-500 font-black text-2xl sm:text-4xl md:text-5xl uppercase tracking-[0.2em] px-4 sm:px-6 py-1 sm:py-2 rounded-sm opacity-90 shadow-[0_0_30px_rgba(239,68,68,0.4)] backdrop-blur-sm">
                     SATILDI
                   </div>
                 </div>
@@ -458,13 +459,13 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                 <>
                   <button
                     onClick={() => setActiveImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-md text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-md text-white hover:bg-black/70 transition-all opacity-70 sm:opacity-0 group-hover:opacity-100"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => setActiveImageIndex((prev) => (prev + 1) % allImages.length)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-md text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-md text-white hover:bg-black/70 transition-all opacity-70 sm:opacity-0 group-hover:opacity-100"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
@@ -544,7 +545,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                     onClick={() => setActiveImageIndex(i)}
                     className={`relative w - 16 h - 20 rounded - lg overflow - hidden flex - shrink - 0 border - 2 transition - all ${i === activeImageIndex ? 'border-primary ring-2 ring-primary/30' : 'border-white/10 hover:border-white/30'} `}
                   >
-                    <img src={url} alt={`Görsel ${i + 1} `} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={getOptimizedImageUrl(url, 200, 200)} alt={`Görsel ${i + 1} `} className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>
@@ -569,7 +570,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                   <div className="relative">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg border-2 border-white/10 overflow-hidden">
                       {product.seller.avatar_url ? (
-                        <img src={product.seller.avatar_url} alt={product.seller.username} className="w-full h-full object-cover" loading="lazy" />
+                        <img src={getOptimizedAvatarUrl(product.seller.avatar_url)} alt={product.seller.username} className="w-full h-full object-cover" loading="lazy" />
                       ) : (
                         product.seller.username.substring(0, 1).toUpperCase()
                       )}
@@ -592,7 +593,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                   <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </motion.div>
               )}
-              <h1 className="text-4xl font-bold tracking-tight">{product.title}</h1>
+              <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">{product.title}</h1>
 
               <div className="text-muted-foreground leading-relaxed">
                 <p>{product.description}</p>
@@ -649,7 +650,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
               <div className="flex items-end justify-between">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground uppercase tracking-widest">Tahmini Bedel</p>
-                  <p className="text-4xl font-bold text-foreground">{formatCurrency(totalPrice)}</p>
+                  <p className="text-3xl sm:text-4xl font-bold text-foreground">{formatCurrency(totalPrice)}</p>
                   <p className="text-[10px] text-muted-foreground">
                     Taban {formatCurrency(product.price)}
                     {extrasTotal > 0 && ` + Ekstra ${formatCurrency(extrasTotal)} `}

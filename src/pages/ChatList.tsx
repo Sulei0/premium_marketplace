@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Layout } from "@/components/Layout";
-import { ROUTE_PATHS, cn } from "@/lib/index";
+import { ROUTE_PATHS, cn, formatCurrency } from "@/lib/index";
+import { getOptimizedImageUrl } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import { MessageSquare, Clock, ArrowRight, Image as ImageIcon } from "lucide-react";
@@ -174,9 +175,10 @@ export default function ChatList() {
                   {/* Product Image */}
                   <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                     <img
-                      src={chat.product.image_url || "/images/placeholder.webp"}
+                      src={getOptimizedImageUrl(chat.product.image_url, 100, 100) || "/images/placeholder.webp"}
                       alt={chat.product.title}
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   </div>
 

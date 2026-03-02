@@ -292,6 +292,10 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  .pt-safe-area {
+    padding-top: env(safe-area-inset-top);
+  }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -299,5 +303,23 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+}
+
+/* Marquee CSS animation — better mobile performance than JS-based */
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee-scroll 25s linear infinite;
+  will-change: transform;
+}
+
+/* Input zoom prevention on iOS — ensure all inputs are 16px+ */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: max(16px, 1em) !important;
   }
 }

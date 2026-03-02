@@ -123,14 +123,8 @@ export function TrustIndicators({ className }: TrustIndicatorProps) {
 
       {/* Animated Marquee - Brand Text (Full Width) */}
       <div className="mt-16 relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden">
-        <motion.div
-          className="flex items-center w-max"
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{
-            repeat: Infinity,
-            ease: "linear",
-            duration: 25,
-          }}
+        <div
+          className="flex items-center w-max animate-marquee"
         >
           {[...Array(16)].map((_, i) => (
             <span key={i} className="flex items-center shrink-0">
@@ -143,7 +137,7 @@ export function TrustIndicators({ className }: TrustIndicatorProps) {
               <span className="text-[#ff0080]/20 text-lg mx-2">✦</span>
             </span>
           ))}
-        </motion.div>
+        </div>
 
         {/* Gradient Overlay for Fade Out Effect */}
         <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent pointer-events-none" />

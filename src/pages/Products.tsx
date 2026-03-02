@@ -218,7 +218,7 @@ export default function Products() {
       </SEO>
       <div className="min-h-screen pb-20">
         {/* Header & Search Section */}
-        <section className="relative pt-32 pb-12 overflow-hidden">
+        <section className="relative pt-24 sm:pt-32 pb-8 sm:pb-12 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
 
           <div className="container mx-auto px-4 relative z-10">
@@ -236,7 +236,7 @@ export default function Products() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/60"
+                  className="text-3xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/60"
                 >
                   Koleksiyonu Keşfet
                 </motion.h1>
@@ -285,19 +285,22 @@ export default function Products() {
 
               <div className="h-6 w-px bg-border mx-2 hidden sm:block" />
 
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 no-scrollbar">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === cat
-                      ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(236,72,153,0.3)]"
-                      : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
-                      }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+              <div className="relative flex-1 min-w-0">
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 no-scrollbar">
+                  {CATEGORIES.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === cat
+                        ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(236,72,153,0.3)]"
+                        : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
+                        }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+                <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" />
               </div>
             </div>
 
@@ -439,7 +442,7 @@ export default function Products() {
                 <>
                   <motion.div
                     layout
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
+                    className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 md:gap-8"
                   >
                     {filteredProducts.map((product, index) => (
                       <motion.div

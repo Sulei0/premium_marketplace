@@ -3,6 +3,7 @@ import { X, Upload, Plus, Trash2, Check, AlertCircle, ImagePlus, Loader2 } from 
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/index";
+import { compressProductImage } from "@/lib/compressImage";
 import {
     sanitizeText,
     validateTitle,
@@ -268,11 +269,13 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                 const fileCheck = validateImageFile(file);
                 if (!fileCheck.valid) throw new Error(fileCheck.error);
 
-                const fileExt = file.name.split(".").pop();
-                const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                // Sıkıştır: 3-8MB → ~100-300KB
+                const compressed = await compressProductImage(file);
+
+                const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.webp`;
                 const { error: uploadError } = await supabase.storage
                     .from("product-images")
-                    .upload(fileName, file);
+                    .upload(fileName, compressed, { contentType: compressed.type });
                 if (uploadError) throw new Error("Görsel yüklenemedi: " + uploadError.message);
                 const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(fileName);
                 uploadedUrls.push(urlData.publicUrl);
@@ -328,10 +331,10 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                     <X className="w-5 h-5" />
                 </button>
 
-                <div className="p-6 sm:p-8">
+                <div className="p-4 sm:p-6 md:p-8">
                     {/* Header */}
                     <div className="text-center mb-6">
-                        <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+                        <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
                             {isEditMode ? "İlanı Düzenle" : "Ürün Sat / İlan Ver"}
                         </h2>
                         <p className="text-gray-400 text-sm mt-1.5">
@@ -371,7 +374,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                 </div>
 
                                 {/* Image Preview Grid */}
-                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                                     {imagePreviews.map((preview, index) => (
                                         <div key={preview} className="relative aspect-square rounded-lg overflow-hidden group border border-white/10">
                                             <img src={preview} alt={`Görsel ${index + 1}`} className="w-full h-full object-cover" />

@@ -5,7 +5,9 @@ import { supabase } from "@/lib/supabase";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { ROUTE_PATHS, formatCurrency, cn } from "@/lib/index";
-import { ArrowLeft, Send, Check, CheckCheck, Paperclip, X, Image as ImageIcon, Loader2 } from "lucide-react";
+import { getOptimizedImageUrl } from "@/lib/utils";
+import { ArrowLeft, Send, ImageIcon, X, AlertCircle, Loader2, Check, CheckCheck, Paperclip, Sparkles, Image } from "lucide-react";
+import { compressChatImage } from "@/lib/compressImage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -468,13 +470,15 @@ export default function ChatDetail() {
         if (!supabase || !id) return null;
 
         try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+            // Sıkıştır: chat image max 800px
+            const compressed = await compressChatImage(file);
+
+            const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.webp`;
             const filePath = `${id}/${fileName}`;
 
             const { data, error } = await supabase.storage
                 .from('chat_images')
-                .upload(filePath, file);
+                .upload(filePath, compressed, { contentType: compressed.type });
 
             if (error) throw error;
 
@@ -659,7 +663,7 @@ export default function ChatDetail() {
     return (
         <Layout>
             <SEO title={chat?.other_user ? `${chat.other_user.username} ile Fısıldaş` : "Fısıltı | Giyenden"} description="Sohbet detayları" />
-            <div className="container mx-auto px-0 sm:px-4 flex flex-col h-[calc(100vh-80px-64px)] md:h-[calc(100vh-80px)]">
+            <div className="container mx-auto px-0 sm:px-4 flex flex-col h-[calc(100dvh-80px)] md:h-[calc(100vh-80px)]">
                 {/* Header */}
                 <div className="p-4 border-b flex items-center gap-4 bg-background z-10 shrink-0">
                     <Button
@@ -706,9 +710,10 @@ export default function ChatDetail() {
                         className="w-10 h-10 rounded overflow-hidden border shrink-0 hover:border-primary transition-colors"
                     >
                         <img
-                            src={chat?.product.image_url || "/images/placeholder.webp"}
+                            src={getOptimizedImageUrl(chat?.product.image_url, 60, 60) || "/images/placeholder.webp"}
                             className="w-full h-full object-cover"
                             alt=""
+                            loading="lazy"
                         />
                     </Link>
                 </div>

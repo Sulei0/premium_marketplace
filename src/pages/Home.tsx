@@ -201,7 +201,7 @@ export default function Home() {
       <div className="flex flex-col w-full overflow-hidden">
 
         {/* Hero Section */}
-        <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+        <section className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img src={IMAGES.HERO_BG_7} alt="Moda Background" className="w-full h-full object-cover opacity-40 scale-105" />
             <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/60 to-background" />
@@ -210,7 +210,7 @@ export default function Home() {
 
           <div className="container relative z-10 px-4 text-center">
 
-            <motion.h1 className="hero-shimmer-text text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-6 leading-tight" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.2 }}>
+            <motion.h1 className="hero-shimmer-text text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-6 leading-snug sm:leading-tight" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.2 }}>
               Kadın kadına, gardıroptan gardıroba.
             </motion.h1>
 
@@ -245,14 +245,8 @@ export default function Home() {
 
         {/* Animated Marquee - Brand Text */}
         <div className="relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden bg-background py-8 border-y border-white/5">
-          <motion.div
-            className="flex items-center w-max"
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{
-              repeat: Infinity,
-              ease: "linear",
-              duration: 25,
-            }}
+          <div
+            className="flex items-center w-max animate-marquee"
           >
             {[...Array(16)].map((_, i) => (
               <span key={i} className="flex items-center shrink-0">
@@ -265,7 +259,7 @@ export default function Home() {
                 <span className="text-[#ff0080]/20 text-lg mx-2">✦</span>
               </span>
             ))}
-          </motion.div>
+          </div>
 
           {/* Gradient Overlay for Fade Out Effect */}
           <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent pointer-events-none" />
@@ -273,7 +267,7 @@ export default function Home() {
         </div>
 
         {/* DB Products Section */}
-        <section id="products-section" className="py-24 bg-background relative">
+        <section id="products-section" className="py-12 sm:py-24 bg-background relative">
           <div className="container px-4">
             <div className="flex items-center justify-between mb-12">
               <div>
@@ -289,7 +283,7 @@ export default function Home() {
                 <p className="text-muted-foreground text-sm">Ürünler yükleniyor...</p>
               </div>
             ) : dbProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-8">
                 {dbProducts.map((product) => (
                   <motion.div key={product.id} variants={staggerItem}>
                     <DbProductCard product={product} />

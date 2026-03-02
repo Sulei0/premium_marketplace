@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { formatCurrency } from "@/lib/index";
+import { getOptimizedThumbnailUrl } from "@/lib/utils";
 
 interface DbProduct {
     id: string;
@@ -177,7 +178,7 @@ function FavProductCard({ product, onToggleFav, favCount }: { product: DbProduct
             <Link to={`/product/${product.id}`} className="block">
                 <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
                     <img
-                        src={product.image_url || defaultImage}
+                        src={getOptimizedThumbnailUrl(product.image_url) || defaultImage}
                         alt={product.title}
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                         loading="lazy"
