@@ -73,26 +73,28 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto">
-      <div className="relative w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl my-auto">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">✕</button>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto">
+      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-[#121212] border border-white/10 rounded-2xl p-5 sm:p-7 shadow-2xl my-auto">
+        <button onClick={onClose} className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+        </button>
 
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+        <div className="text-center mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
             {initialRole === 'seller' ? 'Satıcı Ol' : 'Alışverişe Başla'}
           </h2>
-          <p className="text-gray-400 text-sm mt-2">Aramıza katıl ve keşfetmeye başla.</p>
+          <p className="text-gray-400 text-xs sm:text-sm mt-1.5">Aramıza katıl ve keşfetmeye başla.</p>
         </div>
 
-        {error && <div className="bg-red-500/20 text-red-200 p-3 rounded mb-4 text-sm text-center border border-red-500/30">{error}</div>}
+        {error && <div className="bg-red-500/20 text-red-200 p-2.5 rounded mb-3 text-xs sm:text-sm text-center border border-red-500/30">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* ─── Form Fields ─── */}
           <div className="space-y-1">
             <label className="text-xs text-gray-400 ml-1">Kullanıcı Adı</label>
             <input
               type="text" required value={username} onChange={e => setUsername(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
+              className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-pink-500 focus:outline-none transition-colors"
               placeholder="Örn: GizliButik"
             />
           </div>
@@ -100,7 +102,7 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
             <label className="text-xs text-gray-400 ml-1">E-posta</label>
             <input
               type="email" required value={email} onChange={e => setEmail(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
+              className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-pink-500 focus:outline-none transition-colors"
               placeholder="mail@ornek.com"
             />
           </div>
@@ -108,7 +110,7 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
             <label className="text-xs text-gray-400 ml-1">Şifre</label>
             <input
               type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
+              className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-pink-500 focus:outline-none transition-colors"
               placeholder="******"
             />
           </div>
@@ -125,7 +127,7 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
             type="button"
             onClick={() => handleOAuthRegister('google')}
             disabled={!!oauthLoading || !agreedTerms || !agreedPrivacy}
-            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-3 rounded-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2.5 rounded-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {oauthLoading === 'google' ? (
               <span className="inline-block w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
@@ -141,7 +143,7 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
           </button>
 
           {/* ─── Legal Consent Checkboxes ─── */}
-          <div className="space-y-3 pt-2">
+          <div className="space-y-2.5">
             <div className="flex items-start gap-3">
               <input
                 id="terms-check"
@@ -172,13 +174,13 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
           {/* ─── Submit Button ─── */}
           <button
             disabled={loading || !agreedTerms || !agreedPrivacy}
-            className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold py-3.5 rounded-lg transition-all transform active:scale-95 mt-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+            className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold py-3 rounded-lg transition-all transform active:scale-95 mt-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 text-sm"
           >
             {loading ? 'İşleniyor...' : 'Kayıt Ol'}
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-white/10 text-center">
+        <div className="mt-4 pt-4 border-t border-white/10 text-center">
           <p className="text-sm text-gray-400">
             Zaten hesabın var mı?{' '}
             <button

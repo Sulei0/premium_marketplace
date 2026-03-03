@@ -126,21 +126,23 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto">
-      <div className="relative w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl my-auto">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">✕</button>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto">
+      <div className="relative w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-5 sm:p-7 shadow-2xl my-auto">
+        <button onClick={onClose} className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+        </button>
 
         {/* ─── Header ─── */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           {forgotMode ? (
             <>
-              <h2 className="text-2xl font-bold text-white">Şifreni mi Unuttun?</h2>
-              <p className="text-gray-400 text-sm mt-2">E-posta adresini gir, sana sıfırlama bağlantısı gönderelim.</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Şifreni mi Unuttun?</h2>
+              <p className="text-gray-400 text-xs sm:text-sm mt-1.5">E-posta adresini gir, sana sıfırlama bağlantısı gönderelim.</p>
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-bold text-white">Tekrar Hoşgeldin</h2>
-              <p className="text-gray-400 text-sm mt-2">Hesabına erişmek için bilgilerini gir.</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Tekrar Hoşgeldin</h2>
+              <p className="text-gray-400 text-xs sm:text-sm mt-1.5">Hesabına erişmek için bilgilerini gir.</p>
             </>
           )}
         </div>
@@ -160,17 +162,17 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
         )}
 
         {/* ─── Error Banner ─── */}
-        {error && <div className="bg-red-500/20 text-red-200 p-3 rounded mb-4 text-sm text-center border border-red-500/30">{error}</div>}
+        {error && <div className="bg-red-500/20 text-red-200 p-2.5 rounded mb-3 text-xs sm:text-sm text-center border border-red-500/30">{error}</div>}
 
         {/* ─── Social Login Buttons (shown only in login mode) ─── */}
         {!forgotMode && (
           <>
-            <div className="mb-5">
+            <div className="mb-4">
               <button
                 type="button"
                 onClick={() => handleOAuthLogin('google')}
                 disabled={!!oauthLoading}
-                className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-3 rounded-lg transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2.5 rounded-lg transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-sm"
               >
                 {oauthLoading === 'google' ? (
                   <span className="inline-block w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
@@ -187,7 +189,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
             </div>
 
             {/* ─── Divider ─── */}
-            <div className="flex items-center gap-3 mb-5">
+            <div className="flex items-center gap-3 mb-4">
               <div className="flex-1 h-px bg-white/10" />
               <span className="text-xs text-gray-500 uppercase tracking-wider">veya</span>
               <div className="flex-1 h-px bg-white/10" />
@@ -202,13 +204,13 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
               <label className="text-xs text-gray-400 ml-1">E-posta / Kullanıcı Adı</label>
               <input
                 type="text" required value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
+                className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-pink-500 focus:outline-none transition-colors"
                 placeholder="mail@ornek.com veya kullanıcı adı"
               />
             </div>
             <button
               disabled={loading}
-              className="w-full font-bold py-3.5 rounded-lg transition-all mt-2 text-white"
+              className="w-full font-bold py-3 rounded-lg transition-all mt-1 text-white text-sm"
               style={{ background: 'linear-gradient(135deg, #ff0080, #7928ca)' }}
             >
               {loading ? 'Gönderiliyor...' : 'Sıfırlama Bağlantısı Gönder'}
@@ -223,12 +225,12 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
           </form>
         ) : (
           /* ─── Login Form ─── */
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div className="space-y-1">
               <label className="text-xs text-gray-400 ml-1">E-posta / Kullanıcı Adı</label>
               <input
                 type="text" required value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
+                className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-pink-500 focus:outline-none transition-colors"
                 placeholder="mail@ornek.com veya kullanıcı adı"
               />
             </div>
@@ -236,7 +238,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
               <label className="text-xs text-gray-400 ml-1">Şifre</label>
               <input
                 type="password" required value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
+                className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-pink-500 focus:outline-none transition-colors"
                 placeholder="******"
               />
               {/* ─── Şifremi Unuttum Link ─── */}
@@ -253,14 +255,14 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
             </div>
             <button
               disabled={loading}
-              className="w-full bg-white text-black hover:bg-gray-200 font-bold py-3.5 rounded-lg transition-colors mt-2"
+              className="w-full bg-white text-black hover:bg-gray-200 font-bold py-3 rounded-lg transition-colors mt-1 text-sm"
             >
               {loading ? 'Giriliyor...' : 'Giriş Yap'}
             </button>
           </form>
         )}
 
-        <div className="mt-6 pt-6 border-t border-white/10 text-center">
+        <div className="mt-4 pt-4 border-t border-white/10 text-center">
           <p className="text-sm text-gray-400">
             Hesabın yok mu?{' '}
             <button
