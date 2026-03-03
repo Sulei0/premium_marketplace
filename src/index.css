@@ -308,8 +308,13 @@
 
 /* Marquee CSS animation — better mobile performance than JS-based */
 @keyframes marquee-scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .animate-marquee {
@@ -319,7 +324,10 @@
 
 /* Input zoom prevention on iOS — ensure all inputs are 16px+ */
 @media (max-width: 640px) {
-  input, select, textarea {
+
+  input,
+  select,
+  textarea {
     font-size: max(16px, 1em) !important;
   }
 }

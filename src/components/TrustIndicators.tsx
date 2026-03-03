@@ -10,122 +10,228 @@ interface TrustIndicatorProps {
   className?: string;
 }
 
-// --- Custom SVGs for Giyenden Trust Theme ---
-
-// 1. Kalkan + Kalp (Shield with Heart — Women-Only Safe Space)
-const ShieldHeartIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    {/* Shield */}
-    <path d="M12 2L3 6V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V6L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.1" />
-    {/* Heart inside */}
-    <path d="M12 17.5C12 17.5 7 14.5 7 11.5C7 10 8 9 9.5 9C10.5 9 11.5 9.5 12 10.5C12.5 9.5 13.5 9 14.5 9C16 9 17 10 17 11.5C17 14.5 12 17.5 12 17.5Z" fill="currentColor" fillOpacity="0.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-// 2. Askı + Yıldız (Hanger with Sparkle — Verified Wardrobes)
-const VerifiedHangerIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    {/* Hanger hook */}
-    <path d="M12 2C12 2 12 4 14 4C15.1 4 16 4.9 16 6C16 7.1 14.5 8 14.5 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    {/* Hanger body */}
-    <path d="M2 18L12 10L22 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M2 18H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    {/* Sparkle star */}
-    <path d="M19 3L19.5 4.5L21 5L19.5 5.5L19 7L18.5 5.5L17 5L18.5 4.5L19 3Z" fill="currentColor" />
-    {/* Small sparkle */}
-    <path d="M5 5L5.3 5.9L6 6L5.3 6.1L5 7L4.7 6.1L4 6L4.7 5.9L5 5Z" fill="currentColor" fillOpacity="0.6" />
-    {/* Check badge */}
-    <circle cx="19" cy="15" r="3" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M17.5 15L18.5 16L20.5 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-// 3. Sohbet Balonları + Kalp (Chat Bubbles — Fashion Messaging)
-const FashionChatIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    {/* Main chat bubble */}
-    <path d="M21 12C21 16.418 16.97 20 12 20C10.5 20 9.1 19.7 7.8 19.1L3 21L4.3 17.1C3.5 15.7 3 14 3 12C3 7.582 7.03 4 12 4C16.97 4 21 7.582 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.1" />
-    {/* Heart in bubble */}
-    <path d="M12 15C12 15 9 13 9 11.5C9 10.8 9.5 10 10.5 10C11 10 11.5 10.3 12 11C12.5 10.3 13 10 13.5 10C14.5 10 15 10.8 15 11.5C15 13 12 15 12 15Z" fill="currentColor" fillOpacity="0.4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-    {/* Style dots */}
-    <circle cx="8" cy="12" r="0.8" fill="currentColor" fillOpacity="0.4" />
-    <circle cx="16" cy="12" r="0.8" fill="currentColor" fillOpacity="0.4" />
-  </svg>
-);
-
-const indicators = [
+const comparisonRows = [
   {
-    icon: ShieldHeartIcon,
-    title: "Sadece Kadınlara Özel",
-    description: "Erkeklerin giremediği, kadınların gardıroplarını özgürce paylaştığı güvenli bir moda alanı. Burada sadece sen ve senin tarzın var.",
+    bad: "İsimsiz eller, sömürü zincirleri",
+    good: "Kadından Kadına",
+    icon: "👥",
   },
   {
-    icon: VerifiedHangerIcon,
-    title: "Onaylı Gardıroplar",
-    description: "Toplulukta öne çıkan satıcılar özel rozetleriyle parlar. Her rozet, güvenilirliğin ve kaliteli gardırobun işareti.",
+    bad: "92 milyon ton kıyafet çöpe gider",
+    good: "Her ürün bir çöpü önler",
+    icon: "🌱",
   },
   {
-    icon: FashionChatIcon,
-    title: "Moda Sohbetleri",
-    description: "Stil ilhamı al, teklif ver, detayları konuş. Kadınlar arası doğrudan mesajlaşmayla alışverişin keyfini çıkar.",
+    bad: "Fabrikada doğar, çöpte ölür",
+    good: "Gardıroptan çıkar, hayata döner",
+    icon: "♻️",
+  },
+  {
+    bad: "Şirket zenginleşir",
+    good: "Kazanan sensin",
+    icon: "💸",
+  },
+  {
+    bad: "Sezon biter, moda değişir, atılır",
+    good: "Stil kalıcıdır, döngü devam eder",
+    icon: "✨",
   },
 ];
 
 export function TrustIndicators({ className }: TrustIndicatorProps) {
   return (
-    <div className={cn("w-full py-12 px-4 relative overflow-hidden", className)}>
-      {/* Background Ambience */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-[#ff0080]/5 blur-[100px] pointer-events-none rounded-full" />
+    <div className={cn("w-full py-16 sm:py-24 px-4 relative overflow-hidden", className)}>
+      {/* Background Glow Effects */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-pink-500/8 dark:bg-pink-500/5 blur-[150px] pointer-events-none rounded-full" />
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/8 dark:bg-purple-500/5 blur-[150px] pointer-events-none rounded-full" />
 
-      <div className="max-w-6xl mx-auto relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {indicators.map((item, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{
-                duration: 0.6,
-                delay: index * 0.15,
-                type: "spring",
-                stiffness: 80
-              }}
-              className="relative group p-8 rounded-3xl bg-black/20 border border-white/5 backdrop-blur-md hover:border-[#ff0080]/30 transition-all duration-500 hover:shadow-[0_0_30px_-5px_elseif(#ff0080,0.15)]"
-            >
-              {/* Hover Glow Effect */}
-              <div className="absolute inset-0 bg-gradient-to-b from-[#ff0080]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none" />
+      <div className="max-w-5xl mx-auto relative z-10">
+        {/* Section Title — Outfit Bold, No Serif */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="text-center mb-14 sm:mb-20"
+        >
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-foreground leading-tight">
+            İki dünya var.{" "}
+            <span className="relative inline-block">
+              <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                Seç.
+              </span>
+              <motion.span
+                className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+              />
+            </span>
+          </h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mt-5 text-muted-foreground text-base sm:text-lg max-w-lg mx-auto"
+          >
+            Hızlı moda dünyayı tüketirken, biz kadın kadına döngü yaratıyoruz.
+          </motion.p>
+        </motion.div>
 
-              <div className="relative flex flex-col items-center text-center space-y-5">
-                {/* Icon Container with Neon Glow */}
-                <div className="relative">
-                  <div className="absolute inset-0 bg-[#ff0080] blur-xl opacity-20 group-hover:opacity-60 transition-opacity duration-500" />
-                  <div className="relative p-4 rounded-full bg-black/40 border border-[#ff0080]/20 text-[#ff0080] shadow-[0_0_15px_-3px_rgba(255,0,128,0.3)] group-hover:shadow-[0_0_25px_-2px_rgba(255,0,128,0.6)] group-hover:scale-110 transition-all duration-500">
-                    <item.icon className="w-10 h-10 drop-shadow-[0_0_8px_rgba(255,0,128,0.5)]" />
+        {/* Comparison Container */}
+        <div className="relative">
+          {/* Desktop Layout */}
+          <div className="hidden md:block">
+            {/* Column Headers */}
+            <div className="grid grid-cols-[1fr_56px_1fr] items-center mb-6">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="text-center"
+              >
+                <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-red-500/10 dark:bg-red-500/15 border border-red-500/20">
+                  <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-red-400 dark:text-red-400">
+                    Hızlı Moda
+                  </span>
+                </div>
+              </motion.div>
+              <div />
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="text-center"
+              >
+                <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-primary/10 dark:bg-primary/15 border border-primary/20">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+                    Giyenden
+                  </span>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Rows */}
+            <div className="space-y-3">
+              {comparisonRows.map((row, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="grid grid-cols-[1fr_56px_1fr] items-stretch group"
+                >
+                  {/* Bad Side */}
+                  <div className="relative p-5 rounded-xl bg-card/60 dark:bg-white/[0.03] border border-border/50 group-hover:border-red-500/20 transition-all duration-400 overflow-hidden">
+                    {/* Red tint on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 to-red-500/[0.04] dark:to-red-500/[0.06] opacity-0 group-hover:opacity-100 transition-opacity duration-400 rounded-xl pointer-events-none" />
+                    <div className="relative flex items-center gap-3">
+                      <span className="shrink-0 w-7 h-7 rounded-full bg-red-500/10 dark:bg-red-500/15 flex items-center justify-center text-red-400 text-xs font-bold">✕</span>
+                      <p className="text-sm sm:text-[15px] text-muted-foreground line-through decoration-red-400/40 decoration-[1.5px] leading-relaxed">
+                        {row.bad}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Center Icon */}
+                  <div className="flex items-center justify-center relative">
+                    <div className="w-px h-full bg-border/40 absolute" />
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      whileInView={{ scale: 1, rotate: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: index * 0.1 + 0.2, type: "spring", stiffness: 200 }}
+                      className="relative z-10 w-10 h-10 rounded-full bg-card dark:bg-gray-900 border border-border/60 flex items-center justify-center shadow-sm group-hover:shadow-primary/20 group-hover:border-primary/30 transition-all duration-400"
+                    >
+                      <span className="text-base">{row.icon}</span>
+                    </motion.div>
+                  </div>
+
+                  {/* Good Side */}
+                  <div className="relative p-5 rounded-xl bg-card/60 dark:bg-white/[0.03] border border-border/50 group-hover:border-primary/30 transition-all duration-400 overflow-hidden">
+                    {/* Pink glow on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-l from-primary/0 to-primary/[0.04] dark:to-primary/[0.08] opacity-0 group-hover:opacity-100 transition-opacity duration-400 rounded-xl pointer-events-none" />
+                    {/* Neon line accent */}
+                    <div className="absolute right-0 top-2 bottom-2 w-[2px] bg-primary/0 group-hover:bg-primary/40 transition-all duration-500 rounded-full" />
+                    <div className="relative flex items-center gap-3">
+                      <span className="shrink-0 w-7 h-7 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">✓</span>
+                      <p className="text-sm sm:text-[15px] text-foreground font-bold leading-relaxed group-hover:text-primary transition-colors duration-300">
+                        {row.good}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile Layout — Stacked Cards */}
+          <div className="md:hidden space-y-3">
+            {comparisonRows.map((row, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.08 }}
+                className="rounded-2xl border border-border/50 overflow-hidden bg-card/60 dark:bg-white/[0.03] shadow-sm"
+              >
+                {/* Bad */}
+                <div className="px-4 py-3.5 border-b border-border/30 bg-red-500/[0.03] dark:bg-red-500/[0.05]">
+                  <div className="flex items-center gap-3">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 text-[10px] font-bold">✕</span>
+                    <p className="text-[13px] text-muted-foreground line-through decoration-red-400/30 italic leading-relaxed">
+                      {row.bad}
+                    </p>
                   </div>
                 </div>
-
-                <h3 className="text-xl font-bold tracking-wide text-foreground group-hover:text-[#ff0080] transition-colors duration-300">
-                  {item.title}
-                </h3>
-
-                <p className="text-sm text-muted-foreground leading-relaxed font-light group-hover:text-white/80 transition-colors duration-300">
-                  {item.description}
-                </p>
-              </div>
-
-              {/* Bottom Neon Accent Line */}
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-[2px] bg-[#ff0080]/20 group-hover:w-1/2 group-hover:bg-[#ff0080] transition-all duration-500" />
-            </motion.div>
-          ))}
+                {/* Good */}
+                <div className="px-4 py-3.5 bg-primary/[0.02] dark:bg-primary/[0.06]">
+                  <div className="flex items-center gap-3">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">✓</span>
+                    <p className="text-[13px] text-foreground font-bold leading-relaxed">
+                      {row.good}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
+
+        {/* CTA Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="text-center mt-14 sm:mt-20"
+        >
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('open-register'))}
+            className="group relative inline-flex items-center gap-2.5 px-10 py-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold text-lg rounded-full shadow-xl shadow-pink-500/20 hover:shadow-pink-500/40 hover:scale-[1.03] active:scale-[0.97] transition-all duration-300"
+          >
+            Döngüye Katıl
+            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
+          <p className="mt-4 text-xs text-muted-foreground/60">
+            Sürdürülebilir modanın parçası ol 🌱
+          </p>
+        </motion.div>
       </div>
 
       {/* Animated Marquee - Brand Text (Full Width) */}
       <div className="mt-16 relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden">
-        <div
-          className="flex items-center w-max animate-marquee"
-        >
+        <div className="flex items-center w-max animate-marquee">
           {[...Array(16)].map((_, i) => (
             <span key={i} className="flex items-center shrink-0">
               <span
@@ -146,4 +252,3 @@ export function TrustIndicators({ className }: TrustIndicatorProps) {
     </div>
   );
 }
-

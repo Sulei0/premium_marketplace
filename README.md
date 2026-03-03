@@ -23,6 +23,9 @@ Giyenden, kadınların birbirleriyle güvenli ve şeffaf bir şekilde ikinci el 
 - **Değerlendirme & Yorum** — Satıcıları puanlama ve yorum bırakma
 - **Bildirim Sistemi** — Favori, takip, mesaj ve teklif bildirimleri
 - **Admin Paneli** — Kullanıcı yönetimi, ürün onaylama, şikayet/rapor takibi, rozet yönetimi
+- **Blog Sistemi** — Markdown destekli, zengin içerikli blog yayınlama altyapısı
+- **Gelişmiş Kategori Yapısı** — Moda odaklı, detaylı ve ölçeklenebilir kategori/alt kategori sistemi
+- **Görsel Optimizasyonu** — İstemci taraflı sıkıştırma ve Supabase Image Transformation ile yüksek performans
 - **SEO Optimizasyonu** — Schema.org, Open Graph, canonical URL, dinamik sitemap
 - **Google Analytics** — Ziyaretçi takibi (GA4)
 - **Google OAuth** — Google hesabıyla giriş/kayıt
@@ -166,6 +169,9 @@ Giyenden is a curated marketplace where women can exchange second-hand fashion i
 - **Reviews & Ratings** — Rate and review sellers
 - **Notification System** — Favorites, follow, message, and offer notifications
 - **Admin Panel** — User management, product approval, reports, badge management
+- **Blog System** — Markdown-supported, rich content blog infrastructure
+- **Advanced Category Structure** — Fashion-focused, detailed, and scalable category system
+- **Image Optimization** — Client-side compression and Supabase Image Transformation for fast-loading assets
 - **SEO Optimized** — Schema.org, Open Graph, canonical URLs, dynamic sitemap
 - **Google OAuth** — Sign in/up with Google
 - **Responsive Design** — Mobile-first, all devices supported
@@ -173,7 +179,7 @@ Giyenden is a curated marketplace where women can exchange second-hand fashion i
 
 ## Tech Stack
 
-**Frontend:** React 18, TypeScript, Vite, Tailwind CSS 4, shadcn/ui, Framer Motion, React Router v6, TanStack Query, Zustand
+**Frontend:** React 18, TypeScript, Vite, Tailwind CSS 4, shadcn/ui, Framer Motion, React Router v6, TanStack Query, Zustand, Marked (Markdown)
 
 **Backend:** Supabase (PostgreSQL, Auth, Storage, Realtime, Edge Functions, RLS)
 
