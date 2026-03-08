@@ -33,7 +33,6 @@ Giyenden, kadınların birbirleriyle güvenli ve şeffaf bir şekilde ikinci el 
 - **Dark Mode** — Varsayılan koyu tema ile premium görünüm
 
 ---
-
 ## 🛠️ Teknoloji Stack
 
 ### Frontend

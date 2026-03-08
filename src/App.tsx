@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,33 +14,43 @@ import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import { SellerRoute } from "@/components/SellerRoute";
-import MyProducts from "@/pages/dashboard/MyProducts";
-import Home from "@/pages/Home";
-import Products from "@/pages/Products";
-import ProductDetail from "@/pages/ProductDetail";
-import Profile from "@/pages/Profile";
-import ChatList from "@/pages/ChatList";
-import ChatDetail from "@/pages/ChatDetail";
-import Favorites from "@/pages/Favorites";
-import NotFound from "@/pages/not-found/Index";
-import AdminLayout from "@/components/admin/AdminLayout";
-import AdminDashboard from "@/pages/admin/Index";
-import AdminUsers from "@/pages/admin/AdminUsers";
-import AdminProducts from "@/pages/admin/AdminProducts";
-import AdminReports from "@/pages/admin/AdminReports";
-import AdminBlog from "@/pages/admin/AdminBlog";
-import AdminBlogEditor from "@/pages/admin/AdminBlogEditor";
-import Terms from "@/pages/Terms";
-import Privacy from "@/pages/Privacy";
-import Kvkk from "@/pages/Kvkk";
-import About from "@/pages/About";
-import BlogList from "@/pages/BlogList";
-import BlogPost from "@/pages/BlogPost";
-import Notifications from "@/pages/Notifications";
 import { SEOCanonical } from "@/components/SEOCanonical";
 import { CookieConsent } from "@/components/CookieConsent";
 import { UsernameSetupModal } from "@/components/UsernameSetupModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
+
+// ─── Lazy-loaded pages (code splitting) ───
+const Home = lazy(() => import("@/pages/Home"));
+const Products = lazy(() => import("@/pages/Products"));
+const ProductDetail = lazy(() => import("@/pages/ProductDetail"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const ChatList = lazy(() => import("@/pages/ChatList"));
+const ChatDetail = lazy(() => import("@/pages/ChatDetail"));
+const Favorites = lazy(() => import("@/pages/Favorites"));
+const Notifications = lazy(() => import("@/pages/Notifications"));
+const NotFound = lazy(() => import("@/pages/not-found/Index"));
+const Terms = lazy(() => import("@/pages/Terms"));
+const Privacy = lazy(() => import("@/pages/Privacy"));
+const Kvkk = lazy(() => import("@/pages/Kvkk"));
+const About = lazy(() => import("@/pages/About"));
+const BlogList = lazy(() => import("@/pages/BlogList"));
+const BlogPost = lazy(() => import("@/pages/BlogPost"));
+const MyProducts = lazy(() => import("@/pages/dashboard/MyProducts"));
+const AdminLayout = lazy(() => import("@/components/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("@/pages/admin/Index"));
+const AdminUsers = lazy(() => import("@/pages/admin/AdminUsers"));
+const AdminProducts = lazy(() => import("@/pages/admin/AdminProducts"));
+const AdminReports = lazy(() => import("@/pages/admin/AdminReports"));
+const AdminBlog = lazy(() => import("@/pages/admin/AdminBlog"));
+const AdminBlogEditor = lazy(() => import("@/pages/admin/AdminBlogEditor"));
+
+/** Minimal full-screen spinner shown while a lazy chunk loads */
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -80,44 +91,45 @@ const App = () => {
                       <BrowserRouter>
                         <SEOCanonical />
                         <CookieConsent />
-                        <Routes>
-                          <Route path={ROUTE_PATHS.HOME} element={<Home />} />
-                          <Route path={ROUTE_PATHS.PRODUCTS} element={<Products />} />
-                          <Route path={ROUTE_PATHS.PRODUCT_DETAIL} element={<ProductDetail />} />
-                          <Route path={ROUTE_PATHS.PROFILE} element={<Profile />} />
+                        <Suspense fallback={<PageLoader />}>
+                          <Routes>
+                            <Route path={ROUTE_PATHS.HOME} element={<Home />} />
+                            <Route path={ROUTE_PATHS.PRODUCTS} element={<Products />} />
+                            <Route path={ROUTE_PATHS.PRODUCT_DETAIL} element={<ProductDetail />} />
+                            <Route path={ROUTE_PATHS.PROFILE} element={<Profile />} />
 
-                          {/* Korumalı rotalar */}
-                          <Route path={ROUTE_PATHS.CHATS} element={<ProtectedRoute><ChatList /></ProtectedRoute>} />
-                          <Route path={ROUTE_PATHS.CHAT_DETAIL} element={<ProtectedRoute><ChatDetail /></ProtectedRoute>} />
-                          <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-                          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+                            {/* Korumalı rotalar */}
+                            <Route path={ROUTE_PATHS.CHATS} element={<ProtectedRoute><ChatList /></ProtectedRoute>} />
+                            <Route path={ROUTE_PATHS.CHAT_DETAIL} element={<ProtectedRoute><ChatDetail /></ProtectedRoute>} />
+                            <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+                            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
-                          {/* Yasal sayfalar */}
+                            {/* Yasal sayfalar */}
 
-                          <Route path="/terms" element={<Terms />} />
-                          <Route path="/privacy" element={<Privacy />} />
-                          <Route path="/kvkk" element={<Kvkk />} />
-                          <Route path="/about" element={<About />} />
-                          <Route path="/kose" element={<BlogList />} />
-                          <Route path="/kose/:slug" element={<BlogPost />} />
-                          {/* Satıcı rotaları */}
-                          <Route path="/dashboard/products" element={<SellerRoute><MyProducts /></SellerRoute>} />
+                            <Route path="/terms" element={<Terms />} />
+                            <Route path="/privacy" element={<Privacy />} />
+                            <Route path="/kvkk" element={<Kvkk />} />
+                            <Route path="/about" element={<About />} />
+                            <Route path="/kose" element={<BlogList />} />
+                            <Route path="/kose/:slug" element={<BlogPost />} />
+                            {/* Satıcı rotaları */}
+                            <Route path="/dashboard/products" element={<SellerRoute><MyProducts /></SellerRoute>} />
 
-                          {/* Admin paneli */}
-                          {/* Admin paneli */}
-                          <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-                            <Route index element={<AdminDashboard />} />
-                            <Route path="users" element={<AdminUsers />} />
-                            <Route path="products" element={<AdminProducts />} />
-                            <Route path="reports" element={<AdminReports />} />
-                            <Route path="blog" element={<AdminBlog />} />
-                            <Route path="blog/new" element={<AdminBlogEditor />} />
-                            <Route path="blog/edit/:id" element={<AdminBlogEditor />} />
-                          </Route>
+                            {/* Admin paneli */}
+                            <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                              <Route index element={<AdminDashboard />} />
+                              <Route path="users" element={<AdminUsers />} />
+                              <Route path="products" element={<AdminProducts />} />
+                              <Route path="reports" element={<AdminReports />} />
+                              <Route path="blog" element={<AdminBlog />} />
+                              <Route path="blog/new" element={<AdminBlogEditor />} />
+                              <Route path="blog/edit/:id" element={<AdminBlogEditor />} />
+                            </Route>
 
-                          {/* 404 */}
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
+                            {/* 404 */}
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                        </Suspense>
                       </BrowserRouter>
                     </>
                   </FavoritesProvider>
