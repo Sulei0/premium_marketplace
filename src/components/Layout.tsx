@@ -333,8 +333,11 @@ export function Layout({ children }: LayoutProps) {
 
             {/* Mobile Menu Toggle */}
             <button
-              className="md:hidden text-foreground"
+              className="md:hidden text-foreground p-2 -mr-2"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? "Menüyü kapat" : "Menüyü aç"}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-menu"
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -346,6 +349,7 @@ export function Layout({ children }: LayoutProps) {
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
+            id="mobile-menu"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -584,6 +588,7 @@ export function Layout({ children }: LayoutProps) {
                   }
                   setIsAddProductOpen(true);
                 }}
+                aria-label="Ürün sat / İlan ver"
                 className="w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/40 flex items-center justify-center border-4 border-background"
               >
                 <Plus size={24} />

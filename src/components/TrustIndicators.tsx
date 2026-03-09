@@ -1,4 +1,7 @@
+import { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
+import { ShoppingBag, CheckCircle2, Users } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -10,43 +13,166 @@ interface TrustIndicatorProps {
   className?: string;
 }
 
-const comparisonRows = [
-  {
-    bad: "İsimsiz eller, sömürü zincirleri",
-    good: "Kadından Kadına",
-    icon: "👥",
-  },
-  {
-    bad: "92 milyon ton kıyafet çöpe gider",
-    good: "Her ürün bir çöpü önler",
-    icon: "🌱",
-  },
-  {
-    bad: "Fabrikada doğar, çöpte ölür",
-    good: "Gardıroptan çıkar, hayata döner",
-    icon: "♻️",
-  },
-  {
-    bad: "Şirket zenginleşir",
-    good: "Kazanan sensin",
-    icon: "💸",
-  },
-  {
-    bad: "Sezon biter, moda değişir, atılır",
-    good: "Stil kalıcıdır, döngü devam eder",
-    icon: "✨",
-  },
-];
+/* ───────────────────────────────────────────────
+   Count-Up Hook
+   Sayıyı 0'dan hedefe smooth tırmandırır.
+   - `isVisible` true olunca animasyon BAŞLAR
+   - Sadece bir kez çalışır (hasAnimated ref)
+   ─────────────────────────────────────────────── */
+function useCountUp(target: number, duration: number, isVisible: boolean): number {
+  const [value, setValue] = useState(0);
+  const hasAnimated = useRef(false);
 
+  useEffect(() => {
+    // Hedef 0 ise veya zaten animasyon yapıldıysa → atla
+    if (!isVisible || target === 0 || hasAnimated.current) return;
+
+    hasAnimated.current = true;
+
+    let startTime: number | null = null;
+    let rafId: number;
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // EaseOutExpo — hızlı başla, yavaş bitir
+      const eased = 1 - Math.pow(1 - progress, 4);
+      setValue(Math.round(eased * target));
+
+      if (progress < 1) {
+        rafId = requestAnimationFrame(animate);
+      } else {
+        setValue(target); // Tam değeri göster
+      }
+    };
+
+    rafId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(rafId);
+  }, [isVisible, target, duration]);
+
+  return value;
+}
+
+/* ───────────────────────────────────────────────
+   Rakamları binlik ayraçla formatla (1247 → 1.247)
+   ─────────────────────────────────────────────── */
+function formatNumber(num: number): string {
+  return num.toLocaleString("tr-TR");
+}
+
+/* ───────────────────────────────────────────────
+   Ana Bileşen
+   ─────────────────────────────────────────────── */
 export function TrustIndicators({ className }: TrustIndicatorProps) {
+  const [stats, setStats] = useState({ activeListings: 0, completedSales: 0, members: 0 });
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const hasFetched = useRef(false); // Sonsuz loop koruması
+
+  /* Supabase'den istatistikleri çek — TEK SEFER */
+  const fetchStats = useCallback(async () => {
+    if (!supabase || hasFetched.current) return;
+    hasFetched.current = true;
+
+    try {
+      const [activeRes, soldRes, membersRes] = await Promise.all([
+        supabase
+          .from("products")
+          .select("*", { count: "exact", head: true })
+          .eq("is_active", true)
+          .eq("is_approved", true)
+          .eq("is_sold", false),
+        supabase
+          .from("products")
+          .select("*", { count: "exact", head: true })
+          .eq("is_sold", true),
+        supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true }),
+      ]);
+
+      setStats({
+        activeListings: activeRes.count ?? 0,
+        completedSales: soldRes.count ?? 0,
+        members: membersRes.count ?? 0,
+      });
+    } catch {
+      // Hata olursa sessizce geç, sayılar 0 kalır
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  /* IntersectionObserver — bölüm ekrana girince animasyonu tetikle */
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect(); // Bir kez tetikle, sonra bırak
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const activeCount = useCountUp(stats.activeListings, 2000, isVisible);
+  const salesCount = useCountUp(stats.completedSales, 2200, isVisible);
+  const membersCount = useCountUp(stats.members, 2400, isVisible);
+
+  const statCards = [
+    {
+      label: "Aktif İlan",
+      value: activeCount,
+      icon: ShoppingBag,
+      color: "from-pink-500 to-rose-500",
+      glow: "bg-pink-500/20",
+      iconBg: "bg-pink-500/10",
+      iconColor: "text-pink-500",
+      description: "Şu anda vitrine açık",
+    },
+    {
+      label: "Tamamlanan Satış",
+      value: salesCount,
+      icon: CheckCircle2,
+      color: "from-emerald-500 to-teal-500",
+      glow: "bg-emerald-500/20",
+      iconBg: "bg-emerald-500/10",
+      iconColor: "text-emerald-500",
+      description: "Kadın kadına el değiştirdi",
+    },
+    {
+      label: "Topluluk Üyesi",
+      value: membersCount,
+      icon: Users,
+      color: "from-violet-500 to-purple-500",
+      glow: "bg-violet-500/20",
+      iconBg: "bg-violet-500/10",
+      iconColor: "text-violet-500",
+      description: "Giyenden ailesinde",
+    },
+  ];
+
   return (
-    <div className={cn("w-full py-16 sm:py-24 px-4 relative overflow-hidden", className)}>
-      {/* Background Glow Effects */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-pink-500/8 dark:bg-pink-500/5 blur-[150px] pointer-events-none rounded-full" />
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/8 dark:bg-purple-500/5 blur-[150px] pointer-events-none rounded-full" />
+    <div ref={sectionRef} className={cn("w-full py-12 sm:py-24 px-3 sm:px-4 relative overflow-hidden", className)}>
+      {/* Background Glow Effects — GPU-optimized, mobilde küçültüldü */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[800px] h-[200px] sm:h-[400px] bg-primary/5 blur-[100px] sm:blur-[150px] pointer-events-none rounded-full will-change-transform" />
+      <div className="hidden sm:block absolute top-0 right-1/4 w-[300px] h-[300px] bg-purple-500/5 blur-[120px] pointer-events-none rounded-full" />
+      <div className="hidden sm:block absolute bottom-0 left-1/4 w-[300px] h-[300px] bg-pink-500/5 blur-[120px] pointer-events-none rounded-full" />
 
       <div className="max-w-5xl mx-auto relative z-10">
-        {/* Section Title — Outfit Bold, No Serif */}
+        {/* Section Title */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -54,11 +180,17 @@ export function TrustIndicators({ className }: TrustIndicatorProps) {
           transition={{ duration: 0.7 }}
           className="text-center mb-14 sm:mb-20"
         >
+          <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+              Canlı Veriler
+            </span>
+          </div>
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-foreground leading-tight">
-            İki dünya var.{" "}
+            Topluluk{" "}
             <span className="relative inline-block">
               <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                Seç.
+                Büyüyor.
               </span>
               <motion.span
                 className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"
@@ -76,160 +208,61 @@ export function TrustIndicators({ className }: TrustIndicatorProps) {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="mt-5 text-muted-foreground text-base sm:text-lg max-w-lg mx-auto"
           >
-            Hızlı moda dünyayı tüketirken, biz kadın kadına döngü yaratıyoruz.
+            Her gelen üye, her yeni ilan, her satış — döngünün parçası.
           </motion.p>
         </motion.div>
 
-        {/* Comparison Container */}
-        <div className="relative">
-          {/* Desktop Layout */}
-          <div className="hidden md:block">
-            {/* Column Headers */}
-            <div className="grid grid-cols-[1fr_56px_1fr] items-center mb-6">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-6">
+          {statCards.map((card, index) => {
+            const Icon = card.icon;
+            return (
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="text-center"
-              >
-                <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-red-500/10 dark:bg-red-500/15 border border-red-500/20">
-                  <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-red-400 dark:text-red-400">
-                    Hızlı Moda
-                  </span>
-                </div>
-              </motion.div>
-              <div />
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="text-center"
-              >
-                <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-primary/10 dark:bg-primary/15 border border-primary/20">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-                    Giyenden
-                  </span>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Rows */}
-            <div className="space-y-3">
-              {comparisonRows.map((row, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="grid grid-cols-[1fr_56px_1fr] items-stretch group"
-                >
-                  {/* Bad Side */}
-                  <div className="relative p-5 rounded-xl bg-card/60 dark:bg-white/[0.03] border border-border/50 group-hover:border-red-500/20 transition-all duration-400 overflow-hidden">
-                    {/* Red tint on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 to-red-500/[0.04] dark:to-red-500/[0.06] opacity-0 group-hover:opacity-100 transition-opacity duration-400 rounded-xl pointer-events-none" />
-                    <div className="relative flex items-center gap-3">
-                      <span className="shrink-0 w-7 h-7 rounded-full bg-red-500/10 dark:bg-red-500/15 flex items-center justify-center text-red-400 text-xs font-bold">✕</span>
-                      <p className="text-sm sm:text-[15px] text-muted-foreground line-through decoration-red-400/40 decoration-[1.5px] leading-relaxed">
-                        {row.bad}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Center Icon */}
-                  <div className="flex items-center justify-center relative">
-                    <div className="w-px h-full bg-border/40 absolute" />
-                    <motion.div
-                      initial={{ scale: 0, rotate: -180 }}
-                      whileInView={{ scale: 1, rotate: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.4, delay: index * 0.1 + 0.2, type: "spring", stiffness: 200 }}
-                      className="relative z-10 w-10 h-10 rounded-full bg-card dark:bg-gray-900 border border-border/60 flex items-center justify-center shadow-sm group-hover:shadow-primary/20 group-hover:border-primary/30 transition-all duration-400"
-                    >
-                      <span className="text-base">{row.icon}</span>
-                    </motion.div>
-                  </div>
-
-                  {/* Good Side */}
-                  <div className="relative p-5 rounded-xl bg-card/60 dark:bg-white/[0.03] border border-border/50 group-hover:border-primary/30 transition-all duration-400 overflow-hidden">
-                    {/* Pink glow on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-l from-primary/0 to-primary/[0.04] dark:to-primary/[0.08] opacity-0 group-hover:opacity-100 transition-opacity duration-400 rounded-xl pointer-events-none" />
-                    {/* Neon line accent */}
-                    <div className="absolute right-0 top-2 bottom-2 w-[2px] bg-primary/0 group-hover:bg-primary/40 transition-all duration-500 rounded-full" />
-                    <div className="relative flex items-center gap-3">
-                      <span className="shrink-0 w-7 h-7 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">✓</span>
-                      <p className="text-sm sm:text-[15px] text-foreground font-bold leading-relaxed group-hover:text-primary transition-colors duration-300">
-                        {row.good}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Mobile Layout — Stacked Cards */}
-          <div className="md:hidden space-y-3">
-            {comparisonRows.map((row, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 16 }}
+                key={card.label}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.08 }}
-                className="rounded-2xl border border-border/50 overflow-hidden bg-card/60 dark:bg-white/[0.03] shadow-sm"
+                transition={{ duration: 0.5, delay: index * 0.15 }}
+                className="group relative"
               >
-                {/* Bad */}
-                <div className="px-4 py-3.5 border-b border-border/30 bg-red-500/[0.03] dark:bg-red-500/[0.05]">
-                  <div className="flex items-center gap-3">
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 text-[10px] font-bold">✕</span>
-                    <p className="text-[13px] text-muted-foreground line-through decoration-red-400/30 italic leading-relaxed">
-                      {row.bad}
-                    </p>
+                <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-border/50 bg-card/60 dark:bg-white/[0.03] p-3 sm:p-8 text-center transition-all duration-500 hover:border-primary/30 sm:hover:shadow-lg sm:hover:shadow-primary/5">
+                  {/* Hover glow — yalnızca desktop, mobilde performans için devre dışı */}
+                  <div className={`hidden sm:block absolute inset-0 ${card.glow} opacity-0 group-hover:opacity-100 blur-3xl transition-opacity duration-700 pointer-events-none`} />
+
+                  {/* Top gradient line */}
+                  <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${card.color} opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-500`} />
+
+                  {/* Icon */}
+                  <div className={`w-9 h-9 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-5 rounded-xl sm:rounded-2xl ${card.iconBg} flex items-center justify-center transition-transform duration-500 sm:group-hover:scale-110`}>
+                    <Icon className={`w-4 h-4 sm:w-7 sm:h-7 ${card.iconColor}`} />
                   </div>
-                </div>
-                {/* Good */}
-                <div className="px-4 py-3.5 bg-primary/[0.02] dark:bg-primary/[0.06]">
-                  <div className="flex items-center gap-3">
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">✓</span>
-                    <p className="text-[13px] text-foreground font-bold leading-relaxed">
-                      {row.good}
-                    </p>
+
+                  {/* Number */}
+                  <div className="relative">
+                    <span
+                      className={`text-2xl sm:text-6xl font-black tracking-tighter bg-gradient-to-b ${card.color} bg-clip-text text-transparent tabular-nums`}
+                    >
+                      {formatNumber(card.value)}
+                    </span>
                   </div>
+
+                  {/* Label */}
+                  <p className="mt-1 sm:mt-3 text-[10px] sm:text-base font-bold text-foreground/90 tracking-tight">
+                    {card.label}
+                  </p>
+
+                  {/* Subtitle — mobilde gizle, alan kazandır */}
+                  <p className="hidden sm:block mt-1 text-xs text-muted-foreground/70">
+                    {card.description}
+                  </p>
                 </div>
               </motion.div>
-            ))}
-          </div>
+            );
+          })}
         </div>
-
-        {/* CTA Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="text-center mt-14 sm:mt-20"
-        >
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('open-register'))}
-            className="group relative inline-flex items-center gap-2.5 px-10 py-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold text-lg rounded-full shadow-xl shadow-pink-500/20 hover:shadow-pink-500/40 hover:scale-[1.03] active:scale-[0.97] transition-all duration-300"
-          >
-            Döngüye Katıl
-            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </button>
-          <p className="mt-4 text-xs text-muted-foreground/60">
-            Sürdürülebilir modanın parçası ol 🌱
-          </p>
-        </motion.div>
       </div>
 
-      {/* Animated Marquee - Brand Text (Full Width) */}
+      {/* Animated Marquee — Mevcut Giyenden şeridi KORUNUYOR */}
       <div className="mt-16 relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden">
         <div className="flex items-center w-max animate-marquee">
           {[...Array(16)].map((_, i) => (

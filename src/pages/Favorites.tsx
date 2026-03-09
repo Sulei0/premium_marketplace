@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { formatCurrency } from "@/lib/index";
 import { getOptimizedThumbnailUrl } from "@/lib/utils";
+import { SEO } from "@/components/SEO";
 
 interface DbProduct {
     id: string;
@@ -87,6 +88,7 @@ export default function Favorites() {
 
     return (
         <Layout>
+            <SEO title="Favorilerim | Giyenden" description="Beğendiğin ve kaydettiğin ürünleri bu sayfada bulabilirsin." />
             <div className="min-h-screen pb-20">
                 <section className="relative pt-32 pb-12 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />

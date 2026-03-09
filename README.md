@@ -10,7 +10,7 @@ Giyenden, Türkiye'nin kadınlara özel butik ikinci el moda platformudur. Kulla
 
 ## 📌 Proje Hakkında
 
-Giyenden, kadınların birbirleriyle güvenli ve şeffaf bir şekilde ikinci el moda ürünlerini alıp satabileceği bir marketplace'tir. Platform, butik bir deneyim sunmayı hedefler: onaylı gardıroplar, yüksek kaliteli ilan standartları ve topluluk odaklı bir yaklaşım.
+Giyenden, kadınların birbirleriyle güvenli ve şeffaf bir şekilde ikinci el moda ürünlerini alıp satabileceği bir marketplace'tir. Platform, butik bir deneyim sunmayı hedefler: onaylı gardıroplar, yüksek kaliteli ilan standar1tları ve topluluk odaklı bir yaklaşım.
 
 ### Temel Özellikler
 
