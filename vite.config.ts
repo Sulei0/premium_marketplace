@@ -240,6 +240,16 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       target: 'esnext',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-motion': ['framer-motion'],
+            'vendor-charts': ['recharts'],
+            'vendor-supabase': ['@supabase/supabase-js'],
+            'vendor-editor': ['react-quill-new'],
+          },
+        },
+      },
     },
   }
 });

@@ -292,7 +292,7 @@ export function Layout({ children }: LayoutProps) {
                   <div className="w-8 h-8 rounded-full overflow-hidden border border-border group-hover:border-primary transition-colors bg-muted flex items-center justify-center">
                     {user.user_metadata?.avatar_url ? (
                       <img
-                        src={`${user.user_metadata.avatar_url}?t=${Date.now()}`} // Force fresh fetch on mount
+                        src={`${user.user_metadata.avatar_url}${user.updated_at ? `?v=${encodeURIComponent(user.updated_at)}` : ''}`}
                         alt="Profil"
                         className="w-full h-full object-cover"
                       />
@@ -547,7 +547,7 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </div>
       </footer>
-      <AddProductModal isOpen={isAddProductOpen} onClose={() => setIsAddProductOpen(false)} />
+
 
       {/* --- MOBILE BOTTOM NAV --- */}
       {!location.pathname.startsWith('/chats/') && (

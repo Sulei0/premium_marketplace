@@ -23,35 +23,6 @@ interface DbProductCardProps {
     product: DbProduct;
 }
 
-/* ── CSS for heart burst particles ── */
-const heartBurstStyles = `
-@keyframes heart-particle {
-  0% { transform: translate(0, 0) scale(1); opacity: 1; }
-  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
-}
-.heart-burst-particle {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #ec4899;
-  pointer-events: none;
-  animation: heart-particle 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
-}
-@keyframes heart-ring {
-  0% { transform: scale(0.3); opacity: 0.8; }
-  100% { transform: scale(1.8); opacity: 0; }
-}
-.heart-burst-ring {
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 2px solid #ec4899;
-  pointer-events: none;
-  animation: heart-ring 0.5s ease-out forwards;
-}
-`;
-
 const PARTICLES = [
     { tx: "-12px", ty: "-14px" },
     { tx: "12px", ty: "-14px" },
@@ -78,7 +49,6 @@ export function DbProductCard({ product }: DbProductCardProps) {
 
     return (
         <div className="group relative flex flex-col overflow-hidden rounded-xl bg-card/40 border border-white/5 backdrop-blur-md transition-all hover:border-primary/30 cursor-pointer">
-            <style>{heartBurstStyles}</style>
             <Link to={`/product/${product.id}`} className="block">
                 {/* Image */}
                 <div className="relative aspect-[3/4] sm:aspect-[4/5] overflow-hidden bg-muted/20">

@@ -55,7 +55,9 @@ const PageLoader = () => (
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,
+      staleTime: 5 * 60 * 1000,        // 5 dk — taze sayılır
+      gcTime: 10 * 60 * 1000,           // 10 dk — cache bellekte tutulur
+      refetchOnWindowFocus: false,       // Sekme değişiminde refetch kapalı
       retry: 1,
     },
   },

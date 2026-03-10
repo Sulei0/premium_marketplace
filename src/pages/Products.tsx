@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, SlidersHorizontal, Sparkles, X, Loader2, Heart, ArrowUpDown, ChevronDown } from "lucide-react";
@@ -62,6 +62,15 @@ export default function Products() {
   const observerTarget = useRef<HTMLDivElement>(null);
   const { fetchMultipleFavoriteCounts } = useFavorites();
 
+  // Refs to avoid stale closures in IntersectionObserver callback
+  const pageRef = useRef(0);
+  const hasMoreRef = useRef(true);
+  const loadingRef = useRef(false);
+
+  // Keep refs in sync with state
+  hasMoreRef.current = hasMore;
+  loadingRef.current = loading;
+
   const fetchProducts = async (pageNumber: number) => {
     if (!supabase) {
       setLoading(false);
@@ -106,29 +115,34 @@ export default function Products() {
     fetchProducts(0);
   }, []);
 
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
+  const handleLoadMore = useCallback(() => {
+    if (!hasMoreRef.current || loadingRef.current) return;
+    const nextPage = pageRef.current + 1;
+    pageRef.current = nextPage;
     setPage(nextPage);
+    setLoading(true);
+    loadingRef.current = true;
     fetchProducts(nextPage);
-  };
+  }, []);
 
-  // Infinite Scroll Effect
+  // Infinite Scroll — observer created once, refs prevent stale closures
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
+        if (entries[0].isIntersecting && hasMoreRef.current && !loadingRef.current) {
           handleLoadMore();
         }
       },
       { threshold: 0.1 }
     );
 
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
+    const el = observerTarget.current;
+    if (el) {
+      observer.observe(el);
     }
 
     return () => observer.disconnect();
-  }, [hasMore, loading, page]);
+  }, [handleLoadMore]);
 
   // Determine effective min/max for filtering
   const effectiveMin = minPrice !== "" ? Number(minPrice) : priceRange.min;

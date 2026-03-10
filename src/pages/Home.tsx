@@ -203,7 +203,7 @@ export default function Home() {
         {/* Hero Section */}
         <section className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 z-0">
-            <img src={IMAGES.HERO_BG_7} alt="Moda Background" className="w-full h-full object-cover opacity-40 scale-105" />
+            <img src={IMAGES.HERO_BG_7} alt="Moda Background" fetchPriority="high" decoding="async" className="w-full h-full object-cover opacity-40 scale-105" />
             <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/60 to-background" />
             <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `url(${IMAGES.TEXTURE_BG_2})`, backgroundSize: 'cover', mixBlendMode: 'overlay' }} />
           </div>
@@ -260,7 +260,7 @@ export default function Home() {
           <div
             className="flex items-center w-max animate-marquee"
           >
-            {[...Array(16)].map((_, i) => (
+            {[...Array(8)].map((_, i) => (
               <span key={i} className="flex items-center shrink-0">
                 <span
                   className="text-3xl md:text-4xl font-black italic text-[#ff0080]/30 hover:text-[#ff0080]/70 transition-colors duration-500 select-none px-6 whitespace-nowrap"

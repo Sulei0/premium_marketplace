@@ -331,3 +331,30 @@
     font-size: max(16px, 1em) !important;
   }
 }
+
+/* Heart burst animation for favorite button (DbProductCard) */
+@keyframes heart-particle {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+.heart-burst-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ec4899;
+  pointer-events: none;
+  animation: heart-particle 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+@keyframes heart-ring {
+  0% { transform: scale(0.3); opacity: 0.8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.heart-burst-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid #ec4899;
+  pointer-events: none;
+  animation: heart-ring 0.5s ease-out forwards;
+}
