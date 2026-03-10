@@ -32,7 +32,7 @@ export default function About() {
             />
 
             {/* ── Hero ── */}
-            <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden pt-24 pb-16">
+            <section className="relative min-h-[50vh] md:min-h-[70vh] flex items-center justify-center overflow-hidden pt-20 pb-10 md:pt-24 md:pb-16">
                 <div className="absolute inset-0 bg-gradient-to-br from-pink-950/40 via-background to-purple-950/30 pointer-events-none" />
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl" />
@@ -40,29 +40,18 @@ export default function About() {
                 </div>
 
                 <div className="container mx-auto px-4 relative z-10 text-center max-w-4xl">
-                    <motion.div
-                        initial="hidden"
-                        animate="visible"
-                        variants={fadeUp}
-                        custom={0}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-pink-500/30 bg-pink-500/10 text-pink-400 text-xs font-semibold uppercase tracking-widest mb-6"
-                    >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        Bir Gencin Hayali, Bir Toplumun Hareketi
-                    </motion.div>
-
                     <motion.h1
                         initial="hidden"
                         animate="visible"
                         variants={fadeUp}
-                        custom={1}
-                        className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight"
+                        custom={0}
+                        className="text-4xl md:text-7xl font-black tracking-tight mb-4 md:mb-6 leading-tight"
                     >
-                        Gardırobundan{" "}
+                        Her{" "}
                         <span className="bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-                            Dünyayı
+                            'eski'
                         </span>{" "}
-                        Değiştir
+                        parçada birileri hâlâ güzeldir.
                     </motion.h1>
 
                     <motion.p
@@ -70,50 +59,68 @@ export default function About() {
                         animate="visible"
                         variants={fadeUp}
                         custom={2}
-                        className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto"
+                        className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto"
                     >
                         Giyenden, modayı dayanışmaya, atığı değere, bireysel tercihi kolektif
-                        bir farkındalığa dönüştüren bir platformdur. Çünkü her parçanın
-                        bir hikâyesi var — ve bu hikâye devam edebilir.
+                        bir farkındalığa dönüştüren bir platformdur.
+                    </motion.p>
+                    <motion.p
+                        initial="hidden"
+                        animate="visible"
+                        variants={fadeUp}
+                        custom={3}
+                        className="mt-5 text-base text-muted-foreground/80 max-w-2xl mx-auto"
+                    >
+                        <span
+                            className="relative inline-block font-medium text-foreground/90"
+                            style={{
+                                textDecoration: "underline",
+                                textDecorationColor: "rgba(236,72,153,0.55)",
+                                textDecorationThickness: "2px",
+                                textUnderlineOffset: "5px",
+                            }}
+                        >
+                            Giyenden, 20 yaşında bir üniversite öğrencisinin projesidir.
+                        </span>
                     </motion.p>
                 </div>
             </section>
 
 
             {/* ── Değerler ── */}
-            <section className="py-20 bg-card/30 border-y border-border">
+            <section className="py-12 md:py-20 bg-card/30 border-y border-border">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <motion.div
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true }}
                         variants={fadeUp}
-                        className="text-center mb-16"
+                        className="text-center mb-8 md:mb-16"
                     >
                         <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
                             Bizi Biz Yapan
                         </p>
-                        <h2 className="text-4xl md:text-5xl font-black tracking-tight">
+                        <h2 className="text-3xl md:text-5xl font-black tracking-tight">
                             Temel Değerlerimiz
                         </h2>
                     </motion.div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
                         {[
                             {
-                                icon: <Heart className="w-7 h-7" />,
+                                icon: <Heart className="w-5 h-5 md:w-7 md:h-7" />,
                                 color: "pink",
                                 title: "Kadın Dayanışması",
                                 body: `Giyenden, kadınların birbirini desteklediği bir ekosistem kurmak üzerine inşa edilmiştir. Her satış bir kadın girişimcinin kazancıdır; her satın alma başka bir kadına güçlenme fırsatı sunmaktır. Burada rekabet yoktur — birlikte büyüme vardır.`,
                             },
                             {
-                                icon: <Leaf className="w-7 h-7" />,
+                                icon: <Leaf className="w-5 h-5 md:w-7 md:h-7" />,
                                 color: "green",
                                 title: "Sürdürülebilir Moda",
                                 body: `Küresel tekstil endüstrisi, dünyanın ikinci büyük kirleticisidir. Her ikinci el parça satıldığında, yeni bir ürünün üretilmesine gerek kalmaz. Giyenden'de gerçekleşen her işlem, karbon ayak izinizi küçültür ve döngüsel ekonomiye katkı sağlar.`,
                             },
                             {
-                                icon: <Users className="w-7 h-7" />,
+                                icon: <Users className="w-5 h-5 md:w-7 md:h-7" />,
                                 color: "purple",
                                 title: "Feminist Perspektif",
                                 body: `Moda endüstrisi, tarihsel olarak kadın bedeni ve emeği üzerine kurulmuştur — çoğunlukla kadınlar aleyhine. Giyenden bu denklemi tersine çevirir: Kadınlar burada hem üreticidir hem tüketici, hem satıcı hem alıcı. Kendi ekonomilerini kendileri kurarlar.`,
@@ -126,17 +133,63 @@ export default function About() {
                                 viewport={{ once: true }}
                                 variants={fadeUp}
                                 custom={i}
-                                className={`group relative p-8 rounded-3xl border bg-card hover:border-${card.color}-500/30 transition-all duration-300`}
+                                className={`group relative flex flex-row md:flex-col items-start gap-4 p-5 md:p-8 rounded-2xl md:rounded-3xl border bg-card hover:border-${card.color}-500/30 transition-all duration-300`}
                             >
                                 <div
-                                    className={`w-14 h-14 rounded-2xl bg-${card.color}-500/10 flex items-center justify-center text-${card.color}-400 mb-6 group-hover:scale-110 transition-transform`}
+                                    className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-${card.color}-500/10 flex items-center justify-center text-${card.color}-400 shrink-0 md:mb-4 group-hover:scale-110 transition-transform`}
                                 >
                                     {card.icon}
                                 </div>
-                                <h3 className="text-xl font-bold mb-3">{card.title}</h3>
-                                <p className="text-muted-foreground leading-relaxed text-sm">
-                                    {card.body}
-                                </p>
+                                <div>
+                                    <h3 className="text-base md:text-xl font-bold mb-1 md:mb-3">{card.title}</h3>
+                                    <p className="text-muted-foreground leading-relaxed text-xs md:text-sm">
+                                        {card.body}
+                                    </p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Hedef Kitle ── */}
+            <section className="py-12 md:py-20 bg-card/30 border-y border-border">
+                <div className="container mx-auto px-4 max-w-5xl">
+                    <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true }}
+                        variants={fadeUp}
+                        className="text-center mb-8 md:mb-14"
+                    >
+                        <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
+                            Kimin İçin?
+                        </p>
+                        <h2 className="text-4xl font-black tracking-tight">
+                            Giyenden Kiminle<br />
+                            <span className="text-primary">Büyüyecek?</span>
+                        </h2>
+                    </motion.div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+                        {[
+                            { emoji: "🎓", title: "Öğrenciler", desc: "Bütçesini yönetirken tarzından ödün vermeyen genç kadınlar." },
+                            { emoji: "💼", title: "Çalışan Kadınlar", desc: "Dolaptaki değeri nakde çevirmek isteyen profesyoneller." },
+                            { emoji: "🌱", title: "Çevre Bilinçliler", desc: "Hızlı modayı reddeden, sürdürülebilirliğe inanan bireyler." },
+                            { emoji: "💜", title: "Topluluk Önderleri", desc: "Kadın dayanışmasını günlük pratiklere taşıyan aktivistler." },
+                        ].map((item, i) => (
+                            <motion.div
+                                key={item.title}
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={{ once: true }}
+                                variants={fadeUp}
+                                custom={i}
+                                className="text-center p-4 md:p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all"
+                            >
+                                <div className="text-2xl md:text-4xl mb-2 md:mb-4">{item.emoji}</div>
+                                <h4 className="text-sm md:text-base font-bold mb-1 md:mb-2">{item.title}</h4>
+                                <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
                             </motion.div>
                         ))}
                     </div>
@@ -144,14 +197,14 @@ export default function About() {
             </section>
 
             {/* ── Vizyon & Misyon ── */}
-            <section className="py-24 container mx-auto px-4 max-w-5xl">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <section className="py-12 md:py-24 container mx-auto px-4 max-w-5xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-10">
                     <motion.div
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true }}
                         variants={fadeUp}
-                        className="p-10 rounded-3xl bg-gradient-to-br from-pink-500/10 to-transparent border border-pink-500/20 space-y-4"
+                        className="p-6 md:p-10 rounded-2xl md:rounded-3xl bg-gradient-to-br from-pink-500/10 to-transparent border border-pink-500/20 space-y-3 md:space-y-4"
                     >
                         <div className="flex items-center gap-3 mb-2">
                             <Target className="w-6 h-6 text-pink-400" />
@@ -174,7 +227,7 @@ export default function About() {
                         viewport={{ once: true }}
                         variants={fadeUp}
                         custom={1}
-                        className="p-10 rounded-3xl bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20 space-y-4"
+                        className="p-6 md:p-10 rounded-2xl md:rounded-3xl bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20 space-y-3 md:space-y-4"
                     >
                         <div className="flex items-center gap-3 mb-2">
                             <Globe className="w-6 h-6 text-purple-400" />
@@ -193,60 +246,16 @@ export default function About() {
                 </div>
             </section>
 
-            {/* ── Hedef Kitle ── */}
-            <section className="py-20 bg-card/30 border-y border-border">
-                <div className="container mx-auto px-4 max-w-5xl">
-                    <motion.div
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true }}
-                        variants={fadeUp}
-                        className="text-center mb-14"
-                    >
-                        <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
-                            Kimin İçin?
-                        </p>
-                        <h2 className="text-4xl font-black tracking-tight">
-                            Giyenden Kiminle<br />
-                            <span className="text-primary">Büyüyecek?</span>
-                        </h2>
-                    </motion.div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                        {[
-                            { emoji: "🎓", title: "Öğrenciler", desc: "Bütçesini yönetirken tarzından ödün vermeyen genç kadınlar." },
-                            { emoji: "💼", title: "Çalışan Kadınlar", desc: "Dolaptaki değeri nakde çevirmek isteyen profesyoneller." },
-                            { emoji: "🌱", title: "Çevre Bilinçliler", desc: "Hızlı modayı reddeden, sürdürülebilirliğe inanan bireyler." },
-                            { emoji: "💜", title: "Topluluk Önderleri", desc: "Kadın dayanışmasını günlük pratiklere taşıyan aktivistler." },
-                        ].map((item, i) => (
-                            <motion.div
-                                key={item.title}
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={{ once: true }}
-                                variants={fadeUp}
-                                custom={i}
-                                className="text-center p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all"
-                            >
-                                <div className="text-4xl mb-4">{item.emoji}</div>
-                                <h4 className="font-bold mb-2">{item.title}</h4>
-                                <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
             {/* ── Taahhütler ── */}
-            <section className="py-24 container mx-auto px-4 max-w-4xl">
+            <section className="py-12 md:py-24 container mx-auto px-4 max-w-4xl">
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true }}
                     variants={fadeUp}
-                    className="text-center mb-12"
+                    className="text-center mb-6 md:mb-12"
                 >
-                    <h2 className="text-4xl font-black tracking-tight mb-4">
+                    <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3 md:mb-4">
                         Size Verdiğimiz Söz
                     </h2>
                     <p className="text-muted-foreground">
@@ -254,7 +263,7 @@ export default function About() {
                     </p>
                 </motion.div>
 
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                     {[
                         { icon: <ShieldCheck className="w-5 h-5 text-green-400" />, title: "Güvenli Alan", desc: "Tüm kullanıcılar kimlik doğrulamasından geçer. İçerikler admin denetiminden geçer. Rahatsız edici davranışlar anında raporlanabilir." },
                         { icon: <Heart className="w-5 h-5 text-pink-400" />, title: "Kadın Önce İlkesi", desc: "Tüm kararlarımızda ve tasarımımızda kadın deneyimini merkeze alırız. Platformumuz kadınlar tarafından, kadınlar için şekillendirilir." },
@@ -268,14 +277,14 @@ export default function About() {
                             viewport={{ once: true }}
                             variants={fadeUp}
                             custom={i}
-                            className="flex items-start gap-5 p-6 rounded-2xl bg-card border border-border hover:border-primary/20 transition-all group"
+                            className="flex items-start gap-3 md:gap-5 p-4 md:p-6 rounded-2xl bg-card border border-border hover:border-primary/20 transition-all group"
                         >
                             <div className="p-3 rounded-xl bg-muted group-hover:scale-110 transition-transform shrink-0">
                                 {item.icon}
                             </div>
                             <div>
-                                <h4 className="font-bold mb-1">{item.title}</h4>
-                                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                                <h4 className="text-sm md:text-base font-bold mb-1">{item.title}</h4>
+                                <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                             </div>
                         </motion.div>
                     ))}
@@ -283,7 +292,7 @@ export default function About() {
             </section>
 
             {/* ── CTA ── */}
-            <section className="py-20 relative overflow-hidden">
+            <section className="py-12 md:py-20 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-pink-950/30 to-purple-950/30 pointer-events-none" />
                 <div className="container mx-auto px-4 max-w-3xl text-center relative z-10">
                     <motion.div
@@ -292,8 +301,8 @@ export default function About() {
                         viewport={{ once: true }}
                         variants={fadeUp}
                     >
-                        <div className="text-5xl mb-6">💜</div>
-                        <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6">
+                        <div className="text-4xl md:text-5xl mb-4 md:mb-6">💜</div>
+                        <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4 md:mb-6">
                             Harekete Katıl
                         </h2>
                         <p className="text-muted-foreground text-lg mb-10 leading-relaxed">
@@ -317,6 +326,6 @@ export default function About() {
                     </motion.div>
                 </div>
             </section>
-        </Layout>
+        </Layout >
     );
 }

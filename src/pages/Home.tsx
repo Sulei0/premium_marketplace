@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Loader2, ShoppingBag, Store, Heart, Check } from "lucide-react";
+import { Sparkles, Loader2, ShoppingBag, Store, Heart, Check, Telescope } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { IMAGES } from "@/assets/images";
 import { springPresets, staggerItem } from "@/lib/motion";
@@ -218,27 +218,39 @@ export default function Home() {
               Gardırobundaki 2. el hazineleri Giyenden ile değerlendir, kadın dayanışmasının gücüne güç kat.
             </motion.p>
 
-            <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.6 }}>
-              <Button
-                size="lg"
-                className="h-14 px-8 rounded-full text-lg font-semibold group bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 transition-all"
-                onClick={() => handleRoleClick("seller")}
-              >
-                <Store className="mr-2 w-5 h-5" />
-                Satıcıyım
-                {user && role === "seller" && <Check className="ml-2 w-4 h-4 text-green-300" />}
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-14 px-8 rounded-full text-lg font-semibold group border-primary/40 hover:border-primary hover:bg-primary/10 hover:shadow-[0_0_20px_var(--primary)] transition-all"
-                onClick={() => handleRoleClick("buyer")}
-              >
-                <ShoppingBag className="mr-2 w-5 h-5" />
-                Alıcıyım
-                {user && role === "buyer" && <Check className="ml-2 w-4 h-4 text-green-400" />}
-              </Button>
-            </motion.div>
+            <div className="flex flex-col items-center gap-4">
+              <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.6 }}>
+                <Button
+                  size="lg"
+                  className="h-14 px-8 rounded-full text-lg font-semibold group bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 transition-all"
+                  onClick={() => handleRoleClick("seller")}
+                >
+                  <Store className="mr-2 w-5 h-5" />
+                  Satıcıyım
+                  {user && role === "seller" && <Check className="ml-2 w-4 h-4 text-green-300" />}
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-14 px-8 rounded-full text-lg font-semibold group border-primary/40 hover:border-primary hover:bg-primary/10 hover:shadow-[0_0_20px_var(--primary)] transition-all"
+                  onClick={() => handleRoleClick("buyer")}
+                >
+                  <ShoppingBag className="mr-2 w-5 h-5" />
+                  Alıcıyım
+                  {user && role === "buyer" && <Check className="ml-2 w-4 h-4 text-green-400" />}
+                </Button>
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.8 }}>
+                <Link
+                  to="/about"
+                  className="inline-flex items-center gap-2 h-11 px-7 rounded-full text-base font-medium border border-transparent bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 text-white/80 hover:text-white ring-1 ring-pink-500/30 hover:ring-pink-400/60 transition-all duration-300 backdrop-blur-sm"
+                >
+                  <Telescope className="w-4 h-4" />
+                  Vizyonumuz
+                </Link>
+              </motion.div>
+            </div>
           </div>
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/20 blur-[120px] rounded-full z-0" />
         </section>
