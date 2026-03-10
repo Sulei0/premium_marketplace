@@ -229,13 +229,26 @@ export function Layout({ children }: LayoutProps) {
 
           {/* Actions */}
           <div className="flex items-center space-x-3 sm:space-x-4">
-            {/* Theme Toggle */}
+            {/* Theme Toggle – Slider */}
             <button
               onClick={toggleTheme}
-              className="text-muted-foreground hover:text-foreground transition-colors hidden sm:flex items-center justify-center p-1"
+              className="hidden sm:flex items-center relative w-[52px] h-[28px] rounded-full transition-colors duration-300 cursor-pointer p-0 border border-border"
+              style={{ backgroundColor: theme === 'dark' ? 'oklch(0.2 0.02 340)' : 'oklch(0.9 0.02 340)' }}
               title={theme === 'dark' ? 'Aydınlık Mod' : 'Karanlık Mod'}
+              aria-label={theme === 'dark' ? 'Aydınlık Mod' : 'Karanlık Mod'}
             >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {/* Sun icon (left) */}
+              <Sun className="absolute left-[5px] top-1/2 -translate-y-1/2 w-[16px] h-[16px] transition-opacity duration-300" style={{ color: theme === 'dark' ? 'oklch(0.65 0.03 340)' : 'oklch(0.55 0.15 60)', opacity: theme === 'dark' ? 0.4 : 1 }} />
+              {/* Moon icon (right) */}
+              <Moon className="absolute right-[5px] top-1/2 -translate-y-1/2 w-[16px] h-[16px] transition-opacity duration-300" style={{ color: theme === 'dark' ? 'oklch(0.85 0.03 340)' : 'oklch(0.6 0.03 340)', opacity: theme === 'dark' ? 1 : 0.35 }} />
+              {/* Sliding circle */}
+              <span
+                className="absolute top-[3px] w-[22px] h-[22px] rounded-full shadow-sm transition-all duration-300 ease-in-out"
+                style={{
+                  left: theme === 'dark' ? '27px' : '3px',
+                  backgroundColor: theme === 'dark' ? 'oklch(0.65 0.03 340)' : 'oklch(0.98 0.01 340)',
+                }}
+              />
             </button>
 
 
@@ -464,15 +477,30 @@ export function Layout({ children }: LayoutProps) {
                 )}
               </div>
 
-              {/* Mobile Theme Toggle */}
-              <div className="pt-4 border-t border-border/30">
+              {/* Mobile Theme Toggle – Slider */}
+              <div className="pt-4 border-t border-border/30 flex items-center gap-3">
                 <button
                   onClick={() => { toggleTheme(); }}
-                  className="flex items-center gap-3 py-3 text-lg text-muted-foreground hover:text-foreground transition-colors w-full"
+                  className="relative w-[56px] h-[30px] rounded-full transition-colors duration-300 cursor-pointer p-0 border border-border flex-shrink-0"
+                  style={{ backgroundColor: theme === 'dark' ? 'oklch(0.2 0.02 340)' : 'oklch(0.9 0.02 340)' }}
+                  aria-label={theme === 'dark' ? 'Aydınlık Mod' : 'Karanlık Mod'}
                 >
-                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                  {theme === 'dark' ? 'Aydınlık Mod' : 'Karanlık Mod'}
+                  {/* Sun icon (left) */}
+                  <Sun className="absolute left-[6px] top-1/2 -translate-y-1/2 w-[17px] h-[17px] transition-opacity duration-300" style={{ color: theme === 'dark' ? 'oklch(0.65 0.03 340)' : 'oklch(0.55 0.15 60)', opacity: theme === 'dark' ? 0.4 : 1 }} />
+                  {/* Moon icon (right) */}
+                  <Moon className="absolute right-[6px] top-1/2 -translate-y-1/2 w-[17px] h-[17px] transition-opacity duration-300" style={{ color: theme === 'dark' ? 'oklch(0.85 0.03 340)' : 'oklch(0.6 0.03 340)', opacity: theme === 'dark' ? 1 : 0.35 }} />
+                  {/* Sliding circle */}
+                  <span
+                    className="absolute top-[3px] w-[24px] h-[24px] rounded-full shadow-sm transition-all duration-300 ease-in-out"
+                    style={{
+                      left: theme === 'dark' ? '29px' : '3px',
+                      backgroundColor: theme === 'dark' ? 'oklch(0.65 0.03 340)' : 'oklch(0.98 0.01 340)',
+                    }}
+                  />
                 </button>
+                <span className="text-lg text-muted-foreground">
+                  {theme === 'dark' ? 'Aydınlık Mod' : 'Karanlık Mod'}
+                </span>
               </div>
 
             </nav>
