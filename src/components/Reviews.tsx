@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Star, Send, Loader2 } from "lucide-react";
+import { Star, Send, Loader2, ShieldBan } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBlock } from "@/contexts/BlockContext";
 import { getOptimizedAvatarUrl } from "@/lib/utils";
 
 interface Review {
@@ -51,6 +52,7 @@ function StarRating({ rating, onChange, interactive = false, size = "w-5 h-5" }:
 /** Review Form — for submitting a review of a seller */
 export function ReviewForm({ sellerId, onReviewSubmitted }: { sellerId: string; onReviewSubmitted?: () => void }) {
     const { user } = useAuth();
+    const { isBlocked } = useBlock();
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState("");
     const [loading, setLoading] = useState(false);
@@ -80,6 +82,18 @@ export function ReviewForm({ sellerId, onReviewSubmitted }: { sellerId: string; 
     }, [user, sellerId]);
 
     if (!user || user.id === sellerId) return null;
+
+    // Block check — don't show review form if blocked
+    if (isBlocked(sellerId)) {
+        return (
+            <div className="bg-card/50 border border-border/50 rounded-xl p-4 sm:p-6">
+                <div className="flex items-center gap-3 text-muted-foreground">
+                    <ShieldBan className="w-5 h-5 text-red-500" />
+                    <p className="text-sm">Engelleme nedeniyle değerlendirme yapılamıyor.</p>
+                </div>
+            </div>
+        );
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

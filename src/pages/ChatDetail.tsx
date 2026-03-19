@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBlock } from "@/contexts/BlockContext";
 import { supabase } from "@/lib/supabase";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { ROUTE_PATHS, formatCurrency, cn } from "@/lib/index";
 import { getOptimizedImageUrl } from "@/lib/utils";
-import { ArrowLeft, Send, ImageIcon, X, AlertCircle, Loader2, Check, CheckCheck, Paperclip, Sparkles, Image } from "lucide-react";
+import { ArrowLeft, Send, ImageIcon, X, AlertCircle, Loader2, Check, CheckCheck, Paperclip, Sparkles, Image, ShieldBan, ShieldCheck, MoreVertical } from "lucide-react";
 import { compressChatImage } from "@/lib/compressImage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
@@ -107,12 +108,16 @@ export default function ChatDetail() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { isBlocked, isBlockedByMe, blockUser, unblockUser } = useBlock();
     const [chat, setChat] = useState<ChatDetails | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState("");
     const [loading, setLoading] = useState(true);
     const [isTyping, setIsTyping] = useState(false);
     const [sending, setSending] = useState(false);
+    const [showBlockMenu, setShowBlockMenu] = useState(false);
+    const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+    const blockMenuRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -125,6 +130,24 @@ export default function ChatDetail() {
     const isInitialLoad = useRef(true);
     const prevMessageCountRef = useRef(0);
     const userSentMessageRef = useRef(false);
+
+    // Close block menu on outside click
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (blockMenuRef.current && !blockMenuRef.current.contains(e.target as Node)) {
+                setShowBlockMenu(false);
+            }
+        }
+        if (showBlockMenu) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [showBlockMenu]);
+
+    // Derived block state for the other user in this chat
+    const otherUserId = chat?.other_user.id;
+    const chatIsBlocked = otherUserId ? isBlocked(otherUserId) : false;
+    const chatIsBlockedByMe = otherUserId ? isBlockedByMe(otherUserId) : false;
 
     // SEO metadataları render metodu içindeki <SEO /> bileşeniyle sağlanmaktadır.
 
@@ -716,6 +739,46 @@ export default function ChatDetail() {
                             loading="lazy"
                         />
                     </Link>
+
+                    {/* Block Menu */}
+                    <div className="relative" ref={blockMenuRef}>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowBlockMenu(!showBlockMenu)}
+                            className="shrink-0"
+                        >
+                            <MoreVertical className="w-5 h-5" />
+                        </Button>
+
+                        {showBlockMenu && (
+                            <div className="absolute right-0 top-full mt-1 w-56 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                {chatIsBlockedByMe ? (
+                                    <button
+                                        onClick={() => {
+                                            if (otherUserId) unblockUser(otherUserId);
+                                            setShowBlockMenu(false);
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-green-500 hover:bg-green-500/10 transition-colors"
+                                    >
+                                        <ShieldCheck className="w-4 h-4" />
+                                        Engeli Kaldır
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            setShowBlockMenu(false);
+                                            setShowBlockConfirm(true);
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+                                    >
+                                        <ShieldBan className="w-4 h-4" />
+                                        Kullanıcıyı Engelle
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Messages Area */}
@@ -868,8 +931,21 @@ export default function ChatDetail() {
 
                 {/* Input Area */}
                 <div className="relative border-t bg-background shrink-0">
+                    {/* Block warning banner */}
+                    {chatIsBlocked && (
+                        <div className="px-4 py-3 bg-red-500/10 border-b border-red-500/20 flex items-center gap-3">
+                            <ShieldBan className="w-5 h-5 text-red-500 shrink-0" />
+                            <p className="text-sm text-red-500">
+                                {chatIsBlockedByMe
+                                    ? "Bu kullanıcıyı engellediniz. Mesaj gönderemezsiniz."
+                                    : "Bu kullanıcı tarafından engellendiniz. Mesaj gönderemezsiniz."
+                                }
+                            </p>
+                        </div>
+                    )}
+
                     {/* Image Upload Preview */}
-                    {imagePreview && (
+                    {imagePreview && !chatIsBlocked && (
                         <div className="absolute bottom-full left-0 right-0 p-3 bg-background/95 backdrop-blur-sm border-t animate-in slide-in-from-bottom-2 duration-200">
                             <div className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-primary shadow-lg group">
                                 <img src={imagePreview} className="w-full h-full object-cover" alt="Önizleme" />
@@ -888,50 +964,101 @@ export default function ChatDetail() {
                         </div>
                     )}
 
-                    <form
-                        onSubmit={handleSendMessage}
-                        className="p-4 flex gap-2 items-center"
-                    >
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileSelect}
-                            accept="image/*"
-                            className="hidden"
-                        />
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="shrink-0 rounded-full text-primary hover:text-primary/80 hover:bg-primary/10"
-                            disabled={sending || uploading}
+                    {!chatIsBlocked ? (
+                        <form
+                            onSubmit={handleSendMessage}
+                            className="p-4 flex gap-2 items-center"
                         >
-                            <Paperclip className="w-5 h-5" />
-                        </Button>
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            value={newMessage}
-                            onChange={handleInputChange}
-                            placeholder={imagePreview ? "Görsel için açıklama yaz..." : "Bir şeyler fısılda..."}
-                            className="flex-1 bg-muted/50 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-shadow"
-                            autoComplete="off"
-                        />
-                        <Button
-                            type="submit"
-                            size="icon"
-                            className="shrink-0 rounded-full bg-primary hover:bg-primary/90"
-                            disabled={(!newMessage.trim() && !selectedImage) || sending || uploading}
-                        >
-                            {uploading ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Send className="w-4 h-4" />
-                            )}
-                        </Button>
-                    </form>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileSelect}
+                                accept="image/*"
+                                className="hidden"
+                            />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="shrink-0 rounded-full text-primary hover:text-primary/80 hover:bg-primary/10"
+                                disabled={sending || uploading}
+                            >
+                                <Paperclip className="w-5 h-5" />
+                            </Button>
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={newMessage}
+                                onChange={handleInputChange}
+                                placeholder={imagePreview ? "Görsel için açıklama yaz..." : "Bir şeyler fısılda..."}
+                                className="flex-1 bg-muted/50 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-shadow"
+                                autoComplete="off"
+                            />
+                            <Button
+                                type="submit"
+                                size="icon"
+                                className="shrink-0 rounded-full bg-primary hover:bg-primary/90"
+                                disabled={(!newMessage.trim() && !selectedImage) || sending || uploading}
+                            >
+                                {uploading ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Send className="w-4 h-4" />
+                                )}
+                            </Button>
+                        </form>
+                    ) : (
+                        <div className="p-4 text-center">
+                            <p className="text-xs text-muted-foreground">Engelleme nedeniyle mesaj gönderilemiyor.</p>
+                        </div>
+                    )}
                 </div>
+
+                {/* Block Confirm Dialog */}
+                {showBlockConfirm && (
+                    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setShowBlockConfirm(false)}>
+                        <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2 rounded-full bg-red-500/10">
+                                    <ShieldBan className="w-6 h-6 text-red-500" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg">Kullanıcıyı Engelle</h3>
+                                    <p className="text-sm text-muted-foreground">{chat?.other_user.username}</p>
+                                </div>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                                Bu kullanıcıyı engellediğinizde:
+                            </p>
+                            <ul className="text-sm text-muted-foreground mb-6 space-y-2">
+                                <li className="flex items-center gap-2">🚫 Size mesaj gönderemez</li>
+                                <li className="flex items-center gap-2">🚫 Size teklif veremez</li>
+                                <li className="flex items-center gap-2">🚫 Profilinize yorum yapamaz</li>
+                                <li className="flex items-center gap-2">🚫 Sizi takip edemez</li>
+                                <li className="flex items-center gap-2">✅ İlanlarınızı görmeye devam eder</li>
+                            </ul>
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    className="flex-1 rounded-xl"
+                                    onClick={() => setShowBlockConfirm(false)}
+                                >
+                                    Vazgeç
+                                </Button>
+                                <Button
+                                    className="flex-1 rounded-xl bg-red-600 hover:bg-red-500 text-white"
+                                    onClick={() => {
+                                        if (otherUserId) blockUser(otherUserId);
+                                        setShowBlockConfirm(false);
+                                    }}
+                                >
+                                    Engelle
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Lightbox Overlay */}
                 {lightboxImage && (

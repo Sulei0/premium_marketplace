@@ -45,6 +45,7 @@ import { getOptimizedImageUrl, getOptimizedAvatarUrl, getOptimizedDetailUrl } fr
 import { springPresets, fadeInUp } from '@/lib/motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBlock } from '@/contexts/BlockContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { AddProductModal, type DbProductForEdit } from '@/components/AddProductModal';
 import { toast } from '@/hooks/use-toast';
@@ -252,6 +253,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
 }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isBlocked: checkBlocked, isBlockedByMe: checkBlockedByMe } = useBlock();
   const { isFavorite, toggleFavorite, getFavoriteCount, fetchFavoriteCount } = useFavorites();
   const extras = product.extras || [];
 
@@ -291,6 +293,17 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
     }
     if (isOwner) {
       toast({ title: "Hata", description: "Kendi ilanınıza fısıldayamazsınız.", variant: "destructive" });
+      return;
+    }
+    // Block check
+    if (checkBlocked(product.user_id)) {
+      toast({
+        title: "Engelleme mevcut",
+        description: checkBlockedByMe(product.user_id)
+          ? "Bu satıcıyı engellediniz. Teklif göndermek için engeli kaldırın."
+          : "Bu satıcı tarafından engellendiniz. Teklif gönderemezsiniz.",
+        variant: "destructive",
+      });
       return;
     }
     // Show disclaimer first

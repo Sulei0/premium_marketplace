@@ -19,7 +19,8 @@ import {
   X,
   UserPlus,
   UserCheck,
-  Users
+  Users,
+  ShieldBan
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { SEO } from "@/components/SEO";
@@ -35,6 +36,7 @@ import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { AdminBadgeManager } from "@/components/AdminBadgeManager";
 import { AdminBanButton } from "@/components/admin/AdminBanButton";
 import { useFollow } from "@/contexts/FollowContext";
+import { useBlock } from "@/contexts/BlockContext";
 
 interface DbProduct {
   id: string;
@@ -90,6 +92,10 @@ export default function Profile() {
 function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: boolean }) {
   const { user, role } = useAuth();
   const { isFollowing, toggleFollow, getFollowerCount, getFollowingCount, fetchFollowerCount, fetchFollowingCount } = useFollow();
+  const { isBlockedByMe, blockUser, unblockUser } = useBlock();
+
+  // Block confirm state
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
 
   // Data State
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -432,6 +438,7 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
 
               {/* Follow Button (only on other profiles) */}
               {!isOwnProfile && user && (
+                <>
                 <button
                   onClick={() => toggleFollow(userId)}
                   className={cn(
@@ -447,6 +454,24 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
                     <><UserPlus className="w-4 h-4" /> Takip Et</>
                   )}
                 </button>
+
+                {/* Block/Unblock Button */}
+                {isBlockedByMe(userId) ? (
+                  <button
+                    onClick={() => unblockUser(userId)}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 mt-2 bg-card border border-green-500/30 text-green-500 hover:bg-green-500/10"
+                  >
+                    <ShieldCheck className="w-4 h-4" /> Engeli Kaldır
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowBlockConfirm(true)}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 mt-2 bg-card border border-red-500/20 text-red-500 hover:bg-red-500/10"
+                  >
+                    <ShieldBan className="w-4 h-4" /> Engelle
+                  </button>
+                )}
+                </>
               )}
             </div>
 
@@ -543,6 +568,50 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
           </div>
         </div>
       </div>
+
+      {/* Block Confirm Dialog */}
+      {showBlockConfirm && (
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setShowBlockConfirm(false)}>
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-full bg-red-500/10">
+                <ShieldBan className="w-6 h-6 text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Kullanıcıyı Engelle</h3>
+                <p className="text-sm text-muted-foreground">{profile.username}</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              Bu kullanıcıyı engellediğinizde:
+            </p>
+            <ul className="text-sm text-muted-foreground mb-6 space-y-2">
+              <li className="flex items-center gap-2">🚫 Size mesaj gönderemez</li>
+              <li className="flex items-center gap-2">🚫 Size teklif veremez</li>
+              <li className="flex items-center gap-2">🚫 Profilinize yorum yapamaz</li>
+              <li className="flex items-center gap-2">🚫 Sizi takip edemez</li>
+              <li className="flex items-center gap-2">✅ İlanlarınızı görmeye devam eder</li>
+            </ul>
+            <div className="flex gap-3">
+              <button
+                className="flex-1 py-3 rounded-xl font-semibold text-sm border border-border hover:bg-muted transition-colors"
+                onClick={() => setShowBlockConfirm(false)}
+              >
+                Vazgeç
+              </button>
+              <button
+                className="flex-1 py-3 rounded-xl font-semibold text-sm bg-red-600 hover:bg-red-500 text-white transition-colors"
+                onClick={() => {
+                  blockUser(userId);
+                  setShowBlockConfirm(false);
+                }}
+              >
+                Engelle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/lib/supabase";
+import { toast } from "@/hooks/use-toast";
 
 interface FollowContextType {
     following: Set<string>;
@@ -89,6 +90,27 @@ export function FollowProvider({ children }: { children: React.ReactNode }) {
     const toggleFollow = useCallback(async (userId: string) => {
         if (!user || !supabase) return;
         if (userId === user.id) return; // Can't follow yourself
+
+        // Block check — check from user_blocks table directly
+        // We do a quick DB check here since we don't want a circular dependency with BlockContext
+        try {
+            const { data: blockData } = await supabase
+                .from("user_blocks")
+                .select("id")
+                .or(`and(blocker_id.eq.${user.id},blocked_id.eq.${userId}),and(blocker_id.eq.${userId},blocked_id.eq.${user.id})`)
+                .limit(1);
+
+            if (blockData && blockData.length > 0) {
+                toast({
+                    title: "İşlem başarısız",
+                    description: "Engelleme nedeniyle takip işlemi yapılamıyor.",
+                    variant: "destructive",
+                });
+                return;
+            }
+        } catch {
+            // If table doesn't exist yet, just continue
+        }
 
         const isFollowingUser = following.has(userId);
 

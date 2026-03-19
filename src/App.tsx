@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { FollowProvider } from "@/contexts/FollowContext";
+import { BlockProvider } from "@/contexts/BlockContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -90,7 +91,8 @@ const App = () => {
             <UsernameSetupGate>
               <NotificationsProvider>
                 <FollowProvider>
-                  <FavoritesProvider>
+                  <BlockProvider>
+                    <FavoritesProvider>
                     <>
                       <BrowserRouter>
                         <SEOCanonical />
@@ -138,7 +140,8 @@ const App = () => {
                         </Suspense>
                       </BrowserRouter>
                     </>
-                  </FavoritesProvider>
+                    </FavoritesProvider>
+                  </BlockProvider>
                 </FollowProvider>
               </NotificationsProvider>
             </UsernameSetupGate>
