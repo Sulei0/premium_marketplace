@@ -76,7 +76,7 @@ export function UsernameSetupModal({ isOpen, onComplete }: UsernameSetupModalPro
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-300">
-            <div className="relative w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="relative w-full max-w-md bg-card border border-border rounded-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300">
                 {/* Decorative glow */}
                 <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-40 h-40 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -90,7 +90,7 @@ export function UsernameSetupModal({ isOpen, onComplete }: UsernameSetupModalPro
                     <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
                         Hoş Geldin! 🎉
                     </h2>
-                    <p className="text-gray-400 text-sm mt-2">
+                    <p className="text-muted-foreground text-sm mt-2">
                         Son bir adım kaldı! Toplulukta seni tanıyacağımız bir kullanıcı adı seç.
                     </p>
                 </div>
@@ -103,7 +103,7 @@ export function UsernameSetupModal({ isOpen, onComplete }: UsernameSetupModalPro
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="space-y-1">
-                        <label className="text-xs text-gray-400 ml-1 font-medium">Kullanıcı Adı</label>
+                        <label className="text-xs text-muted-foreground ml-1 font-medium">Kullanıcı Adı</label>
                         <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-pink-500/70 text-sm font-medium">@</span>
                             <input
@@ -111,14 +111,14 @@ export function UsernameSetupModal({ isOpen, onComplete }: UsernameSetupModalPro
                                 required
                                 value={username}
                                 onChange={e => setUsername(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 pl-8 text-white focus:border-pink-500 focus:outline-none transition-colors"
+                                className="w-full bg-background/50 border border-border rounded-lg p-3 pl-8 text-foreground focus:border-pink-500 focus:outline-none transition-colors"
                                 placeholder="Örn: GizliButik"
                                 autoFocus
                                 minLength={3}
                                 maxLength={30}
                             />
                         </div>
-                        <p className="text-xs text-gray-500 ml-1 mt-1">
+                        <p className="text-xs text-muted-foreground/80 ml-1 mt-1">
                             3-30 karakter, harf, rakam ve alt çizgi kullanabilirsin
                         </p>
                     </div>

@@ -58,7 +58,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
                 </div>
               )}
             </div>
-            <span className="text-xs font-medium text-white/90 group-hover/seller:text-primary transition-colors">
+            <span className="text-xs font-medium text-foreground/90 group-hover/seller:text-primary transition-colors">
               @{product.seller.username}
             </span>
           </Link>
@@ -69,7 +69,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         </div>
 
         {/* Stats Overlay (Bottom Left) */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-3 text-white/70">
+        <div className="absolute bottom-3 left-3 flex items-center gap-3 text-foreground/70">
           <div className="flex items-center gap-1 text-[11px]">
             <Eye className="h-3 w-3" />
             {product.stats.views}

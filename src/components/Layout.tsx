@@ -559,6 +559,8 @@ export function Layout({ children }: LayoutProps) {
                 <li><Link to="/terms" className="hover:text-primary">Kullanıcı Sözleşmesi</Link></li>
                 <li><Link to="/privacy" className="hover:text-primary">Gizlilik Politikası</Link></li>
                 <li><Link to="/kvkk" className="hover:text-primary">KVKK Aydınlatma Metni</Link></li>
+                <li><Link to="/mesafeli-satis-sozlesmesi" className="hover:text-primary">Mesafeli Satış Sözleşmesi</Link></li>
+                <li><Link to="/iptal-iade" className="hover:text-primary">İptal & İade Koşulları</Link></li>
               </ul>
             </div>
 

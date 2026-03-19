@@ -136,8 +136,8 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
         <div className="text-center mb-4">
           {forgotMode ? (
             <>
-              <h2 className="text-xl sm:text-2xl font-bold text-white">Şifreni mi Unuttun?</h2>
-              <p className="text-gray-400 text-xs sm:text-sm mt-1.5">E-posta adresini gir, sana sıfırlama bağlantısı gönderelim.</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">Şifreni mi Unuttun?</h2>
+              <p className="text-muted-foreground text-sm mt-1.5">E-posta adresini gir, sana sıfırlama bağlantısı gönderelim.</p>
             </>
           ) : (
             <>
@@ -204,7 +204,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
               <label className="text-xs text-gray-400 ml-1">E-posta / Kullanıcı Adı</label>
               <input
                 type="text" required value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-pink-500 focus:outline-none transition-colors"
+                className="w-full bg-background/50 border border-border rounded-lg p-2.5 text-sm text-foreground focus:border-pink-500 focus:outline-none transition-colors"
                 placeholder="mail@ornek.com veya kullanıcı adı"
               />
             </div>
@@ -230,7 +230,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
               <label className="text-xs text-gray-400 ml-1">E-posta / Kullanıcı Adı</label>
               <input
                 type="text" required value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-pink-500 focus:outline-none transition-colors"
+                className="w-full bg-background/50 border border-border rounded-lg p-2.5 text-sm text-foreground focus:border-pink-500 focus:outline-none transition-colors"
                 placeholder="mail@ornek.com veya kullanıcı adı"
               />
             </div>
@@ -238,7 +238,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
               <label className="text-xs text-gray-400 ml-1">Şifre</label>
               <input
                 type="password" required value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-pink-500 focus:outline-none transition-colors"
+                className="w-full bg-background/50 border border-border rounded-lg p-2.5 text-sm text-foreground focus:border-pink-500 focus:outline-none transition-colors"
                 placeholder="******"
               />
               {/* ─── Şifremi Unuttum Link ─── */}

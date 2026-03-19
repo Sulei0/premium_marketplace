@@ -74,8 +74,8 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto">
-      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-[#121212] border border-white/10 rounded-2xl p-5 sm:p-7 shadow-2xl my-auto">
-        <button onClick={onClose} className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white transition-all">
+      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-card border border-border rounded-2xl p-5 sm:p-7 shadow-2xl my-auto">
+        <button onClick={onClose} className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
         </button>
 
@@ -83,7 +83,7 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
           <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
             {initialRole === 'seller' ? 'Satıcı Ol' : 'Alışverişe Başla'}
           </h2>
-          <p className="text-gray-400 text-xs sm:text-sm mt-1.5">Aramıza katıl ve keşfetmeye başla.</p>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1.5">Aramıza katıl ve keşfetmeye başla.</p>
         </div>
 
         {error && <div className="bg-red-500/20 text-red-200 p-2.5 rounded mb-3 text-xs sm:text-sm text-center border border-red-500/30">{error}</div>}
@@ -91,35 +91,35 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
         <form onSubmit={handleSubmit} className="space-y-3">
           {/* ─── Form Fields ─── */}
           <div className="space-y-1">
-            <label className="text-xs text-gray-400 ml-1">Kullanıcı Adı</label>
+            <label className="text-xs text-muted-foreground ml-1">Kullanıcı Adı</label>
             <input
               type="text" required value={username} onChange={e => setUsername(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-pink-500 focus:outline-none transition-colors"
+              className="w-full bg-background/50 border border-border rounded-lg p-2.5 text-sm text-foreground focus:border-pink-500 focus:outline-none transition-colors"
               placeholder="Örn: GizliButik"
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-gray-400 ml-1">E-posta</label>
+            <label className="text-xs text-muted-foreground ml-1">E-posta</label>
             <input
               type="email" required value={email} onChange={e => setEmail(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-pink-500 focus:outline-none transition-colors"
+              className="w-full bg-background/50 border border-border rounded-lg p-2.5 text-sm text-foreground focus:border-pink-500 focus:outline-none transition-colors"
               placeholder="mail@ornek.com"
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-gray-400 ml-1">Şifre</label>
+            <label className="text-xs text-muted-foreground ml-1">Şifre</label>
             <input
               type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-pink-500 focus:outline-none transition-colors"
+              className="w-full bg-background/50 border border-border rounded-lg p-2.5 text-sm text-foreground focus:border-pink-500 focus:outline-none transition-colors"
               placeholder="******"
             />
           </div>
 
           {/* ─── Divider ─── */}
           <div className="flex items-center gap-3 pt-1">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-xs text-gray-500 uppercase tracking-wider">veya</span>
-            <div className="flex-1 h-px bg-white/10" />
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground uppercase tracking-wider">veya</span>
+            <div className="flex-1 h-px bg-border" />
           </div>
 
           {/* ─── Google Button ─── */}
@@ -152,7 +152,7 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
                 onChange={(e) => setAgreedTerms(e.target.checked)}
                 className="mt-1 w-4 h-4 rounded border-gray-600 bg-black/20 text-pink-500 focus:ring-pink-500/50 transition-colors cursor-pointer"
               />
-              <label htmlFor="terms-check" className="text-xs text-gray-400 leading-snug cursor-pointer select-none">
+              <label htmlFor="terms-check" className="text-xs text-muted-foreground leading-snug cursor-pointer select-none">
                 <Link to="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-pink-400 hover:text-pink-300 hover:underline">Kullanıcı Sözleşmesi</Link>'ni okudum ve kabul ediyorum.
               </label>
             </div>
@@ -165,7 +165,7 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
                 onChange={(e) => setAgreedPrivacy(e.target.checked)}
                 className="mt-1 w-4 h-4 rounded border-gray-600 bg-black/20 text-pink-500 focus:ring-pink-500/50 transition-colors cursor-pointer"
               />
-              <label htmlFor="privacy-check" className="text-xs text-gray-400 leading-snug cursor-pointer select-none">
+              <label htmlFor="privacy-check" className="text-xs text-muted-foreground leading-snug cursor-pointer select-none">
                 <Link to="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-pink-400 hover:text-pink-300 hover:underline">Gizlilik Politikası / KVKK Aydınlatma Metni</Link>'ni okudum ve kabul ediyorum.
               </label>
             </div>
@@ -180,8 +180,8 @@ export function RegistrationModal({ isOpen, onClose, initialRole, onSwitchToLogi
           </button>
         </form>
 
-        <div className="mt-4 pt-4 border-t border-white/10 text-center">
-          <p className="text-sm text-gray-400">
+        <div className="mt-4 pt-4 border-t border-border text-center">
+          <p className="text-sm text-muted-foreground">
             Zaten hesabın var mı?{' '}
             <button
               onClick={onSwitchToLogin}

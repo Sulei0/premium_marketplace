@@ -34,6 +34,8 @@ const Terms = lazy(() => import("@/pages/Terms"));
 const Privacy = lazy(() => import("@/pages/Privacy"));
 const Kvkk = lazy(() => import("@/pages/Kvkk"));
 const About = lazy(() => import("@/pages/About"));
+const DistanceSalesAgreement = lazy(() => import("@/pages/DistanceSalesAgreement"));
+const CancellationReturn = lazy(() => import("@/pages/CancellationReturn"));
 const BlogList = lazy(() => import("@/pages/BlogList"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const MyProducts = lazy(() => import("@/pages/dashboard/MyProducts"));
@@ -111,6 +113,8 @@ const App = () => {
                             <Route path="/terms" element={<Terms />} />
                             <Route path="/privacy" element={<Privacy />} />
                             <Route path="/kvkk" element={<Kvkk />} />
+                            <Route path="/mesafeli-satis-sozlesmesi" element={<DistanceSalesAgreement />} />
+                            <Route path="/iptal-iade" element={<CancellationReturn />} />
                             <Route path="/about" element={<About />} />
                             <Route path="/kose" element={<BlogList />} />
                             <Route path="/kose/:slug" element={<BlogPost />} />

@@ -109,8 +109,8 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                     <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Check className="w-8 h-8 text-red-500" />
                     </div>
-                    <h2 className="text-xl font-bold text-white mb-2">Bu Ürün Satılmıştır</h2>
-                    <p className="text-gray-400 text-sm mb-6">
+                    <h2 className="text-xl font-bold text-foreground mb-2">Bu Ürün Satılmıştır</h2>
+                    <p className="text-muted-foreground text-sm mb-6">
                         Satılan ürünler üzerinde değişiklik yapılamaz. Ürün bilgileri, alıcı ile yapılan anlaşmanın bir parçası olarak kilitlenmiştir.
                     </p>
                     <button
@@ -323,10 +323,10 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="relative w-full max-w-2xl bg-[#121212] border border-white/10 rounded-2xl shadow-2xl max-h-[95vh] overflow-y-auto">
+            <div className="relative w-full max-w-2xl bg-card border border-border rounded-2xl shadow-2xl max-h-[95vh] overflow-y-auto">
                 <button
                     onClick={handleClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10"
+                    className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors z-10"
                 >
                     <X className="w-5 h-5" />
                 </button>
@@ -337,7 +337,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                         <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
                             {isEditMode ? "İlanı Düzenle" : "Ürün Sat / İlan Ver"}
                         </h2>
-                        <p className="text-gray-400 text-sm mt-1.5">
+                        <p className="text-muted-foreground text-sm mt-1.5">
                             {isEditMode ? "Ürün bilgilerini güncelle" : "Ürününün hikayesini paylaş ve satışa çıkar."}
                         </p>
                     </div>
@@ -346,15 +346,15 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                     {success ? (
                         <div className="text-center py-10">
                             <div className="text-5xl mb-4">⏳</div>
-                            <h3 className="text-xl font-semibold text-white mb-2">
+                            <h3 className="text-xl font-semibold text-foreground mb-2">
                                 {isEditMode ? "İlan Güncellendi & Onaya Gönderildi" : "İlanınız Onaya Gönderildi!"}
                             </h3>
-                            <p className="text-gray-400 text-sm">
+                            <p className="text-muted-foreground text-sm">
                                 {isEditMode
                                     ? "Değişiklikleriniz kaydedildi. İlanınız tekrar admin onayına alındı."
                                     : "İlanınız en kısa sürede incelenip yayına alınacaktır."}
                             </p>
-                            <p className="text-gray-500 text-xs mt-2">
+                            <p className="text-muted-foreground/80 text-xs mt-2">
                                 Onay durumu hakkında bildirim ile bilgilendirileceksiniz.
                             </p>
                         </div>
@@ -369,14 +369,14 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                             {/* Multi-Image Upload */}
                             <div className="space-y-1.5">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-xs text-gray-400 ml-1">Ürün Görselleri</label>
-                                    <span className="text-[10px] text-gray-500 font-mono">{totalImages}/{MAX_IMAGES}</span>
+                                    <label className="text-xs text-muted-foreground ml-1">Ürün Görselleri</label>
+                                    <span className="text-[10px] text-muted-foreground/80 font-mono">{totalImages}/{MAX_IMAGES}</span>
                                 </div>
 
                                 {/* Image Preview Grid */}
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                                     {imagePreviews.map((preview, index) => (
-                                        <div key={preview} className="relative aspect-square rounded-lg overflow-hidden group border border-white/10">
+                                        <div key={preview} className="relative aspect-square rounded-lg overflow-hidden group border border-border">
                                             <img src={preview} alt={`Görsel ${index + 1}`} className="w-full h-full object-cover" />
                                             <button
                                                 type="button"
@@ -396,24 +396,24 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                     {/* Add More Button */}
                                     {canAddMore && (
                                         <div
-                                            className="aspect-square border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-pink-500/40 transition-colors"
+                                            className="aspect-square border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-pink-500/40 transition-colors"
                                             onClick={() => fileInputRef.current?.click()}
                                         >
-                                            <ImagePlus className="w-5 h-5 text-gray-600 mb-1" />
-                                            <span className="text-[9px] text-gray-500">Ekle</span>
+                                            <ImagePlus className="w-5 h-5 text-muted-foreground mb-1" />
+                                            <span className="text-[9px] text-muted-foreground/80">Ekle</span>
                                         </div>
                                     )}
                                 </div>
 
                                 {totalImages === 0 && (
                                     <div
-                                        className="border-2 border-dashed border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-pink-500/40 transition-colors group"
+                                        className="border-2 border-dashed border-border rounded-xl overflow-hidden cursor-pointer hover:border-pink-500/40 transition-colors group"
                                         onClick={() => fileInputRef.current?.click()}
                                     >
-                                        <div className="flex flex-col items-center justify-center py-8 text-gray-500">
-                                            <ImagePlus className="w-10 h-10 mb-3 text-gray-600" />
-                                            <p className="text-sm font-medium text-gray-400">Tıklayarak görsel yükle</p>
-                                            <p className="text-xs text-gray-600 mt-1">JPG, PNG, WEBP (Maks. 5 görsel)</p>
+                                        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                                            <ImagePlus className="w-10 h-10 mb-3 text-muted-foreground/80" />
+                                            <p className="text-sm font-medium text-foreground/80">Tıklayarak görsel yükle</p>
+                                            <p className="text-xs text-muted-foreground/80 mt-1">JPG, PNG, WEBP (Maks. 5 görsel)</p>
                                         </div>
                                     </div>
                                 )}
@@ -439,7 +439,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                             {/* Title + Category Row */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <label className="text-xs text-gray-400 ml-1">
+                                    <label className="text-xs text-muted-foreground ml-1">
                                         Ürün Adı <span className="text-pink-500">*</span>
                                     </label>
                                     <input
@@ -448,20 +448,20 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                         maxLength={MAX_TITLE_LENGTH}
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
+                                        className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:border-pink-500 focus:outline-none transition-colors"
                                         placeholder="Örn: Vintage Denim Ceket"
                                     />
-                                    <span className="text-[10px] text-gray-600 ml-1">{title.length}/{MAX_TITLE_LENGTH}</span>
+                                    <span className="text-[10px] text-muted-foreground ml-1">{title.length}/{MAX_TITLE_LENGTH}</span>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-xs text-gray-400 ml-1">Kategori</label>
+                                    <label className="text-xs text-muted-foreground ml-1">Kategori</label>
                                     <select
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors appearance-none cursor-pointer"
+                                        className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:border-pink-500 focus:outline-none transition-colors appearance-none cursor-pointer"
                                     >
                                         {CATEGORIES.map((cat) => (
-                                            <option key={cat} value={cat} className="bg-[#1a1a1a]">{cat}</option>
+                                            <option key={cat} value={cat} className="bg-background">{cat}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -469,22 +469,22 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
 
                             {/* Size (Beden) */}
                             <div className="space-y-1">
-                                <label className="text-xs text-gray-400 ml-1">Beden</label>
+                                <label className="text-xs text-muted-foreground ml-1">Beden</label>
                                 <select
                                     value={size}
                                     onChange={(e) => setSize(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors appearance-none cursor-pointer"
+                                    className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:border-pink-500 focus:outline-none transition-colors appearance-none cursor-pointer"
                                 >
-                                    <option value="" className="bg-[#1a1a1a]">Beden Seçiniz (Opsiyonel)</option>
+                                    <option value="" className="bg-background">Beden Seçiniz (Opsiyonel)</option>
                                     {SIZES.map((s) => (
-                                        <option key={s} value={s} className="bg-[#1a1a1a]">{s}</option>
+                                        <option key={s} value={s} className="bg-background">{s}</option>
                                     ))}
                                 </select>
                             </div>
 
                             {/* Base Price */}
                             <div className="space-y-1">
-                                <label className="text-xs text-gray-400 ml-1">
+                                <label className="text-xs text-muted-foreground ml-1">
                                     Taban Fiyat (₺) <span className="text-pink-500">*</span>
                                 </label>
                                 <input
@@ -505,14 +505,14 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                         // Eksi işareti girişini engelle
                                         if (e.key === "-" || e.key === "e") e.preventDefault();
                                     }}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors"
+                                    className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:border-pink-500 focus:outline-none transition-colors"
                                     placeholder="0.00"
                                 />
                             </div>
 
                             {/* Description */}
                             <div className="space-y-1">
-                                <label className="text-xs text-gray-400 ml-1">
+                                <label className="text-xs text-muted-foreground ml-1">
                                     Açıklama / Hikaye <span className="text-pink-500">*</span>
                                 </label>
                                 <textarea
@@ -521,21 +521,21 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                     maxLength={MAX_DESCRIPTION_LENGTH}
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-pink-500 focus:outline-none transition-colors resize-none"
+                                    className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:border-pink-500 focus:outline-none transition-colors resize-none"
                                     placeholder="Ürününün hikayesini anlat..."
                                 />
-                                <span className="text-[10px] text-gray-600 ml-1">{description.length}/{MAX_DESCRIPTION_LENGTH}</span>
+                                <span className="text-[10px] text-muted-foreground ml-1">{description.length}/{MAX_DESCRIPTION_LENGTH}</span>
                             </div>
 
 
                             {/* Ekstra Hizmetler */}
-                            <div className="space-y-4 bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                            <div className="space-y-4 bg-background/50 border border-border rounded-xl p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h4 className="text-sm font-bold uppercase tracking-wider text-purple-400">
                                             ✨ Ekstra Hizmetler
                                         </h4>
-                                        <p className="text-[11px] text-gray-500">
+                                        <p className="text-[11px] text-muted-foreground">
                                             Alıcıların seçebileceği ek hizmetler.
                                         </p>
                                     </div>
@@ -582,14 +582,14 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                                         setExtras(prev => prev.map(item => item.id === extra.id ? { ...item, label: newLabel } : item));
                                                     }}
                                                     placeholder="Seçenek Adı (Örn: Hediye Paketi)"
-                                                    className="flex-1 bg-transparent border-none text-sm text-white focus:ring-0 placeholder:text-gray-600 p-0"
+                                                    className="flex-1 bg-transparent border-none text-sm text-foreground focus:ring-0 placeholder:text-muted-foreground p-0"
                                                 />
                                             </div>
 
                                             {/* Price & Delete */}
                                             <div className="flex items-center gap-2">
                                                 <div className="relative">
-                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-mono">₺</span>
+                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-mono">₺</span>
                                                     <input
                                                         type="number"
                                                         min="0"
@@ -598,7 +598,7 @@ export function AddProductModal({ isOpen, onClose, editProduct }: AddProductModa
                                                             const newPrice = parseFloat(e.target.value) || 0;
                                                             setExtras(prev => prev.map(item => item.id === extra.id ? { ...item, price: newPrice } : item));
                                                         }}
-                                                        className="w-20 bg-black/20 border border-white/10 rounded-lg py-1.5 pl-5 pr-2 text-right text-sm font-mono text-purple-400 focus:border-purple-500 focus:outline-none"
+                                                        className="w-20 bg-background/50 border border-border rounded-lg py-1.5 pl-5 pr-2 text-right text-sm font-mono text-purple-500 focus:border-purple-500 focus:outline-none"
                                                     />
                                                 </div>
                                                 <button

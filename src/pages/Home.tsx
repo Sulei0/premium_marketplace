@@ -244,7 +244,7 @@ export default function Home() {
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springPresets.gentle, delay: 0.8 }}>
                 <Link
                   to="/about"
-                  className="inline-flex items-center gap-2 h-11 px-7 rounded-full text-base font-medium border border-transparent bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 text-white/80 hover:text-white ring-1 ring-pink-500/30 hover:ring-pink-400/60 transition-all duration-300 backdrop-blur-sm"
+                  className="inline-flex items-center gap-2 h-11 px-7 rounded-full text-base font-medium border border-transparent bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 text-foreground/80 hover:text-foreground ring-1 ring-pink-500/30 hover:ring-pink-400/60 transition-all duration-300 backdrop-blur-sm"
                 >
                   <Telescope className="w-4 h-4" />
                   Vizyonumuz
