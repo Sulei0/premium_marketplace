@@ -25,6 +25,9 @@ Giyenden, kadınların birbirleriyle güvenli ve şeffaf bir şekilde ikinci el 
 - **Admin Paneli** — Kullanıcı yönetimi, ürün onaylama, şikayet/rapor takibi, rozet yönetimi
 - **Blog Sistemi** — Markdown destekli, zengin içerikli blog yayınlama altyapısı
 - **Gelişmiş Kategori Yapısı** — Moda odaklı, detaylı ve ölçeklenebilir kategori/alt kategori sistemi
+- **Kullanıcı Engelleme Sistemi** — İstenmeyen etkileşimleri sınırlamak için kullanıcı engelleme/engeli kaldırma
+- **Zorunlu Kullanıcı Adı (Username) Sistemi** — Kayıt sonrası benzersiz kullanıcı adı belirleme akışı
+- **Yasal ve Çerez Süreç Yönetimi** — Mesafeli Satış Sözleşmesi, İptal/İade koşulları, KVKK aydınlatma ve çerez onay (Cookie Consent) altyapısı
 - **Görsel Optimizasyonu** — İstemci taraflı sıkıştırma ve Supabase Image Transformation ile yüksek performans
 - **SEO Optimizasyonu** — Schema.org, Open Graph, canonical URL, dinamik sitemap
 - **Google Analytics** — Ziyaretçi takibi (GA4)
@@ -170,6 +173,9 @@ Giyenden is a curated marketplace where women can exchange second-hand fashion i
 - **Admin Panel** — User management, product approval, reports, badge management
 - **Blog System** — Markdown-supported, rich content blog infrastructure
 - **Advanced Category Structure** — Fashion-focused, detailed, and scalable category system
+- **User Blocking System** — Block/unblock users to limit unwanted interactions (messages, offers, comments)
+- **Mandatory Username System** — Unique username setup flow after initial registration
+- **Legal & Cookie Consent Management** — Distance Sales Agreements, Cancellation/Return policies, privacy terms, and cookie consent infrastructure
 - **Image Optimization** — Client-side compression and Supabase Image Transformation for fast-loading assets
 - **SEO Optimized** — Schema.org, Open Graph, canonical URLs, dynamic sitemap
 - **Google OAuth** — Sign in/up with Google

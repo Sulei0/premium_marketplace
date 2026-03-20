@@ -47,6 +47,7 @@ const AdminProducts = lazy(() => import("@/pages/admin/AdminProducts"));
 const AdminReports = lazy(() => import("@/pages/admin/AdminReports"));
 const AdminBlog = lazy(() => import("@/pages/admin/AdminBlog"));
 const AdminBlogEditor = lazy(() => import("@/pages/admin/AdminBlogEditor"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 
 /** Minimal full-screen spinner shown while a lazy chunk loads */
 const PageLoader = () => (
@@ -111,6 +112,8 @@ const App = () => {
                             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
                             {/* Yasal sayfalar */}
+
+                            <Route path="/reset-password" element={<ResetPassword />} />
 
                             <Route path="/terms" element={<Terms />} />
                             <Route path="/privacy" element={<Privacy />} />
