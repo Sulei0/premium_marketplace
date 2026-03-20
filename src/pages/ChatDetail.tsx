@@ -584,6 +584,18 @@ export default function ChatDetail() {
         e.preventDefault();
         if (!newMessage.trim() || !user || !id || sending) return;
 
+        // Block check — prevent sending if blocked in either direction
+        if (chatIsBlocked) {
+            toast({
+                title: "Engelleme mevcut",
+                description: chatIsBlockedByMe
+                    ? "Bu kullanıcıyı engellediniz. Mesaj göndermek için engeli kaldırın."
+                    : "Bu kullanıcı tarafından engellendiniz. Mesaj gönderemezsiniz.",
+                variant: "destructive",
+            });
+            return;
+        }
+
         const messageContent = newMessage.trim();
         setNewMessage("");
         setSending(true);
@@ -1032,11 +1044,11 @@ export default function ChatDetail() {
                                 Bu kullanıcıyı engellediğinizde:
                             </p>
                             <ul className="text-sm text-muted-foreground mb-6 space-y-2">
-                                <li className="flex items-center gap-2">🚫 Size mesaj gönderemez</li>
-                                <li className="flex items-center gap-2">🚫 Size teklif veremez</li>
-                                <li className="flex items-center gap-2">🚫 Profilinize yorum yapamaz</li>
-                                <li className="flex items-center gap-2">🚫 Sizi takip edemez</li>
-                                <li className="flex items-center gap-2">✅ İlanlarınızı görmeye devam eder</li>
+                                <li className="flex items-center gap-2">🚫 Birbirinize mesaj gönderemezsiniz</li>
+                                <li className="flex items-center gap-2">🚫 Birbirinize teklif veremezsiniz</li>
+                                <li className="flex items-center gap-2">🚫 Birbirinizin profiline yorum yapamaz</li>
+                                <li className="flex items-center gap-2">🚫 Birbirinizi takip edemezsiniz</li>
+                                <li className="flex items-center gap-2">✅ İlanları görmeye devam eder</li>
                             </ul>
                             <div className="flex gap-3">
                                 <Button

@@ -92,7 +92,7 @@ export default function Profile() {
 function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: boolean }) {
   const { user, role } = useAuth();
   const { isFollowing, toggleFollow, getFollowerCount, getFollowingCount, fetchFollowerCount, fetchFollowingCount } = useFollow();
-  const { isBlockedByMe, blockUser, unblockUser } = useBlock();
+  const { isBlockedByMe, isBlocked, blockUser, unblockUser } = useBlock();
 
   // Block confirm state
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
@@ -439,6 +439,11 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
               {/* Follow Button (only on other profiles) */}
               {!isOwnProfile && user && (
                 <>
+                {isBlocked(userId) ? (
+                  <div className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm mt-4 bg-muted text-muted-foreground cursor-not-allowed border border-border">
+                    <ShieldBan className="w-4 h-4" /> Engelleme nedeniyle takip edilemiyor
+                  </div>
+                ) : (
                 <button
                   onClick={() => toggleFollow(userId)}
                   className={cn(
@@ -454,6 +459,7 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
                     <><UserPlus className="w-4 h-4" /> Takip Et</>
                   )}
                 </button>
+                )}
 
                 {/* Block/Unblock Button */}
                 {isBlockedByMe(userId) ? (
@@ -586,11 +592,11 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
               Bu kullanıcıyı engellediğinizde:
             </p>
             <ul className="text-sm text-muted-foreground mb-6 space-y-2">
-              <li className="flex items-center gap-2">🚫 Size mesaj gönderemez</li>
-              <li className="flex items-center gap-2">🚫 Size teklif veremez</li>
-              <li className="flex items-center gap-2">🚫 Profilinize yorum yapamaz</li>
-              <li className="flex items-center gap-2">🚫 Sizi takip edemez</li>
-              <li className="flex items-center gap-2">✅ İlanlarınızı görmeye devam eder</li>
+              <li className="flex items-center gap-2">🚫 Birbirinize mesaj gönderemezsiniz</li>
+              <li className="flex items-center gap-2">🚫 Birbirinize teklif veremezsiniz</li>
+              <li className="flex items-center gap-2">🚫 Birbirinizin profiline yorum yapamaz</li>
+              <li className="flex items-center gap-2">🚫 Birbirinizi takip edemezsiniz</li>
+              <li className="flex items-center gap-2">✅ İlanları görmeye devam eder</li>
             </ul>
             <div className="flex gap-3">
               <button
