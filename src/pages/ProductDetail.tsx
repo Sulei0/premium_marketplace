@@ -741,17 +741,25 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold text-primary flex items-center gap-2">
               <ShieldCheck className="w-6 h-6" />
-              Önemli Güvenlik Uyarısı
+              🎯 Teklif başarıyla iletildi.
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed space-y-2 pt-2">
+            <AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed space-y-3 pt-2">
               <p>
-                <strong>Giyenden</strong> ödeme işlemlerine aracılık etmemektedir. Ödemeler doğrudan kullanıcılar (P2P) arasındadır.
+                Satıcı kabul ettiğinde, işlem detayları taraflar arasında sohbet üzerinden organize edilir.
               </p>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Güvenliğiniz için ödeme kanıtlarınızı (dekont vb.) saklayınız.</li>
-                <li>Tanımadığınız kişilere ödeme yaparken dikkatli olunuz.</li>
-                <li>Ticaretiniz ve anlaşmanız tamamen sizin sorumluluğunuzdadır.</li>
-              </ul>
+              <div className="space-y-1">
+                <p>💳 <strong>Ödeme:</strong> IBAN</p>
+                <p>📦 <strong>Gönderim:</strong> Satıcı tarafından sağlanır</p>
+              </div>
+              <p>
+                🔒 Giyenden topluluğunda güven esastır. Alışveriş öncesi satıcı profilini ve değerlendirmeleri incelemenizi öneririz.
+              </p>
+              <p>
+                🛡️ Olası bir sorun durumunda Giyenden ekibi süreci inceleyerek taraflara destek olur ve çözüm için yardımcı olur.
+              </p>
+              <p>
+                💬 Süreci mesajlar bölümünden takip edebilirsiniz.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:space-x-4">
@@ -760,7 +768,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
               onClick={executeWhisper}
               className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
             >
-              Okudum, Onaylıyorum
+              ✅ Devam Et
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

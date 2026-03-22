@@ -37,6 +37,8 @@ import { AdminBadgeManager } from "@/components/AdminBadgeManager";
 import { AdminBanButton } from "@/components/admin/AdminBanButton";
 import { useFollow } from "@/contexts/FollowContext";
 import { useBlock } from "@/contexts/BlockContext";
+import { PhoneVerificationModal } from "@/components/PhoneVerificationModal";
+import { Phone } from "lucide-react";
 
 interface DbProduct {
   id: string;
@@ -59,6 +61,8 @@ interface ProfileData {
   badges: string[];
   created_at: string;
   username_changes: number;
+  phone?: string | null;
+  is_phone_verified?: boolean;
 }
 
 export default function Profile() {
@@ -113,9 +117,12 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
   }, [userId, fetchFollowerCount, fetchFollowingCount]);
 
   // Edit State
-  const [editing, setEditing] = useState(false);
+  const [editingMode, setEditingMode] = useState<'none' | 'username' | 'phone'>('none');
   const [editUsername, setEditUsername] = useState("");
+  const [editPhone, setEditPhone] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [testOtpCode, setTestOtpCode] = useState<string | null>(null);
 
   // Fetch Data
   useEffect(() => {
@@ -141,6 +148,8 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
 
         setProfile(profileData as ProfileData);
         setEditUsername(profileData.username);
+        // Telefon numarasındaki olası +90 prefix'ini ve boşlukları temizleyerek input'a yansıt
+        setEditPhone((profileData.phone || "").replace(/^\+90|\D/g, ''));
 
         // 2. Fetch Products
         // If own profile, show all. If other, show only active.
@@ -197,58 +206,122 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
     fetchData();
   }, [userId, isOwnProfile]);
 
+  // Telefon Formatlama Yardımcıları
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/[^\d]/g, '');
+    if (val.length > 10) val = val.slice(0, 10);
+    setEditPhone(val);
+  };
+
+  const formatDisplayPhone = (val: string) => {
+    if (!val) return "";
+    let res = val;
+    if (res.length > 3) res = `${res.slice(0, 3)} ${res.slice(3)}`;
+    if (res.length > 6) res = `${res.slice(0, 7)} ${res.slice(7)}`;
+    if (res.length > 8) res = `${res.slice(0, 10)} ${res.slice(10)}`;
+    return res.trim();
+  };
+
+  const handleSendOtp = async (phoneToVerify: string) => {
+    if (!supabase || !user) return;
+    try {
+      const { data: code, error } = await supabase.rpc('generate_phone_otp', {
+        p_user_id: user.id,
+        p_phone: phoneToVerify
+      });
+      if (error) throw error;
+      setTestOtpCode(code);
+      console.log("TEST İÇİN ÜRETİLEN OTP KODU:", code);
+      toast.success("Doğrulama kodu (simülasyon) gönderildi!");
+      setShowPhoneVerification(true);
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Kod gönderilirken hata oluştu: " + err.message);
+    }
+  };
+
   // Actions
-  const handleSaveUsername = async () => {
+  const handleSaveProfile = async () => {
     if (!supabase || !user || !profile) return;
     setSaving(true);
     try {
-      if (profile.username === editUsername) {
-        setEditing(false);
+      const formattedPhone = editPhone ? `+90${editPhone}` : null;
+      
+      if (profile.username === editUsername && profile.phone === formattedPhone) {
+        setEditingMode('none');
         setSaving(false);
         return;
       }
 
-      // Check change limit
-      if ((profile.username_changes || 0) >= 3) {
+      // Check username limit only if username changed
+      let usernameChanged = profile.username !== editUsername;
+      
+      if (usernameChanged && (profile.username_changes || 0) >= 3) {
         toast.error("Kullanıcı adınızı en fazla 3 kez değiştirebilirsiniz.");
         setSaving(false);
         return;
       }
 
       // Check uniqueness
-      const { data: existingUser, error: uniquenessError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', editUsername)
-        .neq('id', user.id)
-        .maybeSingle();
+      if (usernameChanged) {
+        const { data: existingUser, error: uniquenessError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', editUsername)
+          .neq('id', user.id)
+          .maybeSingle();
 
-      if (uniquenessError) throw uniquenessError;
-      if (existingUser) {
-        toast.error("Bu kullanıcı adı başkası tarafından kullanılıyor.");
-        setSaving(false);
-        return;
+        if (uniquenessError) throw uniquenessError;
+        if (existingUser) {
+          toast.error("Bu kullanıcı adı başkası tarafından kullanılıyor.");
+          setSaving(false);
+          return;
+        }
       }
 
-      // Update DB
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          username: editUsername,
-          username_changes: (profile.username_changes || 0) + 1
-        })
-        .eq('id', user.id);
+      let phoneChanged = profile.phone !== formattedPhone;
+      let updates: any = {};
+      let changesCount = profile.username_changes || 0;
 
-      if (error) throw error;
+      if (usernameChanged) {
+        updates.username = editUsername;
+        updates.username_changes = changesCount + 1;
+        
+        const { error } = await supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', user.id);
+        if (error) throw error;
+        
+        await supabase.auth.updateUser({ data: { username: editUsername } });
+      }
 
-      // Update Auth
-      await supabase.auth.updateUser({ data: { username: editUsername } });
+      if (phoneChanged && formattedPhone) {
+        if (formattedPhone.length !== 13) {
+           toast.error("Lütfen 10 haneli (örn: 5XX XXX XX XX) geçerli bir telefon girin.");
+           setSaving(false);
+           return;
+        }
+        // Çağırılacak RPC: Telefonu günceller ve OTP üretir
+        await handleSendOtp(formattedPhone);
+        updates.phone = formattedPhone;
+        updates.is_phone_verified = false;
+      } else if (phoneChanged && !formattedPhone) {
+        // Eğer telefonu silmek isterlerse
+        const { error } = await supabase.from('profiles').update({ phone: null, is_phone_verified: false }).eq('id', user.id);
+        if (error) throw error;
+        updates.phone = null;
+        updates.is_phone_verified = false;
+      }
 
       // Update Local State
-      setProfile(prev => prev ? ({ ...prev, username: editUsername, username_changes: (prev.username_changes || 0) + 1 }) : null);
+      setProfile(prev => prev ? ({ 
+        ...prev, 
+        ...updates 
+      }) : null);
 
-      toast.success(`Kullanıcı adı güncellendi. Kalan hakkınız: ${3 - ((profile.username_changes || 0) + 1)}`);
-      setEditing(false);
+      toast.success("Profiliniz başarıyla güncellendi.");
+      setEditingMode('none');
     } catch (error: any) {
       console.error(error);
       toast.error("Hata: " + error.message);
@@ -392,35 +465,103 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
             <div className="space-y-4 text-center lg:text-left">
               <div className="flex flex-col gap-2 items-center lg:items-start">
 
-                {/* Username Editing */}
-                {editing && isOwnProfile ? (
-                  <div className="flex items-center gap-2 w-full justify-center lg:justify-start">
-                    <input
-                      type="text"
-                      value={editUsername}
-                      onChange={(e) => setEditUsername(e.target.value)}
-                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xl font-bold text-foreground focus:border-pink-500 focus:outline-none w-full max-w-[200px]"
-                    />
-                    <button onClick={handleSaveUsername} disabled={saving} className="p-2 bg-primary text-white rounded-lg hover:bg-primary/90">
-                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    </button>
-                    <button onClick={() => { setEditing(false); setEditUsername(profile.username); }} className="p-2 text-muted-foreground hover:bg-white/5 rounded-lg">
-                      <X className="w-4 h-4" />
-                    </button>
+                {/* Profile Editing */}
+                {editingMode === 'username' && isOwnProfile ? (
+                  <div className="flex flex-col gap-3 w-full max-w-sm justify-center lg:justify-start">
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground uppercase tracking-widest">Kullanıcı Adı</label>
+                      <input
+                        type="text"
+                        value={editUsername}
+                        onChange={(e) => setEditUsername(e.target.value)}
+                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xl font-bold text-foreground focus:border-pink-500 focus:outline-none w-full"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center gap-2 mt-2">
+                      <button onClick={handleSaveProfile} disabled={saving} className="flex-1 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 flex justify-center items-center font-bold">
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Kaydet"}
+                      </button>
+                      <button onClick={() => { setEditingMode('none'); setEditUsername(profile.username); }} className="p-2 text-muted-foreground hover:bg-white/5 rounded-lg border border-white/10">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                ) : editingMode === 'phone' && isOwnProfile ? (
+                  <div className="flex flex-col gap-3 w-full max-w-sm justify-center lg:justify-start">
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground uppercase tracking-widest">Telefon Numarası</label>
+                      <div className="flex bg-white/5 border border-white/10 rounded-lg overflow-hidden focus-within:border-pink-500 transition-colors">
+                        <span className="px-3 py-2 text-muted-foreground font-medium bg-black/20 flex items-center shrink-0 border-r border-white/5">
+                          +90
+                        </span>
+                        <input
+                          type="tel"
+                          placeholder="5XX XXX XX XX"
+                          value={formatDisplayPhone(editPhone)}
+                          onChange={handlePhoneChange}
+                          className="bg-transparent px-3 py-2 font-medium text-foreground focus:outline-none w-full"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 mt-2">
+                      <button onClick={handleSaveProfile} disabled={saving} className="flex-1 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 flex justify-center items-center font-bold">
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Kaydet"}
+                      </button>
+                      <button onClick={() => { setEditingMode('none'); setEditPhone(profile.phone || ""); }} className="p-2 text-muted-foreground hover:bg-white/5 rounded-lg border border-white/10">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <h1 className="text-2xl sm:text-4xl font-bold tracking-tight flex items-center gap-2">
-                    {profile.username}
-                    <BadgeDisplay badges={profile.badges} size="lg" />
-                    {isOwnProfile && (
-                      <button onClick={() => setEditing(true)} className="p-1.5 text-muted-foreground hover:text-primary transition-colors">
-                        <Edit3 className="w-4 h-4" />
+                  <>
+                    <h1 className="text-2xl sm:text-4xl font-bold tracking-tight flex items-center gap-2">
+                      {profile.username}
+                      <BadgeDisplay badges={profile.badges} size="lg" />
+                      {isOwnProfile && (
+                        <button onClick={() => setEditingMode('username')} className="p-1.5 text-muted-foreground hover:text-primary transition-colors">
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </h1>
+                    
+                    {/* Phone Display (Only if Own Profile) */}
+                    {isOwnProfile && profile.phone && (
+                      <div className="flex items-center gap-2 text-sm mt-1">
+                        <span className="text-muted-foreground">{profile.phone}</span>
+                        {profile.is_phone_verified ? (
+                          <span className="flex items-center gap-1 text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full text-xs font-bold border border-green-500/20">
+                            <ShieldCheck className="w-3 h-3" /> Doğrulandı
+                          </span>
+                        ) : (
+                          <button 
+                            onClick={() => handleSendOtp(profile.phone!)} 
+                            className="flex items-center gap-1 text-red-400 bg-red-500/10 hover:bg-red-500/20 px-2 py-0.5 rounded-full text-xs font-bold border border-red-500/20 transition-colors"
+                          >
+                            <ShieldAlert className="w-3 h-3" /> Doğrula
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => setEditingMode('phone')}
+                          className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors ml-2"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    {isOwnProfile && !profile.phone && (
+                      <button 
+                        onClick={() => setEditingMode('phone')}
+                        className="flex items-center gap-1.5 text-xs text-pink-400 hover:text-pink-300 mt-1"
+                      >
+                        <Phone className="w-3 h-3" /> Telefon ekle (Opsiyonel)
                       </button>
                     )}
-                  </h1>
+                  </>
                 )}
 
-                <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider">
+                <span className="px-3 py-1 mt-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider">
                   {profile.role === "seller" ? "Satıcı" : "Alıcı"}
                 </span>
               </div>
@@ -617,6 +758,20 @@ function UserProfile({ userId, isOwnProfile }: { userId: string, isOwnProfile: b
             </div>
           </div>
         </div>
+      )}
+      {/* Phone Verification Modal */}
+      {isOwnProfile && profile?.phone && (
+        <PhoneVerificationModal 
+          isOpen={showPhoneVerification} 
+          onClose={() => setShowPhoneVerification(false)} 
+          phoneNumber={profile.phone}
+          testCode={testOtpCode}
+          onResend={() => handleSendOtp(profile.phone!)}
+          onVerified={() => {
+            // Sadece başarılı olduğunda UI'ı yeşile döndür
+            setProfile(prev => prev ? { ...prev, is_phone_verified: true } : null);
+          }}
+        />
       )}
     </Layout>
   );
