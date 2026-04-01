@@ -54,6 +54,7 @@ import { AdminProductActions } from '@/components/admin/AdminProductActions';
 import { ReportModal } from '@/components/ReportModal';
 import { Flag } from 'lucide-react';
 import { DbProductCard } from '@/components/DbProductCard';
+import { ProductComments } from '@/components/ProductComments';
 
 
 
@@ -773,6 +774,9 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Product Comments — Dolap-style */}
+      <ProductComments productId={product.id} ownerId={product.user_id} />
 
       {/* Similar Products */}
       <SimilarProducts category={product.category} currentId={product.id} />
