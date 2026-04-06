@@ -13,13 +13,8 @@ export function getOptimizedImageUrl(
 ): string {
   if (!url) return '';
 
-  // Only optimize Supabase storage URLs
-  if (url.includes('supabase.co') && url.includes('/storage/v1/object/public/')) {
-    const separator = url.includes('?') ? '&' : '?';
-    const heightParam = height ? `&height=${height}` : '';
-    return `${url}${separator}width=${width}${heightParam}&resize=cover&format=webp&quality=${quality}`;
-  }
-
+  // Images are already compressed locally before upload, and Free Tier doesn't support transformations
+  // so we return the original URL.
   return url;
 }
 

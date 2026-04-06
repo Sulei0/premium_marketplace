@@ -38,13 +38,9 @@ export function OptimizedImage({
     const optimizedSrc = useMemo(() => {
         if (!useOptimization || !src || error) return error ? fallbackSrc : src;
 
-        // Check if it's a Supabase Storage URL
-        const isSupabaseUrl = src.includes("supabase") && src.includes("/storage/");
-        if (!isSupabaseUrl) return src;
-
-        // Add transform parameters for Supabase Image Transformation
-        const separator = src.includes("?") ? "&" : "?";
-        return `${src}${separator}width=${thumbnailWidth}&height=${thumbnailHeight}&resize=cover&format=webp`;
+        // Images are already compressed locally before upload, and Free Tier doesn't support transformations.
+        // Return original url to prevent broken images.
+        return src;
     }, [src, thumbnailWidth, thumbnailHeight, useOptimization, error, fallbackSrc]);
 
     return (
