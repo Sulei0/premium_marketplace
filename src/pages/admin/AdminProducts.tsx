@@ -23,8 +23,8 @@ interface Product {
     price: number;
     category: string;
     user_id: string;
-    is_active: boolean; // Active/Passive by seller
-    is_approved: boolean; // Approved by admin
+    is_active: boolean;
+    is_approved: boolean;
     created_at: string;
     image_url: string | null;
     seller: {
@@ -43,7 +43,6 @@ export default function AdminProducts() {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            // Step 1: fetch all products (no join — no FK between products and profiles)
             const { data: productData, error: productError } = await supabase
                 .from("products")
                 .select("*")
@@ -51,7 +50,6 @@ export default function AdminProducts() {
 
             if (productError) throw productError;
 
-            // Step 2: fetch profiles for all unique user_ids
             const userIds = [...new Set((productData || []).map((p: any) => p.user_id))];
             let usernameMap: Record<string, string> = {};
 
@@ -68,7 +66,6 @@ export default function AdminProducts() {
                 }
             }
 
-            // Step 3: merge seller username into each product
             const merged = (productData || []).map((p: any) => ({
                 ...p,
                 seller: { username: usernameMap[p.user_id] || null },
@@ -112,7 +109,6 @@ export default function AdminProducts() {
 
             if (error) throw error;
 
-            // Send notification to the product owner
             await supabase
                 .from("notifications")
                 .insert({
@@ -135,7 +131,6 @@ export default function AdminProducts() {
         if (!confirm(`"${product.title}" ilanını reddetmek istediğinize emin misiniz?`)) return;
 
         try {
-            // Delete the product or keep it as rejected — keeping it unapproved
             const { error } = await supabase
                 .from("products")
                 .update({ is_approved: false, is_active: false })
@@ -143,7 +138,6 @@ export default function AdminProducts() {
 
             if (error) throw error;
 
-            // Send rejection notification
             await supabase
                 .from("notifications")
                 .insert({
@@ -171,7 +165,6 @@ export default function AdminProducts() {
 
             if (error) throw error;
 
-            // Send notification
             await supabase
                 .from("notifications")
                 .insert({
@@ -194,13 +187,11 @@ export default function AdminProducts() {
 
     const filteredProducts = products
         .filter(product => {
-            // Text search
             const matchesSearch =
                 product.title.toLowerCase().includes(search.toLowerCase()) ||
                 product.category.toLowerCase().includes(search.toLowerCase()) ||
                 product.seller?.username?.toLowerCase().includes(search.toLowerCase());
 
-            // Status filter
             const matchesFilter =
                 filter === "all" ? true :
                     filter === "pending" ? !product.is_approved :
@@ -209,11 +200,68 @@ export default function AdminProducts() {
             return matchesSearch && matchesFilter;
         });
 
+    const ProductActions = ({ product }: { product: Product }) => (
+        <div className="flex items-center gap-1">
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                title="İlanı Görüntüle"
+                onClick={() => window.open(`/#/products/${product.id}`, '_blank')}
+            >
+                <ExternalLink className="w-4 h-4 text-muted-foreground" />
+            </Button>
+
+            {product.is_approved ? (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    title="Onayı Kaldır"
+                    onClick={() => handleRevokeApproval(product)}
+                >
+                    <XCircle className="w-4 h-4 text-orange-500" />
+                </Button>
+            ) : (
+                <>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 hover:bg-green-500/10"
+                        title="Onayla"
+                        onClick={() => handleApprove(product)}
+                    >
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 hover:bg-red-500/10"
+                        title="Reddet"
+                        onClick={() => handleReject(product)}
+                    >
+                        <XCircle className="w-4 h-4 text-red-500" />
+                    </Button>
+                </>
+            )}
+
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                title="Sil"
+                onClick={() => handleDelete(product.id)}
+            >
+                <Trash2 className="w-4 h-4" />
+            </Button>
+        </div>
+    );
+
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight">İlan Yönetimi</h1>
-                <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">İlan Yönetimi</h1>
+                <div className="flex items-center gap-2 flex-wrap">
                     {pendingCount > 0 && (
                         <Badge variant="destructive" className="animate-pulse">
                             {pendingCount} Onay Bekliyor
@@ -225,9 +273,9 @@ export default function AdminProducts() {
                 </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <div className="flex items-center gap-2 bg-card p-2 rounded-lg border border-border w-full max-w-md">
-                    <Search className="w-4 h-4 text-muted-foreground ml-2" />
+            <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 bg-card p-2 rounded-lg border border-border w-full">
+                    <Search className="w-4 h-4 text-muted-foreground ml-2 shrink-0" />
                     <Input
                         placeholder="İlan başlığı, kategori veya satıcı ara..."
                         className="border-none shadow-none focus-visible:ring-0"
@@ -236,7 +284,7 @@ export default function AdminProducts() {
                     />
                 </div>
 
-                <div className="flex items-center gap-1.5 bg-card p-1 rounded-lg border border-border">
+                <div className="flex items-center gap-1.5 bg-card p-1 rounded-lg border border-border self-start">
                     <button
                         onClick={() => setFilter("pending")}
                         className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${filter === "pending" ? "bg-destructive text-destructive-foreground" : "text-muted-foreground hover:text-foreground"}`}
@@ -261,7 +309,8 @@ export default function AdminProducts() {
                 </div>
             </div>
 
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
+            {/* Desktop Table */}
+            <div className="hidden lg:block rounded-xl border border-border bg-card overflow-hidden">
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-secondary/50 hover:bg-secondary/50">
@@ -269,8 +318,8 @@ export default function AdminProducts() {
                             <TableHead>Başlık</TableHead>
                             <TableHead>Satıcı</TableHead>
                             <TableHead>Fiyat</TableHead>
-                            <TableHead>Durum (Satıcı)</TableHead>
-                            <TableHead>Onay (Admin)</TableHead>
+                            <TableHead>Durum</TableHead>
+                            <TableHead>Onay</TableHead>
                             <TableHead>Tarih</TableHead>
                             <TableHead className="text-right">İşlemler</TableHead>
                         </TableRow>
@@ -332,66 +381,71 @@ export default function AdminProducts() {
                                         {format(new Date(product.created_at), 'd MMM yyyy', { locale: tr })}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8"
-                                                title="İlanı Görüntüle"
-                                                onClick={() => window.open(`/#/products/${product.id}`, '_blank')}
-                                            >
-                                                <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                                            </Button>
-
-                                            {product.is_approved ? (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8"
-                                                    title="Onayı Kaldır"
-                                                    onClick={() => handleRevokeApproval(product)}
-                                                >
-                                                    <XCircle className="w-4 h-4 text-orange-500" />
-                                                </Button>
-                                            ) : (
-                                                <>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 hover:bg-green-500/10"
-                                                        title="Onayla"
-                                                        onClick={() => handleApprove(product)}
-                                                    >
-                                                        <CheckCircle className="w-4 h-4 text-green-500" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 hover:bg-red-500/10"
-                                                        title="Reddet"
-                                                        onClick={() => handleReject(product)}
-                                                    >
-                                                        <XCircle className="w-4 h-4 text-red-500" />
-                                                    </Button>
-                                                </>
-                                            )}
-
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
-                                                title="Sil"
-                                                onClick={() => handleDelete(product.id)}
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </div>
+                                        <ProductActions product={product} />
                                     </TableCell>
                                 </TableRow>
                             ))
                         )}
                     </TableBody>
                 </Table>
+            </div>
+
+            {/* Mobile & Tablet Card List */}
+            <div className="lg:hidden space-y-3">
+                {loading ? (
+                    <div className="flex justify-center items-center gap-2 text-muted-foreground py-12">
+                        <Loader2 className="w-5 h-5 animate-spin" /> Yükleniyor...
+                    </div>
+                ) : filteredProducts.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-12">
+                        {filter === "pending" ? "Onay bekleyen ilan yok." : "İlan bulunamadı."}
+                    </div>
+                ) : (
+                    filteredProducts.map((product) => (
+                        <div
+                            key={product.id}
+                            className={`bg-card border border-border rounded-xl p-4 space-y-3 ${!product.is_approved ? "border-yellow-500/30 bg-yellow-500/5" : ""}`}
+                        >
+                            <div className="flex items-start gap-3">
+                                <div className="w-14 h-14 rounded-lg bg-secondary overflow-hidden border border-border shrink-0">
+                                    {product.image_url ? (
+                                        <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Yok</div>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-semibold truncate">{product.title}</p>
+                                    <p className="text-xs text-muted-foreground">{product.category}</p>
+                                    <p className="text-sm font-bold text-primary mt-1">{formatCurrency(product.price)}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="text-xs text-muted-foreground">Satıcı: <span className="text-foreground font-medium">{product.seller?.username || 'Bilinmiyor'}</span></span>
+                                    <span className="text-xs text-muted-foreground">{format(new Date(product.created_at), 'd MMM yyyy', { locale: tr })}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div className="flex gap-2 flex-wrap">
+                                    {product.is_active ? (
+                                        <Badge variant="outline" className="text-green-500 bg-green-500/10 border-green-500/20 text-xs">Aktif</Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="text-muted-foreground text-xs">Pasif</Badge>
+                                    )}
+                                    {product.is_approved ? (
+                                        <Badge variant="default" className="bg-blue-600 hover:bg-blue-700 text-xs">Onaylı</Badge>
+                                    ) : (
+                                        <Badge variant="destructive" className="animate-pulse text-xs">Onay Bekliyor</Badge>
+                                    )}
+                                </div>
+                                <ProductActions product={product} />
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     );

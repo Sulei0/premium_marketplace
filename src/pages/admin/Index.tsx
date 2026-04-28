@@ -12,7 +12,6 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         const fetchStats = async () => {
-            // Parallel fetching
             const p1 = supabase.from('profiles').select('*', { count: 'exact', head: true });
             const p2 = supabase.from('products').select('*', { count: 'exact', head: true });
             const p3 = supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'admin');
@@ -38,37 +37,37 @@ export default function AdminDashboard() {
     ];
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Genel Bakış</h1>
-                <p className="text-muted-foreground mt-2">Platform istatistikleri ve durum özeti.</p>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Genel Bakış</h1>
+                <p className="text-muted-foreground mt-2 text-sm sm:text-base">Platform istatistikleri ve durum özeti.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {cards.map((card, i) => {
                     const Icon = card.icon;
                     return (
-                        <div key={i} className="bg-card border border-border p-6 rounded-xl flex items-start justify-between shadow-sm">
+                        <div key={i} className="bg-card border border-border p-4 sm:p-6 rounded-xl flex items-start justify-between shadow-sm">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground">{card.label}</p>
-                                <h3 className="text-2xl font-bold mt-2">{card.value}</h3>
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground">{card.label}</p>
+                                <h3 className="text-xl sm:text-2xl font-bold mt-1 sm:mt-2">{card.value}</h3>
                             </div>
-                            <div className={`p-3 rounded-lg ${card.bg}`}>
-                                <Icon className={`w-5 h-5 ${card.color}`} />
+                            <div className={`p-2 sm:p-3 rounded-lg ${card.bg} shrink-0`}>
+                                <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${card.color}`} />
                             </div>
                         </div>
                     )
                 })}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-card border border-border p-6 rounded-xl min-h-[300px] flex flex-col items-center justify-center text-muted-foreground border-dashed">
-                    <Activity className="w-10 h-10 mb-4 opacity-20" />
-                    <p>Son Aktiviteler (Yakında)</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <div className="bg-card border border-border p-6 rounded-xl min-h-[200px] sm:min-h-[300px] flex flex-col items-center justify-center text-muted-foreground border-dashed">
+                    <Activity className="w-8 h-8 sm:w-10 sm:h-10 mb-4 opacity-20" />
+                    <p className="text-sm">Son Aktiviteler (Yakında)</p>
                 </div>
-                <div className="bg-card border border-border p-6 rounded-xl min-h-[300px] flex flex-col items-center justify-center text-muted-foreground border-dashed">
-                    <TrendingUp className="w-10 h-10 mb-4 opacity-20" />
-                    <p>Satış Grafikleri (Yakında)</p>
+                <div className="bg-card border border-border p-6 rounded-xl min-h-[200px] sm:min-h-[300px] flex flex-col items-center justify-center text-muted-foreground border-dashed">
+                    <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 mb-4 opacity-20" />
+                    <p className="text-sm">Satış Grafikleri (Yakında)</p>
                 </div>
             </div>
         </div>

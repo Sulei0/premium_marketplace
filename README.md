@@ -21,6 +21,7 @@ Giyenden, kadınların birbirleriyle güvenli ve şeffaf bir şekilde ikinci el 
 - **Favori & Beğeni** — Ürünleri favorilere ekleme, beğeni sayaçları
 - **Takip Sistemi** — Satıcıları takip etme, takipçi/takip edilen sayaçları
 - **Değerlendirme & Yorum** — Satıcıları puanlama ve yorum bırakma
+- **Ürün Soru-Cevap ve Yorum Sistemi** — Spam korumalı, iç içe (nested) yanıt destekleyen alıcı-satıcı arası soru ve yorum altyapısı
 - **Bildirim Sistemi** — Favori, takip, mesaj ve teklif bildirimleri
 - **Admin Paneli** — Kullanıcı yönetimi, ürün onaylama, şikayet/rapor takibi, rozet yönetimi
 - **Blog Sistemi** — Markdown destekli, zengin içerikli blog yayınlama altyapısı
@@ -169,6 +170,7 @@ Giyenden is a curated marketplace where women can exchange second-hand fashion i
 - **Favorites & Likes** — Save favorite products, like counters
 - **Follow System** — Follow sellers, follower/following counts
 - **Reviews & Ratings** — Rate and review sellers
+- **Product Q&A and Comment System** — Spam-protected product Q&A with nested replies
 - **Notification System** — Favorites, follow, message, and offer notifications
 - **Admin Panel** — User management, product approval, reports, badge management
 - **Blog System** — Markdown-supported, rich content blog infrastructure
