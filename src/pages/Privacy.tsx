@@ -1,6 +1,6 @@
 import React from "react";
 import { Layout } from "@/components/Layout";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { SEO } from "@/components/SEO";
 
 export default function Privacy() {

@@ -180,7 +180,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{ user, role, setRole, signUp, signIn, signInWithOAuth, signOut, resetPassword, needsUsername, setNeedsUsername, loading }}>
-      {!loading && children}
+      {loading ? (
+        <div className="flex items-center justify-center min-h-screen bg-background">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <p className="text-sm text-muted-foreground animate-pulse">Yükleniyor...</p>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 };

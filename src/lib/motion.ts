@@ -7,7 +7,7 @@
  * - Physical weight (like real objects moving)
  */
 
-import type { Transition, Variants } from "framer-motion"
+import type { Transition, Variants } from "motion/react"
 
 // ============================================
 // Spring Presets

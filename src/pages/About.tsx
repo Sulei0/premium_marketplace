@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { SEO } from "@/components/SEO";
@@ -18,7 +18,7 @@ const fadeUp = {
     visible: (i = 0) => ({
         opacity: 1,
         y: 0,
-        transition: { delay: i * 0.1, duration: 0.6, ease: "easeOut" },
+        transition: { delay: i * 0.1, duration: 0.6, ease: "easeOut" as const },
     }),
 };
 

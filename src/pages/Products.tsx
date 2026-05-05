@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { Search, SlidersHorizontal, Sparkles, X, Loader2, Heart, ArrowUpDown, ChevronDown } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/lib/supabase";
@@ -325,7 +325,7 @@ export default function Products() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  transition={{ duration: 0.3, ease: "easeInOut" as const }}
                   className="overflow-hidden"
                 >
                   <div className="bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl p-6 mb-6 space-y-6">
@@ -464,7 +464,7 @@ export default function Products() {
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ delay: index * 0.05 }}
+                        transition={{ delay: index < 8 ? index * 0.05 : 0 }}
                       >
                         <DbProductCard product={product} />
                       </motion.div>

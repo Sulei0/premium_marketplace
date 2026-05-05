@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { supabase } from "@/lib/supabase";
 import { Layout } from "@/components/Layout";
 import { SEO } from "@/components/SEO";
@@ -23,7 +23,7 @@ const fadeUp = {
     hidden: { opacity: 0, y: 30 },
     visible: (i = 0) => ({
         opacity: 1, y: 0,
-        transition: { delay: i * 0.08, duration: 0.5, ease: "easeOut" },
+        transition: { delay: i * 0.08, duration: 0.5, ease: "easeOut" as const },
     }),
 };
 

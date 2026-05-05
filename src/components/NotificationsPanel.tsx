@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { Bell, MessageSquare, Heart, Star, Gift, Check, CheckCheck } from "lucide-react";
 import { useNotifications, type Notification } from "@/contexts/NotificationsContext";
 import { cn } from "@/lib/index";

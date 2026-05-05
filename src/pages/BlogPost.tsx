@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { supabase } from "@/lib/supabase";
 import { Layout } from "@/components/Layout";
 import { SEO } from "@/components/SEO";

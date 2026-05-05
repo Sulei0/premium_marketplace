@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { Heart, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

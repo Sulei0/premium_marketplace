@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Heart, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Layout } from "@/components/Layout";

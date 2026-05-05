@@ -19,7 +19,7 @@ import {
   Moon,
   Home
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { ROUTE_PATHS, cn } from "@/lib/index";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { ShoppingBag, CheckCircle2, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { clsx, type ClassValue } from "clsx";
