@@ -117,7 +117,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           <Link to={getProductPath(product.id)} className="flex items-center justify-center gap-2">
             <MessageCircle className="h-4 w-4 transition-transform group-hover/btn:-translate-y-0.5" />
             <span className="text-xs font-bold uppercase tracking-widest">
-              Satıcıya Fısılda
+              Teklif Ver
             </span>
           </Link>
         </Button>

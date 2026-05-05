@@ -288,7 +288,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
 
   const handleWhisperClick = () => {
     if (!user) {
-      toast({ title: "Giriş yapmalısınız", description: "Fısıldamak için lütfen giriş yapın.", variant: "destructive" });
+      toast({ title: "Giriş yapmalısınız", description: "Teklif vermek için lütfen giriş yapın.", variant: "destructive" });
       window.dispatchEvent(new Event('open-login'));
       return;
     }
@@ -704,7 +704,7 @@ function DbProductView({ product, isOwner, onEdit, editModalOpen, onCloseEdit }:
                   </div>
                 ) : (
                   <span className="flex items-center gap-2">
-                    Satıcıya Fısılda <MessageSquare className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                    Teklif Ver <MessageSquare className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </span>
                 )}
                 {!isSold && <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />}

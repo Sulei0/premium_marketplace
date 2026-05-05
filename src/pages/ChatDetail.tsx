@@ -697,7 +697,7 @@ export default function ChatDetail() {
 
     return (
         <Layout>
-            <SEO title={chat?.other_user ? `${chat.other_user.username} ile Fısıldaş` : "Fısıltı | Giyenden"} description="Sohbet detayları" />
+            <SEO title={chat?.other_user ? `${chat.other_user.username} ile Mesajlaş` : "Mesajlar | Giyenden"} description="Sohbet detayları" />
             <div className="container mx-auto px-0 sm:px-4 flex flex-col h-[calc(100dvh-80px)] md:h-[calc(100vh-80px)]">
                 {/* Header */}
                 <div className="p-4 border-b flex items-center gap-4 bg-background z-10 shrink-0">
